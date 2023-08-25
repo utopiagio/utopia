@@ -1,2 +1,2 @@
 # utopia
-Easy GioUI
+A framework to build golang ui's using gioui.
