@@ -105,6 +105,10 @@ func (ob *GoSwitchObj) SetOnChange(f func(bool)) {
 	ob.onPress = f
 }*/
 
+func (ob *GoSwitchObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
+}
+
 func (ob *GoSwitchObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
 	if ob.Visible {
@@ -115,6 +119,9 @@ func (ob *GoSwitchObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

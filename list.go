@@ -245,7 +245,7 @@ const (
 type GoListBoxObj struct {
 	GioObject
 	GioWidget
-	goScrollbar
+	Scrollbar goScrollbar
 	AnchorStrategy
 	state *widget_gio.List
 }
@@ -283,7 +283,7 @@ func GoListBox(parent GoObject) *GoListBoxObj {
 	hListBox := &GoListBoxObj {
 		GioObject: object,
 		GioWidget: widget,
-		goScrollbar: scrollbar,
+		Scrollbar: scrollbar,
 		//ScrollbarStyle: Scrollbar(theme, state.Scrollbar),
 		AnchorStrategy: Occupy,
 		state: 	state,
@@ -294,6 +294,10 @@ func GoListBox(parent GoObject) *GoListBoxObj {
 
 func (ob *GoListBoxObj) ObjectType() (string) {
 	return "GoListBoxObj"
+}
+
+func (ob *GoListBoxObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }
 
 func (ob *GoListBoxObj) SetLayoutMode(mode GoLayoutDirection) {
@@ -316,6 +320,9 @@ func (ob *GoListBoxObj) Draw(gtx layout_gio.Context) layout_gio.Dimensions {
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
@@ -325,7 +332,7 @@ func (ob *GoListBoxObj) Layout(gtx layout_gio.Context, length int, w layout_gio.
 	originalConstraints := gtx.Constraints
 
 	// Determine how much space the scrollbar occupies.
-	barWidth := gtx.Dp(ob.Width())
+	barWidth := gtx.Dp(ob.Scrollbar.Width())
 
 	if ob.AnchorStrategy == Occupy {
 
@@ -364,7 +371,7 @@ func (ob *GoListBoxObj) Layout(gtx layout_gio.Context, length int, w layout_gio.
 		gtx.Constraints.Min = ob.state.Axis.Convert(min)
 	}
 	anchoring.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-		return ob.goScrollbar.Layout(gtx, ob.state.Axis, start, end)
+		return ob.Scrollbar.Layout(gtx, ob.state.Axis, start, end)
 	})
 
 	if delta := ob.state.ScrollDistance(); delta != 0 {

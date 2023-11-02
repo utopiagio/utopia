@@ -89,12 +89,19 @@ func (ob *GoImageObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) 
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
 
 func (ob *GoImageObj) ObjectType() (string) {
 	return "GoImageObj"
+}
+
+func (ob *GoImageObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }
 
 const defaultScale = float32(160.0 / 72.0)

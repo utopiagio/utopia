@@ -153,12 +153,19 @@ func (ob *GoCanvasObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
 
 func (ob *GoCanvasObj) ObjectType() (string) {
 	return "GoCanvasObj"
+}
+
+func (ob *GoCanvasObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }
 
 func (ob *GoCanvasObj) Update() {

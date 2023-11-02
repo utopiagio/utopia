@@ -54,6 +54,9 @@ func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
@@ -68,4 +71,8 @@ func (ob *GoCheckBoxObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 
 func (ob *GoCheckBoxObj) ObjectType() (string) {
 	return "GoCheckBoxObj"
+}
+
+func (ob *GoCheckBoxObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }

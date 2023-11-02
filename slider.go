@@ -74,6 +74,8 @@ func (ob *GoSliderObj) ObjectType() (string) {
 	return "GoSliderObj"
 }
 
+
+
 func (ob *GoSliderObj) SetOnChange(f func(float32)) {
 	ob.onChange = f
 }
@@ -94,6 +96,10 @@ func (ob *GoSliderObj) SetValue(value float32) {
 	ob.gioSlider.Value = value
 }
 
+func (ob *GoSliderObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
+}
+
 func (ob *GoSliderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
 	if ob.Visible {
@@ -104,6 +110,9 @@ func (ob *GoSliderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

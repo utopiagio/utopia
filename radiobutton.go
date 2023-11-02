@@ -85,6 +85,9 @@ func (ob *GoRadioButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimens
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
@@ -102,4 +105,8 @@ func (ob *GoRadioButtonObj) layout(gtx layout_gio.Context) layout_gio.Dimensions
 
 func (ob *GoRadioButtonObj) ObjectType() (string) {
 	return "GoRadioButtonObj"
+}
+
+func (ob *GoRadioButtonObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }

@@ -32,6 +32,11 @@ const (
 	// *** On Mac OS X this will also be indicate that the widget accepts tab focus when in 'Text/List focus mode'.
 )
 
+type GoPos struct {
+	X int
+	Y int
+}
+
 type GoSize struct {
 	Width int
 	Height int
@@ -157,14 +162,12 @@ type GoBorder struct {
 }
 
 func (b GoBorder) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio.Dimensions {
-
 	rr := gtx.Dp(unit_gio.Dp(b.BRadius))
 	width := gtx.Dp(unit_gio.Dp(b.BWidth))
-	whalf := (width + 1) / 2 // width / 2 // 
-	log.Println("whalf =", whalf)
+	//log.Println("width =", width)
 
 	mcs := gtx.Constraints
-	mcs.Max.X -= whalf * 4
+	mcs.Max.X -= width * 2
 	if mcs.Max.X < 0 {
 		width = 0
 		mcs.Max.X = 0
@@ -172,7 +175,7 @@ func (b GoBorder) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio
 	if mcs.Min.X > mcs.Max.X {
 		mcs.Min.X = mcs.Max.X
 	}
-	mcs.Max.Y -= whalf * 4
+	mcs.Max.Y -= width * 2
 	if mcs.Max.Y < 0 {
 		width = 0
 		mcs.Max.Y = 0
@@ -182,11 +185,23 @@ func (b GoBorder) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio
 	}
 	gtx.Constraints = mcs
 	
-	trans := op_gio.Offset(image.Pt(whalf * 2, whalf * 2)).Push(gtx.Ops)
+	trans := op_gio.Offset(image.Pt(width, width)).Push(gtx.Ops)
 	dims := w(gtx)
 
 	r := image.Rectangle{Max: dims.Size}
-	r = r.Inset(-whalf)
+	//log.Println("image.Rect=", r)
+	r = r.Inset(-width / 2)
+
+	//log.Println("image.Inset=", r)
+	/*cl := clip_gio.UniformRRect(r, rr).Push(gtx.Ops)
+	paint_gio.ColorOp{Color: b.BColor.NRGBA()}.Add(gtx.ops)
+	paint_gio.PaintOp{}.Add(gtx.Ops)
+	cl.Pop()*/
+	/*paint_gio.FillShape(gtx.Ops,
+		Color_White.NRGBA(),
+		clip_gio.UniformRRect(r, rr).Op(gtx.Ops),
+	)*/
+	
 	paint_gio.FillShape(gtx.Ops,
 		b.BColor.NRGBA(),
 		clip_gio.Stroke{
@@ -198,8 +213,8 @@ func (b GoBorder) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio
 	trans.Pop()
 
 	return layout_gio.Dimensions{
-		Size:     dims.Size.Add(image.Point{X: whalf * 2, Y: whalf * 2}),
-		Baseline: dims.Baseline + whalf,
+		Size:     dims.Size.Add(image.Point{X: width * 2, Y: width * 2}),
+		Baseline: dims.Baseline + width,
 	}
 }
 
@@ -290,7 +305,10 @@ type GioWidget struct {
 	GoMargin		// clear margin surrounding widget
 	GoPadding		// clear padding within widget
 	GoSize 			// Fixed, Min and Max sizes
-		
+	
+	dims layout_gio.Dimensions // Dimensions{Size image.Point{X: int, Y: int}, Baseline int}
+	
+
 	Visible bool
 	// windows 10 System Colors
 	BackColor 		GoColor 	// COLOR_WINDOW
@@ -336,9 +354,11 @@ type GioWidget struct {
 	label *widget_gio.Label*/
 }
 
-/*func (w *goWidget) Click() {
-	return w.clickable.Click()
-}*/
+func (w *GioWidget) Click(e pointer_gio.Event) {
+	if w.onPointerClick != nil {
+			w.onPointerClick(e)
+		}
+}
 
 func (w *GioWidget) Clicked() (clicked bool) {
 	log.Println("GioWidget::Clicked", w.clicks)
@@ -365,7 +385,7 @@ func (w *GioWidget) Clicked() (clicked bool) {
 func (w *GioWidget) ClearFocus() bool {
 	if GoApp.Keyboard().ClearFocus(w) {
 		//w.focus = false
-		if w.onClearFocus != nil{
+		if w.onClearFocus != nil {
 			w.onClearFocus()
 		}
 		return true
@@ -376,6 +396,10 @@ func (w *GioWidget) ClearFocus() bool {
 func (w *GioWidget) HasFocus() bool {
 	return w.focus
 }
+
+/*func (w *GioWidget) Height() (height int) {
+	return w.GoSize.Height
+}*/
 
 func (w *GioWidget) Hide() {
 	w.Visible = false
@@ -405,6 +429,10 @@ func (w *GioWidget) Margin() (margin GoMargin) {
 // see goWidget positioning and geometry.
 func (w *GioWidget) Padding() (padding GoPadding) {
 	return w.GoPadding
+}
+
+func (w *GioWidget) SetBackgroundColor(color GoColor) {
+	w.BackgroundColor = color
 }
 
 func (w *GioWidget) SetBorder(style GoBorderStyle, width int, radius int, color GoColor) {
@@ -585,6 +613,10 @@ func (w *GioWidget) Show() {
 	w.Visible = true
 }
 
+/*func (w *GioWidget) Width() (width int) {
+	return w.GoSize.Width
+}*/
+
 func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
 	//log.Println("GioWidget::SignalEvents", w.events)
 	if w.events != 0 {
@@ -621,12 +653,12 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 			case key_gio.Event:
 				switch e.State {
 					case key_gio.Press:
-						log.Println("Key::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
+						//log.Println("Key::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
 						if w.onKeyPress != nil {
 							w.onKeyPress(e)
 						}
 					case key_gio.Release:
-						log.Println("Key::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
+						//log.Println("Key::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
 						if w.onKeyRelease != nil {
 							w.onKeyRelease(e)
 						}
@@ -634,29 +666,47 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 			case pointer_gio.Event:
 				switch e.Type {
 					case pointer_gio.Press:
-						log.Println("MousePress:")
-						if e.Time - w.clickEvent.Time < doubleClickDuration {
-							//log.Println("MouseDoubleClick:")
-							log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
-							GoApp.Keyboard().SetFocusControl(w)
-							w.clicks = 2
-						} else {
-							if w.FocusPolicy >= ClickFocus && w.focus == false{
-								log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
+						//log.Println("MousePress:")
+						//log.Println("e.Time: ", uint(e.Time))
+						//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
+						//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
+
+						//log.Println("Duration: ", uint(e.Time - w.clickEvent.Time))
+
+						if w.FocusPolicy >= ClickFocus && w.focus == false {
+								//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
 								GoApp.Keyboard().SetFocusControl(w)
-							}
+						}
+						if w.clickEvent.Time == 0 {
 							w.clickEvent = e
+							//log.Println("w.onPointerPress()")
 							if w.onPointerPress != nil {
+								//log.Println("w.onPointerPress() != nil")
 								w.onPointerPress(e)
+							}
+						} else {
+							if e.Time - w.clickEvent.Time < doubleClickDuration {
+								//log.Println("MouseDoubleClick:")
+								//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
+								//GoApp.Keyboard().SetFocusControl(w)
+								w.clicks = 2
 							}
 						}
 					case pointer_gio.Release:
-						log.Println("MouseRelease:")
+						//log.Println("MouseRelease:")
+						//log.Println("e.Time: ", uint(e.Time))
+						//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
+						//log.Println("clickDuration: ", uint(clickDuration))
+						//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
+
+						//log.Println("Duration: ", uint(e.Time - w.clickEvent.Time))
 						if e.Time - w.clickEvent.Time < clickDuration {
 							//log.Println("MouseClick:")
 							// call go routine
 							go w.pointerClicked()
 							w.clicks = 1
+						} else {
+							w.clickEvent.Time = 0
 						}
 						if w.onPointerRelease != nil {
 							w.onPointerRelease(e)
@@ -686,8 +736,9 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 
 func (w *GioWidget) pointerClicked() {
 	time.Sleep(doubleClickDuration)
+	w.clickEvent.Time = 0
 	if w.clicks == 1 {
-		log.Println("POINTER clicked:")
+		//log.Println("POINTER clicked:")
 		if w.onPointerClick != nil {
 			w.onPointerClick(w.clickEvent)
 		}
@@ -698,4 +749,5 @@ func (w *GioWidget) pointerClicked() {
 			w.onPointerDoubleClick(w.clickEvent)
 		}
 	}
+	
 }

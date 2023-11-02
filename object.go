@@ -55,10 +55,9 @@ type GoObject interface {
 	ParentControl() (GoObject)
 	ParentWindow() (*GoWindowObj)
 	RemoveControl(GoObject)
-	SizePolicy() *GoSizePolicy
+	SizePolicy() (*GoSizePolicy)
 	SetSizePolicy(horiz GoSizeType, vert GoSizeType)
-
-	//wid() (*goWidget)
+	Widget() (*GioWidget)
 }
 
 type GioObject struct {
@@ -94,6 +93,10 @@ func (ob *GioObject) ParentWindow() (*GoWindowObj) {
 	return ob.Window
 }
 
+/*func (ob *GioObject) Widget() *GioWidget {
+	return nil
+}*/
+
 func (ob *GioObject) RemoveControl(object GoObject) {
 	k := 0
 	for _, v := range ob.Controls {
@@ -112,3 +115,4 @@ func (ob *GioObject) SizePolicy() *GoSizePolicy {	// widget sizing policy - GoSi
 func (ob *GioObject) SetSizePolicy(horiz GoSizeType, vert GoSizeType) {	// widget sizing policy - GoSizePolicy{horiz, vert, fixed}
 	ob.GoSizePolicy = GetSizePolicy(horiz, vert)
 }
+

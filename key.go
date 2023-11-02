@@ -20,7 +20,7 @@ type GoKeyboardObj struct {
 }
 
 func (k *GoKeyboardObj) ClearFocus(w *GioWidget) bool {
-	log.Println("GoKeyboardObj::ClearFocus")
+	//log.Println("GoKeyboardObj::ClearFocus")
 	k.focus = false
 	k.controlFocus = nil
 	return true
@@ -35,12 +35,17 @@ func (k *GoKeyboardObj) GetFocus() (w *GioWidget) {
 }
 
 func (k *GoKeyboardObj) SetFocus(w *GioWidget) bool {
-	if k.focus == true {
+	if k.controlFocus == w {
+		log.Println("GoKeyboardObj::ChangeFocus return true......")
+		return true
+	}
+	if k.controlFocus != nil {
 		if !k.controlFocus.ClearFocus() {
 			log.Println("GoKeyboardObj::ClearFocus return false......")
 			return false
 		}
 	}
+
 	log.Println("GoKeyboardObj::ChangeFocus")
 	
 	if w == nil {

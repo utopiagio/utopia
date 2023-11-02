@@ -5,6 +5,7 @@ package utopia
 import (
 	//"log"
 	"image/color"
+
 )
 
 type GoColor uint32
@@ -226,6 +227,31 @@ func (c GoColor) RGBA() (r uint8, g uint8, b uint8, a uint8) {
 	return uint8((c & 0xFF0000) >> 16), uint8((c & 0xFF00) >> 8), uint8(c & 0xFF), uint8((c & 0xFF000000) >> 24)
 }
 
+/*func (c GoColor) LinearRGBA() (color.RGBA) {
+	colr := color.NRGBA{R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c), A: uint8(c >> 24)}
+	if colr.A == 0xFF {
+		return color.RGBA(colr)
+	}
+	cl := LinearFromSRGB(col)
+	return color.RGBA{
+		R: uint8(cl.R*255 + .5),
+		G: uint8(cl.G*255 + .5),
+		B: uint8(cl.B*255 + .5),
+		A: col.A,
+	}
+}*/
+
+// LinearFromSRGB converts from col in the sRGB colorspace to RGBA.
+/*func LinearFromSRGB(col color.NRGBA) RGBA {
+	af := float32(col.A) / 0xFF
+	return RGBA{
+		R: srgb8ToLinear[col.R] * af, // sRGBToLinear(float32(col.R)/0xff) * af,
+		G: srgb8ToLinear[col.G] * af, // sRGBToLinear(float32(col.G)/0xff) * af,
+		B: srgb8ToLinear[col.B] * af, // sRGBToLinear(float32(col.B)/0xff) * af,
+		A: af,
+	}
+}*/
+
 func NRGBAColor(col color.NRGBA) (GoColor) {
 	color := uint32(uint32(col.A) << 24 + uint32(col.R) << 16 + uint32(col.G) << 8 + uint32(col.B))
 	return GoColor(color)
@@ -237,9 +263,16 @@ func (c GoColor) NRGBA() (color.NRGBA) {
 }
 
 // MulAlpha applies the alpha to the color.
-func MulAlpha(c color.NRGBA, alpha uint8) color.NRGBA {
-	c.A = uint8(uint32(c.A) * uint32(alpha) / 0xFF)
-	return c
+func (c GoColor) MulAlpha(alpha uint8) (color GoColor) {
+	col := c.NRGBA()
+	col.A = uint8(uint32(col.A) * uint32(alpha) / 0xFF)
+	return NRGBAColor(col)
+}
+
+// MulAlpha applies the alpha to the color.
+func MulAlpha(col color.NRGBA, alpha uint8) color.NRGBA {
+	col.A = uint8(uint32(col.A) * uint32(alpha) / 0xFF)
+	return col
 }
 
 // Disabled blends color towards the luminance and multiplies alpha.

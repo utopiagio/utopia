@@ -294,6 +294,9 @@ func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) 
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
@@ -358,6 +361,10 @@ func (ob *GoLabelObj) render(gtx layout_gio.Context, lt *text_gio.Shaper, font t
 
 func (ob *GoLabelObj) ObjectType() (string) {
 	return "GoLabelObj"
+}
+
+func (ob *GoLabelObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }
 
 func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {

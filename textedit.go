@@ -118,6 +118,56 @@ func (ob *GoTextEditObj) Length() (length int) {
 	return ob.editor.Len()
 }
 
+/*func (ob *GoTextEditObj) MoveCoord(pos image.Point) {
+	x := fixed.I(pos.X + ob.scrollOff.X)
+	y := pos.Y + ob.scrollOff.Y
+	ob.caret.start = ob.closestToXY(x, y).runes
+	ob.caret.xoff = 0
+}
+
+func (ob *GoTextEditObj) MoveCaret(startDelta, endDelta int) {
+	ob.caret.xoff = 0
+	ob.caret.start = ob.closestToRune(ob.caret.start + startDelta).runes
+	ob.caret.end = ob.closestToRune(ob.caret.end + endDelta).runes
+}
+
+func (ob *GoTextEditObj) MoveStart(selAct selectionAction) {
+	caret := ob.closestToRune(ob.caret.start)
+	caret = ob.closestToLineCol(caret.lineCol.line, 0)
+	ob.caret.start = caret.runes
+	ob.caret.xoff = -caret.x
+	ob.updateSelection(selAct)
+}
+
+func (ob *GoTextEditObj) MoveEnd(selAct selectionAction) {
+	caret := ob.closestToRune(e.caret.start)
+	caret = ob.closestToLineCol(caret.lineCol.line, math.MaxInt)
+	ob.caret.start = caret.runes
+	ob.caret.xoff = fixed.I(ob.maxWidth) - caret.x
+	ob.updateSelection(selAct)
+}
+
+func (ob *GoTextEditObj) MoveLines(distance int, selAct selectionAction) {
+	caretStart := ob.closestToRune(ob.caret.start)
+	x := caretStart.x + ob.caret.xoff
+	// Seek to line.
+	pos := ob.closestToLineCol(caretStart.lineCol.line+distance, 0)
+	pos = ob.closestToXY(x, pos.y)
+	ob.caret.start = pos.runes
+	ob.caret.xoff = x - pos.x
+	ob.updateSelection(selAct)
+}
+
+func (ob *GoTextEditObj) MovePages(pages int, selAct selectionAction) {
+	caret := ob.closestToRune(ob.caret.start)
+	x := caret.x + ob.caret.xoff
+	y := caret.y + pages*ob.viewSize.Y
+	pos := ob.closestToXY(x, y)
+	ob.caret.start = pos.runes
+	ob.caret.xoff = x - pos.x
+	ob.updateSelection(selAct)
+}*/
+
 func (ob *GoTextEditObj) PointerDragged(e pointer_gio.Event) {
 	ob.editor.pointerDragged(e)
 }
@@ -183,6 +233,9 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
@@ -226,9 +279,10 @@ func (ob *GoTextEditObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 			ob.editor.PaintCaret(gtx)
 		}
-		return layout_gio.Dimensions{Size: gtx.Constraints.Min}
+		return dims //layout_gio.Dimensions{Size: gtx.Constraints.Min}
 	})
-	defer clip_gio.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Push(gtx.Ops).Pop()
+	//defer clip_gio.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Push(gtx.Ops).Pop()
+	defer clip_gio.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
 	// add the events handler to receive widget pointer events
 	pointer_gio.CursorText.Add(gtx.Ops)
 	ob.SignalEvents(gtx)
@@ -237,6 +291,10 @@ func (ob *GoTextEditObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 
 func (ob *GoTextEditObj) ObjectType() (string) {
 	return "GoTextEditObj"
+}
+
+func (ob *GoTextEditObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }
 
 func blendDisabledColor(disabled bool, c color.NRGBA) color.NRGBA {

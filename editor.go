@@ -13,7 +13,7 @@ import (
 	//"bufio"
 	"image"
 	"io"
-	"log"
+	//"log"
 	"math"
 	"strings"
 	"time"
@@ -39,7 +39,7 @@ import (
 type Editor struct {
 	// text manages the text buffer and provides shaping and cursor positioning
 	// services.
-	text GioTextView//textView
+	text GioTextView //GoTextEditObj//GioTextView
 	// Alignment controls the alignment of text within the editor.
 	Alignment text_gio.Alignment
 	// SingleLine force the text to stay on a single line.
@@ -787,7 +787,7 @@ func (e *Editor) PaintCaret(gtx layout.Context) {
 		return
 	}
 	e.text.PaintCaret(gtx)
-	log.Println("(*Editor) PaintCaret")
+	//log.Println("(*Editor) PaintCaret")
 }
 
 // Len is the length of the editor contents, in runes.

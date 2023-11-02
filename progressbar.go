@@ -54,6 +54,10 @@ func (ob *GoProgressBarObj) ObjectType() (string) {
 	return "GoProgressBarObj"
 }
 
+func (ob *GoProgressBarObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
+}
+
 func (ob *GoProgressBarObj) Progress() (int) {
 	return ob.progress
 }
@@ -96,6 +100,9 @@ func (ob *GoProgressBarObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimens
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

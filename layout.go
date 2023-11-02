@@ -3,12 +3,12 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	//"image/color"
 
 	layout_gio "github.com/utopiagio/gio/layout"
 	//widget_gio "github.com/utopiagio/gio/widget"
-	//"github.com/utopiagio/gio/unit"
+	unit_gio "github.com/utopiagio/gio/unit"
 )
 
 type GoLayoutStyle int
@@ -21,7 +21,8 @@ const (
 	// gio.Flex{Axis: layout_gio.Horizontal, Spacing: 0, Alignment: Baseline, WeightSum: 0}
 	HFlexBoxLayout							
 	// gio.Flex{Axis: layout_gio.Vertical, Spacing: 0, Alignment: Baseline, WeightSum: 0}
-	VFlexBoxLayout							
+	VFlexBoxLayout
+	PopupMenuLayout			
 )
 
 type GoLayoutDirection int
@@ -215,6 +216,26 @@ func GoVFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	return hLayout
 }
 
+func GoPopupMenuLayout(parent GoObject) (hObj *GoLayoutObj) {
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	widget := GioWidget{
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoMargin: GoMargin{0,0,0,0},
+		GoPadding: GoPadding{0,0,0,0},
+		FocusPolicy: NoFocus,
+		Visible: true,
+	}
+	hLayout := &GoLayoutObj{
+		GioObject: object,
+		GioWidget: widget,
+		flex_gio: &layout_gio.Flex{Axis: layout_gio.Vertical},
+		style: PopupMenuLayout,
+		flexControls: []layout_gio.FlexChild{},
+	}
+	parent.AddControl(hLayout)
+	return hLayout
+}
+
 type GoLayoutObj struct {
 	GioObject
 	GioWidget
@@ -227,7 +248,7 @@ type GoLayoutObj struct {
 func (ob *GoLayoutObj) SetAlignment(alignment GoLayoutAlignment) {
 	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
 		ob.flex_gio.Alignment = layout_gio.Alignment(uint8(alignment))	// layout_gio.Alignment
-	} else if ob.style == HBoxLayout || ob.style == VBoxLayout {
+	} else if ob.style == HBoxLayout || ob.style == VBoxLayout || ob.style == PopupMenuLayout {
 		ob.list_gio.Alignment = layout_gio.Alignment(uint8(alignment))	// layout_gio.Alignment
 	}
 }
@@ -236,27 +257,31 @@ func (ob *GoLayoutObj) SetAlignment(alignment GoLayoutAlignment) {
 }*/
 
 func (ob *GoLayoutObj) SetSpacing(spacing GoLayoutSpacing) {
-	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
+	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout || ob.style == PopupMenuLayout {
 		ob.flex_gio.Spacing = layout_gio.Spacing(uint8(spacing))	// layout_gio.Spacing
 	}
+}
+
+func (ob *GoLayoutObj) Style() (GoLayoutStyle) {
+	return ob.style
 }
 
 func (ob *GoLayoutObj) addFlexControl(control GoObject) {
 	if ob.style == HFlexBoxLayout {
 		ob.flexControls = append(ob.flexControls, layout_gio.FlexControl(control.SizePolicy().HFlex, control.SizePolicy().VFlex, 1, control.Draw))
-	} else if ob.style == VFlexBoxLayout {
+	} else if ob.style == VFlexBoxLayout || ob.style == PopupMenuLayout {
 		ob.flexControls = append(ob.flexControls, layout_gio.FlexControl(control.SizePolicy().VFlex, control.SizePolicy().HFlex, 1, control.Draw))
 	}
 }
 
 func (ob *GoLayoutObj) addFlexedControl(control GoObject) {
-	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
+	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout || ob.style == PopupMenuLayout {
 		ob.flexControls = append(ob.flexControls, layout_gio.Flexed(1, control.Draw))
 	}
 }
 
 func (ob *GoLayoutObj) addRigidControl(control GoObject) {
-	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
+	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout || ob.style == PopupMenuLayout {
 		ob.flexControls = append(ob.flexControls, layout_gio.Rigid(control.Draw))
 	}
 }
@@ -287,10 +312,10 @@ func (ob *GoLayoutObj) addRigidControl(control GoObject) {
 
 func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	dims = layout_gio.Dimensions{Size: gtx.Constraints.Max,}
-	log.Println("gtx.Constraints.Max: ", dims)
+	//log.Println("gtx.Constraints.Max: ", dims)
 	if ob.Visible {
 		if ob.style == HBoxLayout || ob.style == VBoxLayout {
-			log.Println("BoxLayout style:", ob.style)
+			//log.Println("BoxLayout style:", ob.style)
 			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 				return ob.GoBorder.Layout(gtx, func(gtx C) D {
 					return ob.GoPadding.Layout(gtx, func(gtx C) D {
@@ -301,21 +326,43 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				})
 			})
 		} else if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
-			log.Println("FlexBoxLayout style:", ob.style)
-			ob.repack()
+			//log.Println("FlexBoxLayout style:", ob.style)
+			ob.repack(gtx)
 			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
-						return ob.flex_gio.Layout(gtx, ob.flexControls... ) 
+						layoutDims := ob.flex_gio.Layout(gtx, ob.flexControls... )
+						//log.Println("LayoutDims: ", layoutDims)
+						return layoutDims
 					})
-					log.Println("Layout PaddingDims: ", paddingDims)
+					//log.Println("Layout PaddingDims: ", paddingDims)
 					return paddingDims
 				})
-				log.Println("Layout BorderDims: ", borderDims)
+				//log.Println("Layout BorderDims: ", borderDims)
 				return borderDims
 			})
-			log.Println("Layout MarginDims: ", dims)
+			//log.Println("Layout MarginDims: ", dims)
+		}  else if ob.style == PopupMenuLayout {
+			//log.Println("FlexBoxLayout style:", ob.style)
+			ob.repack(gtx)
+			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
+				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
+					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
+						layoutDims := ob.flex_gio.Layout(gtx, ob.flexControls... )
+						layoutDims.Size.X = gtx.Dp(unit_gio.Dp(ob.MinWidth))
+						layoutDims.Size.Y = gtx.Dp(unit_gio.Dp(ob.MinHeight))
+						return layoutDims
+					})
+					//log.Println("Layout PaddingDims: ", paddingDims)
+					return paddingDims
+				})
+				//log.Println("Layout BorderDims: ", borderDims)
+				return borderDims
+			})
 		}
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
@@ -324,20 +371,47 @@ func (ob *GoLayoutObj) ObjectType() (string) {
 	return "GoLayoutObj"
 }
 
-func (ob *GoLayoutObj) repack() {
+func (ob *GoLayoutObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
+}
+
+func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
 	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
 		ob.flexControls = []layout_gio.FlexChild{}
 		for i := 0; i < len(ob.Controls); i++ {
-			
 			ob.addFlexControl(ob.Controls[i])
+			
 			/*if ob.controls[i].sizePolicy().HFixed {
 				ob.addRigidControl(ob.controls[i])
 			} else {
 				ob.addFlexedControl(ob.controls[i])
 			}*/
+
 			if ob.Controls[i].ObjectType() == "GoLayoutObj" {
-				ob.Controls[i].(*GoLayoutObj).repack()
+				ob.Controls[i].(*GoLayoutObj).repack(gtx)
 			}
 		}
+	} else if ob.style == PopupMenuLayout {
+		ob.flexControls = []layout_gio.FlexChild{}
+		for i := 0; i < len(ob.Controls); i++ {
+			ob.addFlexControl(ob.Controls[i])
+			parent := ob.Controls[i].ParentControl()
+			if i == 0 {
+				parent.Widget().dims.Size.X = 0
+				parent.Widget().dims.Size.Y = 0
+				ob.dims.Size.X = 0
+				ob.dims.Size.Y = 0
+			}
+			dims := ob.Controls[i].(*GoMenuItemObj).Size(gtx)
+			ob.Widget().dims.Size.Y += dims.Size.Y
+			if dims.Size.X > parent.Widget().dims.Size.X {
+				parent.Widget().dims.Size.X = dims.Size.X
+				ob.Widget().dims.Size.X = dims.Size.X
+			
+				parent.Widget().MinWidth = int(float32(dims.Size.X) / GoDpr)
+				ob.Widget().MinWidth = int(float32(dims.Size.X) / GoDpr)
+			}
+		}
+		ob.Widget().MinHeight = int(float32(ob.Widget().dims.Size.Y) / GoDpr)
 	}
 }

@@ -48,6 +48,9 @@ func (ob *GoLoaderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
@@ -82,6 +85,10 @@ func (ob *GoLoaderObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 
 func (ob *GoLoaderObj) ObjectType() (string) {
 	return "GoLoaderObj"
+}
+
+func (ob *GoLoaderObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
 }
 
 func clipLoader(ops *op_gio.Ops, startAngle, endAngle, radius float32) clip_gio.Op {

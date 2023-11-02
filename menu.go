@@ -1,4 +1,4 @@
-/* button.go */
+/* menu.go */
 
 package utopia
 
@@ -38,45 +38,52 @@ import (
 
 //func Button(th *Theme, button *widget.Clickable, txt string) ButtonStyle {
 
-func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
+func GoMenu(parent GoObject, text string, id int) (hObj *GoMenuObj) {
 	//var fontSize unit_gio.Sp = 14
 	var theme *GoThemeObj = GoApp.Theme()
+	height := parent.(*GoMenuBarObj).Height
+		
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
+		GoSize: GoSize{60, height, 60, height, 1000, height},
 		FocusPolicy: StrongFocus,
 		Visible: true,
 	}
-	hButton := &GoButtonObj{
+	hMenu := &GoMenuObj{
 		GioObject: object,
 		GioWidget: widget,
 		
 		fontSize: theme.TextSize,
+		id: id,
+	
 		text: text,
-		color: theme.ContrastFg,
-		background: theme.ContrastBg,
-		cornerRadius: 4,
+		color: theme.TextColor,
+		background: Color_WhiteSmoke,
+		cornerRadius: 0,
 		inset: layout_gio.Inset{
-			Top: 10, Bottom: 10,
-			Left: 12, Right: 12,
+			Top: 4, Bottom: 4,
+			Left: 8, Right: 8,
 		},
 		shaper: theme.Shaper,
 	}
-	hButton.SetOnPointerRelease(hButton.Click)
-	hButton.SetOnPointerEnter(nil)
-	hButton.SetOnPointerLeave(nil)
-	parent.AddControl(hButton)
-	return hButton
+	hMenu.SetOnPointerRelease(hMenu.Click)
+	hMenu.SetOnPointerEnter(nil)
+	hMenu.SetOnPointerLeave(nil)
+	parent.AddControl(hMenu)
+	return hMenu
 }
 
-type GoButtonObj struct {
+type GoMenuObj struct {
 	GioObject
 	GioWidget
 	//theme *GoThemeObj
 	font text_gio.Font
 	fontSize unit_gio.Sp
+	id int
+	//offset int
 	text string
 	color GoColor
 	background GoColor
@@ -84,28 +91,50 @@ type GoButtonObj struct {
 	inset layout_gio.Inset
 	shaper *text_gio.Shaper
 	onClick func()
+
+	menuItems  []*GoMenuItemObj
+	itemLength int
 	//textAlign text.Alignment
 }
 
-func (ob *GoButtonObj) Click(e pointer_gio.Event) {
+func (ob *GoMenuObj) AddAction(text string, action func()) {
+	item := GoMenuItem(ob, text, len(ob.menuItems), action)
+	ob.menuItems = append(ob.menuItems, item)
+}
+
+func (ob *GoMenuObj) AddItem(text string) {
+	item := GoMenuItem(ob, text, len(ob.menuItems), nil)
+	ob.menuItems = append(ob.menuItems, item)
+}
+
+func (ob *GoMenuObj) Click(e pointer_gio.Event) {
+	//log.Println("GoMenuObj::Click()")
+	ob.ParentWindow().MenuPopup().SetMargin(0, 25, 0, 0)
+	//log.Println("modal.layout.SetMargin(ob.offset)=", ob.offset())
+	ob.ParentWindow().MenuPopup().layout.SetMargin(ob.offset(), 25, 0, 0)
+	for idx := 0; idx < len(ob.menuItems); idx++ {
+		ob.ParentWindow().MenuPopup().layout.AddControl(ob.menuItems[idx])
+	}
+	
+	ob.ParentWindow().MenuPopup().Show()
 	if ob.onClick != nil {
 		ob.onClick()
 	}
 }
 
-func (ob *GoButtonObj) SetOnClick(f func()) {
+func (ob *GoMenuObj) SetOnClick(f func()) {
 	ob.onClick = f
 }
 
-func (ob *GoButtonObj) SetText(text string) {
+func (ob *GoMenuObj) SetText(text string) {
 	ob.text = text
 }
 
-func (ob *GoButtonObj) Text() (text string) {
+func (ob *GoMenuObj) Text() (text string) {
 	return ob.text
 }
 
-func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
+func (ob *GoMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
 	//log.Println("gtx.Constraints.Max: ", dims)
 	if ob.Visible {
@@ -121,19 +150,25 @@ func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 			//log.Println("BorderDims: ", borderDims)
 			return borderDims
 		})
+		//log.Println("GoMenuObj dims: ", dims)
 		ob.dims = dims
-		//log.Println("ButtonDims: ", dims)
 		ob.Width = (int(float32(dims.Size.X) / GoDpr))
 		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		//log.Println("Menu.Width: ", ob.Width)
+		//log.Println("Menu.Height: ", ob.Height)
 	}
 	return dims
 }
 
-func (ob *GoButtonObj) ObjectType() (string) {
-	return "GoButtonObj"
+func (ob *GoMenuObj) ObjectType() (string) {
+	return "GoMenuObj"
 }
 
-func (ob *GoButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
+func (ob *GoMenuObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
+}
+
+func (ob *GoMenuObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
@@ -148,14 +183,9 @@ func (ob *GoButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	})
 }
 
-func (ob *GoButtonObj) Widget() (*GioWidget) {
-	return &ob.GioWidget
-}
-
-func (ob *GoButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio.Dimensions {
+func (ob *GoMenuObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio.Dimensions {
 	min := gtx.Constraints.Min
 	//semantic_gio.Button.Add(gtx.Ops)
-	
 	return layout_gio.Stack{Alignment: layout_gio.Center}.Layout(gtx,
 		layout_gio.Expanded(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			rr := gtx.Dp(ob.cornerRadius)
@@ -189,25 +219,22 @@ func (ob *GoButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layou
 	}
 }*/
 
-type GoIconButtonObj struct {
+/*type GoIconButtonObj struct {
 	GioObject
 	GioWidget
-	// Color is the icon color.
-	color GoColor
+
 	background GoColor
-	cornerRadius unit_gio.Dp
-	//icon  *widget_gio.Icon
-	icon *GoIconObj
+	// Color is the icon color.
+	color 	GoColor
+	icon  *widget_gio.Icon
 	// Size is the icon size.
 	size        unit_gio.Dp
 	inset       layout_gio.Inset
-	onClick func()
-	//clickable   *widget_gio.Clickable
-	//description string
-}
+	clickable   *widget_gio.Clickable
+	description string
+}*/
 
-//func GoIconButton(parent GoObject, icon *GoIconObj), description string) *GoIconButtonObj {
-func GoIconButton(parent GoObject, icon *GoIconObj) *GoIconButtonObj {
+/*func GoIconButton(parent GoObject, icon *widget_gio.Icon, description string) *GoIconButtonObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
@@ -219,103 +246,18 @@ func GoIconButton(parent GoObject, icon *GoIconObj) *GoIconButtonObj {
 	hIconButton := &GoIconButtonObj{
 		GioObject: object,
 		GioWidget: widget,
-		background:  theme.ColorBg,
-		color:       theme.ColorFg,
-		cornerRadius: 4,
+		background:  theme.ContrastBg,
+		color:       theme.ContrastFg,
 		icon:        icon,
-		size:        28,
-		inset:       layout_gio.UniformInset(4),
-		//clickable: 	 new(widget_gio.Clickable),
-		//description: description,
+		size:        24,
+		inset:       layout_gio.UniformInset(12),
+		clickable: 	 new(widget_gio.Clickable),
+		description: description,
 	}
-	hIconButton.SetOnPointerRelease(hIconButton.Click)
-	hIconButton.SetOnPointerEnter(nil)
-	hIconButton.SetOnPointerLeave(nil)
-	//hIconButton.SetBorder(BorderSingleLine, 2, 4, Color_Blue)
 	parent.AddControl(hIconButton)
 	return hIconButton
-}
+}*/
 
-func (ob *GoIconButtonObj) Click(e pointer_gio.Event) {
-	if ob.onClick != nil {
-		ob.onClick()
-	}
-}
-
-func (ob *GoIconButtonObj) SetOnClick(f func()) {
-	ob.onClick = f
-}
-
-func (ob *GoIconButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
-	//log.Println("gtx.Constraints.Max: ", dims)
-	if ob.Visible {
-	//margin := layout_gio.Inset(ob.margin.Left)
-		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
-			borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
-				paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
-					return ob.Layout(gtx)
-				})
-				//log.Println("PaddingDims: ", paddingDims)
-				return paddingDims
-			})
-			//log.Println("BorderDims: ", borderDims)
-			return borderDims
-		})
-		ob.dims = dims
-		//log.Println("ButtonDims: ", dims)
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
-	}
-	return dims
-}
-
-func (ob *GoIconButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
-	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-			size := gtx.Dp(ob.size)
-			if ob.icon != nil {
-				gtx.Constraints.Min = image.Point{X: size}
-				ob.icon.Layout(gtx, ob.color)
-			}
-			return layout_gio.Dimensions{
-				Size: image.Point{X: size, Y: size},
-			}
-		})
-		//log.Println("inset size: ", insetDims)
-		return insetDims
-	})
-}
-
-func (ob *GoIconButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio.Dimensions {
-	min := gtx.Constraints.Min
-	//semantic_gio.Button.Add(gtx.Ops)
-	
-	return layout_gio.Stack{Alignment: layout_gio.Center}.Layout(gtx,
-		layout_gio.Expanded(func(gtx layout_gio.Context) layout_gio.Dimensions {
-			rr := gtx.Dp(ob.cornerRadius)
-			defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
-			background := ob.background.NRGBA()
-			switch {
-			case gtx.Queue == nil:
-				background = DisabledBlend(background)
-			case ob.IsHovered() || ob.HasFocus():
-				background = HoveredBlend(background)
-			}
-			paint_gio.Fill(gtx.Ops, background)
-			/*for _, c := range ob.clickable.History() {
-				drawInk(gtx, c)
-			}*/
-			ob.SignalEvents(gtx)
-			return layout_gio.Dimensions{Size: gtx.Constraints.Min}
-		}),
-		layout_gio.Stacked(func(gtx layout_gio.Context) layout_gio.Dimensions {
-			gtx.Constraints.Min = min
-			return layout_gio.Center.Layout(gtx, w)
-		}),
-	)
-}
 /*func (ob *GoIconButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	m := op_gio.Record(gtx.Ops)
 	dims := ob.clickable.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
@@ -359,19 +301,11 @@ func (ob *GoIconButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) l
 	defer clip_gio.Ellipse(bounds).Push(gtx.Ops).Pop()
 	c.Add(gtx.Ops)
 	return dims
-}*/
+}
 
 func (ob *GoIconButtonObj) ObjectType() (string) {
 	return "GoIconButtonObj"
-}
-
-func (ob *GoIconButtonObj) SetSize(size int) {
-	ob.size = unit_gio.Dp(size)
-}
-
-func (ob *GoIconButtonObj) Widget() (*GioWidget) {
-	return &ob.GioWidget
-}
+}*/
 
 // Layout and update the button state
 /*func clickableLayout(gtx layout.Context, w layout.Widget) layout.Dimensions {
@@ -408,7 +342,7 @@ func (ob *GoIconButtonObj) Widget() (*GioWidget) {
 	return dims
 }*/
 
-func (ob *GoButtonObj) drawInk(gtx layout_gio.Context, c widget_gio.Press) {
+func (ob *GoMenuObj) drawInk(gtx layout_gio.Context, c widget_gio.Press) {
 	// duration is the number of seconds for the
 	// completed animation: expand while fading in, then
 	// out.
@@ -505,4 +439,8 @@ func (ob *GoButtonObj) drawInk(gtx layout_gio.Context, c widget_gio.Press) {
 	})).Push(gtx.Ops).Pop()
 	defer clip_gio.UniformRRect(image.Rectangle{Max: image.Pt(size, size)}, rr).Push(gtx.Ops).Pop()
 	paint_gio.PaintOp{}.Add(gtx.Ops)
+}
+
+func (ob *GoMenuObj) offset() int {
+	return ob.Parent.(*GoMenuBarObj).MenuOffset(ob.id)
 }

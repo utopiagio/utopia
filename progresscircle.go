@@ -45,6 +45,10 @@ func (ob *GoProgressCircleObj) ObjectType() (string) {
 	return "GoProgressCircleObj"
 }
 
+func (ob *GoProgressCircleObj) Widget() (*GioWidget) {
+	return &ob.GioWidget
+}
+
 func (ob *GoProgressCircleObj) SetProgress(progress int) {
 	if progress > ob.totalSteps {
 		progress = 0
@@ -66,6 +70,9 @@ func (ob *GoProgressCircleObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dim
 				})
 			})
 		})
+		ob.dims = dims
+		ob.Width = (int(float32(dims.Size.X) / GoDpr))
+		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }
