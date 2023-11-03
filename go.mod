@@ -19,3 +19,5 @@ require (
 	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c // indirect
 	golang.org/x/sys v0.6.0 // indirect
 )
+
+replace github.com/utopiagio/gio => ../gio

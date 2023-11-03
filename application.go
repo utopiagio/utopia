@@ -266,6 +266,11 @@ func (ob *GoWindowObj) SetPadding(left int, top int, right int, bottom int) {
 	ob.layout.SetPadding(left, top, right, bottom)
 }
 
+func (ob *GoWindowObj) SetPos(x int, y int) {
+	ob.X = x
+	ob.Y = y
+}
+
 func (ob *GoWindowObj) SetSize(width int, height int) {
 	ob.Width = width
 	ob.Height = height
