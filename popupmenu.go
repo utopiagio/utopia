@@ -38,6 +38,11 @@ type GoPopupMenuObj struct {
 	//visible bool
 }
 
+func (ob *GoPopupMenuObj) Clear() {
+	ob.layout = GoPopupMenuLayout(ob)
+	ob.layout.SetBorder(BorderSingleLine, 1, 5, Color_Blue)
+}
+
 func (ob *GoPopupMenuObj) Click(e pointer_gio.Event) {
 	ob.Hide()
 }
@@ -54,13 +59,6 @@ func (ob *GoPopupMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensio
 		})*/
 	}
 	return dims
-}
-
-func (ob *GoPopupMenuObj) Hide() {
-	ob.GioWidget.Hide()
-	ob.layout = GoPopupMenuLayout(ob)
-		//ob.layout.SetPadding(3,3,3,3)
-	ob.layout.SetBorder(BorderSingleLine, 1, 3, Color_Blue)
 }
 
 // Layout draws the scrim using the provided animation. If the animation indicates

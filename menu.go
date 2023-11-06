@@ -109,6 +109,7 @@ func (ob *GoMenuObj) AddItem(text string) {
 
 func (ob *GoMenuObj) Click(e pointer_gio.Event) {
 	//log.Println("GoMenuObj::Click()")
+	ob.ParentWindow().MenuPopup().Clear()
 	ob.ParentWindow().MenuPopup().SetMargin(0, 25, 0, 0)
 	//log.Println("modal.layout.SetMargin(ob.offset)=", ob.offset())
 	ob.ParentWindow().MenuPopup().layout.SetMargin(ob.offset(), 25, 0, 0)
