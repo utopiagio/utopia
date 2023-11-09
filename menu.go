@@ -102,22 +102,25 @@ func (ob *GoMenuObj) AddAction(text string, action func()) {
 	ob.menuItems = append(ob.menuItems, item)
 }
 
-func (ob *GoMenuObj) AddItem(text string) {
+func (ob *GoMenuObj) AddItem(text string) (*GoMenuItemObj) {
 	item := GoMenuItem(ob, text, len(ob.menuItems), nil)
 	ob.menuItems = append(ob.menuItems, item)
+	return item
 }
 
 func (ob *GoMenuObj) Click(e pointer_gio.Event) {
 	//log.Println("GoMenuObj::Click()")
-	ob.ParentWindow().MenuPopup().Clear()
-	ob.ParentWindow().MenuPopup().SetMargin(0, 25, 0, 0)
+	ob.ParentWindow().ClearPopupMenus()
+	popupMenu := ob.ParentWindow().AddPopupMenu()
+	popupMenu.Clear()
+	popupMenu.SetMargin(0, 25, 0, 0)
 	//log.Println("modal.layout.SetMargin(ob.offset)=", ob.offset())
-	ob.ParentWindow().MenuPopup().layout.SetMargin(ob.offset(), 25, 0, 0)
+	popupMenu.layout.SetMargin(ob.MenuOffset(), 25, 0, 0)
 	for idx := 0; idx < len(ob.menuItems); idx++ {
-		ob.ParentWindow().MenuPopup().layout.AddControl(ob.menuItems[idx])
+		popupMenu.layout.AddControl(ob.menuItems[idx])
 	}
 	
-	ob.ParentWindow().MenuPopup().Show()
+	popupMenu.Show()
 	if ob.onClick != nil {
 		ob.onClick()
 	}
@@ -442,6 +445,6 @@ func (ob *GoMenuObj) drawInk(gtx layout_gio.Context, c widget_gio.Press) {
 	paint_gio.PaintOp{}.Add(gtx.Ops)
 }
 
-func (ob *GoMenuObj) offset() int {
+func (ob *GoMenuObj) MenuOffset() int {
 	return ob.Parent.(*GoMenuBarObj).MenuOffset(ob.id)
 }

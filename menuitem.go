@@ -91,16 +91,57 @@ type GoMenuItemObj struct {
 	shaper *text_gio.Shaper
 	onClick func()
 
-	menuItem  []*GoMenuItemObj
-	
+	menuItems []*GoMenuItemObj
+	itemLength int
 	//textAlign text.Alignment
 }
 
+func (ob *GoMenuItemObj) AddAction(text string, action func()) (*GoMenuItemObj) {
+	item := GoMenuItem(ob, text, len(ob.menuItems), action)
+	ob.menuItems = append(ob.menuItems, item)
+	return item
+}
+
+func (ob *GoMenuItemObj) AddItem(text string) (*GoMenuItemObj) {
+	item := GoMenuItem(ob, text, len(ob.menuItems), nil)
+	ob.menuItems = append(ob.menuItems, item)
+	return item
+}
+
 func (ob *GoMenuItemObj) Click(e pointer_gio.Event) {
-	ob.ParentWindow().MenuPopup().Hide()
-	if ob.onClick != nil {
-		ob.onClick()
+	if len(ob.menuItems) > 0 {
+		popupMenu := ob.ParentWindow().AddPopupMenu()
+		popupMenu.Clear()
+		popupMenu.SetMargin(0, 25, 0, 0)
+		//log.Println("modal.layout.SetMargin(ob.offset)=", ob.offset())
+		offsetX, offsetY := ob.ItemOffset(ob.menuId)
+		popupMenu.layout.SetMargin(offsetX, 25 + offsetY, 0, 0)
+		for idx := 0; idx < len(ob.menuItems); idx++ {
+			popupMenu.layout.AddControl(ob.menuItems[idx])
+		}
+	
+		popupMenu.Show()
+	} else {
+		ob.ParentWindow().ClearPopupMenus()
+		if ob.onClick != nil {
+			ob.onClick()
+		}
 	}
+	/*for idx := 0; idx < len(ob.ParentWindow().menuItems); idx++ {
+		for idx := 0; idx < len(ob.menuItems); idx++ {
+			ob.ParentWindow().MenuPopup(ob.id).layout.AddControl(ob.menuItems[idx])
+	}*/
+	
+}
+
+func (ob *GoMenuItemObj) ItemOffset(id int) (offsetX int, offsetY int) {
+	
+	offsetX = ob.Parent.(*GoMenuObj).MenuOffset() + ob.Width
+	if id > len(ob.menuItems) {id = len(ob.menuItems) - 1}
+	for idx := 0; idx < id; idx++ {
+		offsetY += ob.menuItems[idx].Height
+	}
+	return offsetX, offsetY
 }
 
 func (ob *GoMenuItemObj) SetOnClick(f func()) {
@@ -170,6 +211,7 @@ func (ob *GoMenuItemObj) Size(gtx layout_gio.Context) layout_gio.Dimensions {
 	//return image.Point{int(float32(insetDims.Size.X + 20) / GoDpr), int(float32(insetDims.Size.Y) / GoDpr)}
 	return insetDims
 }
+
 func (ob *GoMenuItemObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
@@ -194,7 +236,7 @@ func (ob *GoMenuItemObj) layout(gtx layout_gio.Context, w layout_gio.Widget) lay
 		//layout_gio.Fixed(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			rr := gtx.Dp(ob.cornerRadius)
 			constraints := gtx.Constraints.Min
-			constraints.X = gtx.Dp(unit_gio.Dp(ob.Parent.(*GoMenuObj).MinWidth))
+			constraints.X = gtx.Dp(unit_gio.Dp(ob.Parent.Widget().MinWidth))
 			//constraints.X = ob.Parent.MinWidth
 			defer clip_gio.UniformRRect(image.Rectangle{Max: constraints}, rr).Push(gtx.Ops).Pop()
 			background := ob.background.NRGBA()
@@ -216,6 +258,10 @@ func (ob *GoMenuItemObj) layout(gtx layout_gio.Context, w layout_gio.Widget) lay
 			return layout_gio.Center.Layout(gtx, w)
 		}),
 	)
+}
+
+func (ob *GoMenuItemObj) offset() int {
+	return ob.Parent.(*GoMenuBarObj).MenuOffset(ob.menuId)
 }
 
 /*func ButtonLayout(th *GoThemeObj, button *widget_gio.Clickable) ButtonLayoutStyle {

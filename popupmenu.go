@@ -44,7 +44,8 @@ func (ob *GoPopupMenuObj) Clear() {
 }
 
 func (ob *GoPopupMenuObj) Click(e pointer_gio.Event) {
-	ob.Hide()
+	ob.ParentWindow().ClearPopupMenus()
+	//ob.Hide()
 }
 
 func (ob *GoPopupMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
