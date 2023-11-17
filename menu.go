@@ -41,11 +41,15 @@ import (
 func GoMenu(parent GoObject, text string, id int) (hObj *GoMenuObj) {
 	//var fontSize unit_gio.Sp = 14
 	var theme *GoThemeObj = GoApp.Theme()
-	height := parent.(*GoMenuBarObj).Height
+	var height int
+	if parent.ObjectType() == "GoMenuBarObj" {
+		height = parent.(*GoMenuBarObj).Height
+	}
+	
 		
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{60, height, 60, height, 1000, height},

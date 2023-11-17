@@ -39,7 +39,7 @@ func GoSwitch(parent GoObject, description string) *GoSwitchObj {
 	//var swtch *widget_gio.Bool = new(widget_gio.Bool)
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		Visible: true,

@@ -158,7 +158,7 @@ type GoBorder struct {
 	BColor 	GoColor
 	BRadius 	int
 	BWidth 	int
-	
+	FillColor 	GoColor
 }
 
 func (b GoBorder) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio.Dimensions {
@@ -186,22 +186,26 @@ func (b GoBorder) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio
 	gtx.Constraints = mcs
 	
 	trans := op_gio.Offset(image.Pt(width, width)).Push(gtx.Ops)
+	// Save the operations in an independent ops value (the cache).
+	macro := op_gio.Record(gtx.Ops)
 	dims := w(gtx)
+	call := macro.Stop()
+	//trans := op_gio.Offset(image.Pt(width, width)).Push(gtx.Ops)
+	//dims := w(gtx)
 
 	r := image.Rectangle{Max: dims.Size}
 	//log.Println("image.Rect=", r)
 	r = r.Inset(-width / 2)
 
-	//log.Println("image.Inset=", r)
-	/*cl := clip_gio.UniformRRect(r, rr).Push(gtx.Ops)
-	paint_gio.ColorOp{Color: b.BColor.NRGBA()}.Add(gtx.ops)
-	paint_gio.PaintOp{}.Add(gtx.Ops)
-	cl.Pop()*/
-	/*paint_gio.FillShape(gtx.Ops,
-		Color_White.NRGBA(),
-		clip_gio.UniformRRect(r, rr).Op(gtx.Ops),
-	)*/
-	
+	if b.FillColor > 0x00 {
+		paint_gio.FillShape(gtx.Ops,
+			b.FillColor.NRGBA(),
+			clip_gio.UniformRRect(r, rr).Op(gtx.Ops),
+		)
+	}
+	// Draw the operations from the cache.
+	call.Add(gtx.Ops)
+	// Paint the Border
 	paint_gio.FillShape(gtx.Ops,
 		b.BColor.NRGBA(),
 		clip_gio.Stroke{
@@ -209,7 +213,6 @@ func (b GoBorder) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio
 			Width: float32(width),
 		}.Op(),
 	)
-
 	trans.Pop()
 
 	return layout_gio.Dimensions{
@@ -432,11 +435,12 @@ func (w *GioWidget) Padding() (padding GoPadding) {
 }
 
 func (w *GioWidget) SetBackgroundColor(color GoColor) {
-	w.BackgroundColor = color
+	//w.BackgroundColor = color
+	w.GoBorder.FillColor = color
 }
 
 func (w *GioWidget) SetBorder(style GoBorderStyle, width int, radius int, color GoColor) {
-	w.GoBorder = GoBorder{style, color, radius, width}
+	w.GoBorder = GoBorder{style, color, radius, width, w.GoBorder.FillColor}
 }
 
 func (w *GioWidget) SetBorderColor(color GoColor) {
@@ -451,15 +455,15 @@ func (w *GioWidget) SetBorderStyle(style GoBorderStyle) {
 	color := w.GoBorder.BColor
 	switch style {
 		case BorderNone:
-			w.GoBorder = GoBorder{style, color, 0, 0}
+			w.GoBorder = GoBorder{style, color, 0, 0, 0}
 		case BorderSingleLine:
-			w.GoBorder = GoBorder{style, color, 0, 1}
+			w.GoBorder = GoBorder{style, color, 0, 1, 0}
 		case BorderSunken:
-			w.GoBorder = GoBorder{style, color, 0, 2}
+			w.GoBorder = GoBorder{style, color, 0, 2, 0}
 		case BorderSunkenThick:
-			w.GoBorder = GoBorder{style, color, 0, 4}
+			w.GoBorder = GoBorder{style, color, 0, 4, 0}
 		case BorderRaised:
-			w.GoBorder = GoBorder{style, color, 0, 4}	
+			w.GoBorder = GoBorder{style, color, 0, 4, 0}	
 	}
 
 }

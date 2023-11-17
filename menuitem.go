@@ -44,7 +44,7 @@ func GoMenuItem(parent GoObject, text string, menuId int, action func()) (hObj *
 
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{100, 30, 100, 30, 1000, 30},

@@ -18,13 +18,14 @@ import (
 
 	//archive "golang.org/x/exp/shiny/materialdesign/icons"	// eg: archive.FileFolder
 )
-
+const defaultIconColor = Color_Black
+const defaultIconSize = 24
 
 
 // example : folderIcon := GoIcon(parent, archive.FileFolder)
 
-// GoIcon returns a new Icon from IconVG data.
-func GoIconLabel(parent GoObject, data []byte, args ...interface{}) (*GoIconLabelObj) {
+// Icon returns a new Icon from IconVG data.
+func GoIcon(data []byte, args ...interface{}) (*GoIconObj) {
 	var color GoColor
 	var size int
 	var text string
@@ -52,33 +53,24 @@ func GoIconLabel(parent GoObject, data []byte, args ...interface{}) (*GoIconLabe
 		return nil
 	}
 
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
-	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
-		GoMargin: GoMargin{0,0,0,0},
-		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{24, 24, 24, 24, 1000, 1000},
-		FocusPolicy: StrongFocus,
-		Visible: true,
-		//target: nil,
-	}
-
-	hIcon := &GoIconLabelObj{
-		GioObject: object,
-		GioWidget: widget,
+	//object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	
+	hIcon := &GoIconObj{
+		//GioObject: object,
+		//GioWidget: widget,
 		src: data,
 		color: color,
 		description: text,
 		size: size,
 	}
-	parent.AddControl(hIcon)
+	//parent.AddControl(hIcon)
 
 	return hIcon
 }
 
-type GoIconLabelObj struct {
-	GioObject
-	GioWidget
+type GoIconObj struct {
+	//GioObject
+	//GioWidget
 
 	src []byte
 	color GoColor
@@ -90,14 +82,9 @@ type GoIconLabelObj struct {
 	imgColor GoColor	//color.NRGBA
 }
 
-func (ob *GoIconLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
+/*func (ob *GoIconObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
-	/*X = gtx.Constraints.Max.X
-	Y = gtx.Constraints.Max.Y
-	if ob.SizePolicy.Horiz == FixedWidth {X = ob.X}
-	if ob.SizePolicy.Vert == FixedHeight {Y = ob.Y}
-	gtx.Constraints.Min = image.Point{X, Y}
-	gtx.Constraints.Max = image.Point{X, Y}*/
+	
 	if ob.Visible {
 	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C, ) D {
@@ -112,23 +99,23 @@ func (ob *GoIconLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensio
 		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
+}*/
+
+func (ob *GoIconObj) ObjectType() (string) {
+	return "GoIconObj"
 }
 
-func (ob *GoIconLabelObj) ObjectType() (string) {
-	return "GoIconLabelObj"
-}
+/*func (ob *GoIconObj) Widget() (*GioWidget) {
+	return nil
+}*/
 
-func (ob *GoIconLabelObj) Widget() (*GioWidget) {
-	return &ob.GioWidget
-}
-
-func (ob *GoIconLabelObj) Size() (int) {
+func (ob *GoIconObj) Size() (int) {
 	return ob.size
 }
 
 // Layout displays the icon with its size set to the X minimum constraint.
-func (ob *GoIconLabelObj) Layout(gtx layout_gio.Context, color GoColor) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+func (ob *GoIconObj) Layout(gtx layout_gio.Context, color GoColor) layout_gio.Dimensions {
+	//ob.ReceiveEvents(gtx)
 	
 	sz := gtx.Constraints.Min.X
 	//log.Println("Icon ob.size =", sz)
@@ -144,14 +131,14 @@ func (ob *GoIconLabelObj) Layout(gtx layout_gio.Context, color GoColor) layout_g
 	paint_gio.PaintOp{}.Add(gtx.Ops)
 
 	// add the events handler to receive widget pointer events
-	ob.SignalEvents(gtx)
+	//ob.SignalEvents(gtx)
 
 	return layout_gio.Dimensions{
 		Size: ico.Size(),
 	}
 }
 
-func (ob *GoIconLabelObj) image(sz int, color GoColor) paint_gio.ImageOp {
+func (ob *GoIconObj) image(sz int, color GoColor) paint_gio.ImageOp {
 	if sz == ob.imgSize && color == ob.imgColor {
 		return ob.op
 	}

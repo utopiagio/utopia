@@ -23,9 +23,10 @@ func GoSpacer(parent GoObject, space int) (hObj *GoSpacerObj) {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
+		GoSize: GoSize{0, 0, 0, 0, 16777215, 16777215},
 		FocusPolicy: NoFocus,
 		Visible: true,
 	}
@@ -38,12 +39,17 @@ func GoSpacer(parent GoObject, space int) (hObj *GoSpacerObj) {
 		space: space,
 	}
 	if parent.(*GoLayoutObj).Style() == HFlexBoxLayout {
-		hSpacer.width = unit_gio.Dp(space)
-		hSpacer.height = unit_gio.Dp(0)
+		hSpacer.Width = space
+		hSpacer.Height = 0
+		//hSpacer.width = unit_gio.Dp(space)
+		//hSpacer.height = unit_gio.Dp(0)
 	} else if parent.(*GoLayoutObj).Style() == VFlexBoxLayout {
-		hSpacer.width = unit_gio.Dp(0)
-		hSpacer.height = unit_gio.Dp(space)
+		hSpacer.Width = 0
+		hSpacer.Height = space
+		//hSpacer.width = unit_gio.Dp(0)
+		//hSpacer.height = unit_gio.Dp(space)
 	}
+	
 	parent.AddControl(hSpacer)
 	return hSpacer
 }
@@ -87,10 +93,18 @@ func (ob *GoSpacerObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 }
 
 func (ob *GoSpacerObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
+	width := gtx.Dp(unit_gio.Dp(ob.Width))
+	height := gtx.Dp(unit_gio.Dp(ob.Height))
+	if ob.SizePolicy().HFlex {
+		width = gtx.Constraints.Max.X
+	}
+	if ob.SizePolicy().VFlex {
+		height = gtx.Constraints.Max.Y
+	}
 	return layout_gio.Dimensions {
 		Size: image.Point{
-			X: gtx.Dp(ob.width),
-			Y: gtx.Dp(ob.height),
+			X: width,
+			Y: height,
 		},
 	}
 }

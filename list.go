@@ -3,6 +3,7 @@
 package utopia
 
 import (
+	//"log"
 	"image"
 	"image/color"
 	"math"
@@ -260,7 +261,7 @@ func GoListBox(parent GoObject) *GoListBoxObj {
 	state := &widget_gio.List{}
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		Visible: true,
@@ -391,7 +392,10 @@ func (ob *GoListBoxObj) Layout(gtx layout_gio.Context, length int, w layout_gio.
 		cross.Y += barWidth
 		listDims.Size = ob.state.Axis.Convert(cross)
 	}
-
+	//log.Println("listDims :", listDims)
+	if ob.MinWidth > listDims.Size.X {
+		listDims.Size.X = ob.MinWidth
+	}
 	return listDims
 }
 

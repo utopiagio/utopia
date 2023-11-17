@@ -13,7 +13,7 @@ import (
 func GoPopupMenu(parent GoObject) (hPopupMenu *GoPopupMenuObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: StrongFocus,
@@ -22,7 +22,7 @@ func GoPopupMenu(parent GoObject) (hPopupMenu *GoPopupMenuObj) {
 	hPopupMenu = &GoPopupMenuObj{GioObject: object, GioWidget: widget, alpha: 90}
 	hPopupMenu.layout = GoPopupMenuLayout(hPopupMenu)
 	//hPopupMenu.layout.SetPadding(3,3,3,3)
-	hPopupMenu.layout.SetBorder(BorderSingleLine, 1, 3, Color_Blue)
+	hPopupMenu.layout.SetBorder(BorderSingleLine, 1, 2, Color_LightGray)
 	hPopupMenu.SetOnPointerRelease(hPopupMenu.Click)
 	hPopupMenu.SetOnPointerEnter(nil)
 	hPopupMenu.SetOnPointerLeave(nil)
@@ -35,17 +35,15 @@ type GoPopupMenuObj struct {
 	layout *GoLayoutObj
 	// FinalAlpha is the final opacity of the scrim on a scale from 0 to 255.
 	alpha uint8
-	//visible bool
 }
 
 func (ob *GoPopupMenuObj) Clear() {
 	ob.layout = GoPopupMenuLayout(ob)
-	ob.layout.SetBorder(BorderSingleLine, 1, 5, Color_Blue)
+	ob.layout.SetBorder(BorderSingleLine, 1, 2, Color_LightGray)
 }
 
 func (ob *GoPopupMenuObj) Click(e pointer_gio.Event) {
 	ob.ParentWindow().ClearPopupMenus()
-	//ob.Hide()
 }
 
 func (ob *GoPopupMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {

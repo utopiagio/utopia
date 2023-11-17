@@ -43,7 +43,7 @@ func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: StrongFocus,
@@ -211,7 +211,7 @@ func GoIconButton(parent GoObject, icon *GoIconObj) *GoIconButtonObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		Visible: true,
@@ -223,7 +223,7 @@ func GoIconButton(parent GoObject, icon *GoIconObj) *GoIconButtonObj {
 		color:       theme.ColorFg,
 		cornerRadius: 4,
 		icon:        icon,
-		size:        28,
+		size:        24,
 		inset:       layout_gio.UniformInset(4),
 		//clickable: 	 new(widget_gio.Clickable),
 		//description: description,

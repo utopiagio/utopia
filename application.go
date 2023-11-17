@@ -141,6 +141,9 @@ type GoWindowObj struct {
 	layout *GoLayoutObj
 	//mainwindow bool
 	modalwindow bool
+	modalstyle string
+	ModalAction int
+	ModalInfo string
 	popupmenus []*GoPopupMenuObj
 	popupwindow *GoPopupWindowObj
 
@@ -150,13 +153,13 @@ func GoMainWindow(windowName string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{640, 450, 0, 0, 1500, 1000}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, false, nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, false, "", -1, "", nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
 	hWin.menubar = GoMenuBar(hWin.frame)
-	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
-	//hWin.menubar.SetBackgroundColor(Color_Gray)
+	//hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
+	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
 	//hWin.AddPopupMenu(GoPopupMenu(hWin))
@@ -170,13 +173,33 @@ func GoWindow(windowName string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{640, 450, 0, 0, 1500, 1000}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, false, nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, false, "", -1, "", nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
 	hWin.menubar = GoMenuBar(hWin.frame)
 	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
-	//hWin.menubar.SetBackgroundColor(Color_Gray)
+	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
+	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
+	hWin.layout = GoVFlexBoxLayout(hWin.frame)
+	//hWin.popupmenus = GoPopupMenu(hWin)
+	hWin.popupwindow = GoPopupWindow(hWin)
+	GoApp.AddWindow(hWin)
+	return hWin
+}
+
+func GoModalWindow(modalStyle string, windowName string) (hWin *GoWindowObj) {
+	//object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	size := GoSize{640, 450, 0, 0, 1500, 1000}
+	pos := GoPos{-1, -1}
+	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, true, modalStyle, -1, "", nil, nil}
+	hWin.Window = hWin
+	hWin.frame = GoVFlexBoxLayout(hWin)
+	
+	hWin.menubar = GoMenuBar(hWin.frame)
+	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
+	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
 	//hWin.popupmenus = GoPopupMenu(hWin)
@@ -196,9 +219,18 @@ func (ob *GoWindowObj) ClearPopupMenus() {
 	ob.popupmenus = nil
 }
 
+func (ob *GoWindowObj) Close() {
+	ob.gio.Perform(system.ActionClose)
+}
+
 func (ob *GoWindowObj) IsMainWindow() bool {
 	//return ob.frame
 	return !ob.modalwindow
+}
+
+func (ob *GoWindowObj) IsModal() bool {
+	//return ob.frame
+	return ob.modalwindow
 }
 
 func (ob *GoWindowObj) Layout() *GoLayoutObj {
@@ -207,7 +239,7 @@ func (ob *GoWindowObj) Layout() *GoLayoutObj {
 }
 
 func (ob *GoWindowObj) MenuBar() *GoMenuBarObj {
-	//return ob.frame
+	ob.menubar.Show()
 	return ob.menubar
 }
 
@@ -218,6 +250,18 @@ func (ob *GoWindowObj) MenuPopup(idx int) *GoPopupMenuObj {
 		return ob.popupmenus[len(ob.popupmenus) - 1]
 	}
 	return nil
+}
+
+/*func (ob *GoWindowObj) ModalAction() (int) {
+	return ob.ModalAction
+}
+
+func (ob *GoWindowObj) ModalInfo() (string) {
+	return ob.ModalInfo
+}*/
+
+func (ob *GoWindowObj) ModalStyle() (string) {
+	return ob.modalstyle
 }
 
 func (ob *GoWindowObj) PopupWindow() *GoPopupWindowObj {
@@ -299,9 +343,9 @@ func (ob *GoWindowObj) Show() {
 	ob.run()
 }
 
-func (ob *GoWindowObj) ShowModal() {
-	ob.modalwindow = true
-	ob.run()
+func (ob *GoWindowObj) ShowModal() (action int, info string) {
+	action, info = ob.runModal()
+	return
 }
 
 
@@ -324,6 +368,34 @@ func (ob *GoWindowObj) run() {
 		GoApp.RemoveWindow(ob)
 	}()
 	time.Sleep(200 * time.Millisecond)
+}
+
+func (ob *GoWindowObj) runModal() (action int, info string) {
+    // create new modalwindow
+    ob.gio = app_gio.NewWindow(
+      app_gio.Title(ob.name),
+      app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)),
+      app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)),
+    )
+    // draw on screen
+    log.Println("Modal Dialog ob.loop()")
+    if err := ob.loop(); err != nil {
+      log.Fatal(err)
+	}
+	switch ob.ModalStyle() {
+	case "GoFileDialog":
+		log.Println("Modal Dialog Style: GoFileDialog")
+		action = ob.ModalAction
+		info = ob.ModalInfo
+	}
+	log.Println("ob.IsMainWindow() :", ob.IsMainWindow())
+	if ob.IsMainWindow() {
+		os.Exit(0)
+	}
+	GoApp.RemoveWindow(ob)
+	
+	time.Sleep(200 * time.Millisecond)
+	return action, info
 }
 
 func (ob *GoWindowObj) loop() (err error) {

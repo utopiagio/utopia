@@ -90,7 +90,7 @@ func GoBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 	}
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: NoFocus,
@@ -110,7 +110,7 @@ func GoBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 func GoHBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: NoFocus,
@@ -130,7 +130,7 @@ func GoHBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 func GoVBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: NoFocus,
@@ -159,7 +159,7 @@ func GoFlexBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 	}
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: NoFocus,
@@ -179,7 +179,7 @@ func GoFlexBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 func GoHFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: NoFocus,
@@ -199,7 +199,7 @@ func GoHFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 func GoVFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: NoFocus,
@@ -219,7 +219,7 @@ func GoVFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 func GoPopupMenuLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
-		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0},
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: NoFocus,
