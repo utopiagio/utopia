@@ -26,7 +26,7 @@ func GoSpacer(parent GoObject, space int) (hObj *GoSpacerObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 0, 0, 16777215, 16777215},
+		GoSize: GoSize{space, space, space, space, 16777215, 16777215},
 		FocusPolicy: NoFocus,
 		Visible: true,
 	}
@@ -93,8 +93,8 @@ func (ob *GoSpacerObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 }
 
 func (ob *GoSpacerObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	width := gtx.Dp(unit_gio.Dp(ob.Width))
-	height := gtx.Dp(unit_gio.Dp(ob.Height))
+	width := gtx.Dp(unit_gio.Dp(ob.MinWidth))
+	height := gtx.Dp(unit_gio.Dp(ob.MinHeight))
 	if ob.SizePolicy().HFlex {
 		width = gtx.Constraints.Max.X
 	}

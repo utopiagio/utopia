@@ -7,7 +7,8 @@ import (
 	"log"
 	"reflect"
 
-	f32_gio "github.com/utopiagio/utopia/colorf32"
+	f32_ui "github.com/utopiagio/utopia/colorf32"
+	
 	layout_gio "github.com/utopiagio/gio/layout"
 	//op_gio "github.com/utopiagio/gio/op"
 	clip_gio "github.com/utopiagio/gio/op/clip"
@@ -21,7 +22,8 @@ import (
 	//archive "golang.org/x/exp/shiny/materialdesign/icons"	// eg: archive.FileFolder
 )
 
-
+//const defaultIconColor = Color_Black
+//const defaultIconSize = 24
 
 // example : folderIcon := GoIcon(parent, archive.FileFolder)
 
@@ -184,7 +186,7 @@ func (ob *GoIconLabelObj) image(sz int, color GoColor) paint_gio.ImageOp {
 	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: int(float32(sz) * dy / dx)}})
 	var ico iconvg.Rasterizer
 	ico.SetDstImage(img, img.Bounds(), draw.Src)
-	m.Palette[0] = f32_gio.NRGBAToLinearRGBA(color.NRGBA())
+	m.Palette[0] = f32_ui.NRGBAToLinearRGBA(color.NRGBA())
 	iconvg.Decode(&ico, ob.icon, &iconvg.DecodeOptions{
 		Palette: &m.Palette,
 	})

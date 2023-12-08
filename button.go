@@ -9,6 +9,7 @@ import (
 	"math"
 
 	//"github.com/utopiagio/gio/font/gofont"
+	
 	layout_gio "github.com/utopiagio/gio/layout"
 	op_gio "github.com/utopiagio/gio/op"
 	clip_gio "github.com/utopiagio/gio/op/clip"
@@ -196,8 +197,8 @@ type GoIconButtonObj struct {
 	color GoColor
 	background GoColor
 	cornerRadius unit_gio.Dp
-	//icon  *widget_gio.Icon
-	icon *GoIconObj
+	iconVG  *GoIconVGObj
+	iconPNG *GoIconPNGObj
 	// Size is the icon size.
 	size        unit_gio.Dp
 	inset       layout_gio.Inset
@@ -207,7 +208,7 @@ type GoIconButtonObj struct {
 }
 
 //func GoIconButton(parent GoObject, icon *GoIconObj), description string) *GoIconButtonObj {
-func GoIconButton(parent GoObject, icon *GoIconObj) *GoIconButtonObj {
+func GoIconVGButton(parent GoObject, icon *GoIconVGObj) *GoIconButtonObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
@@ -222,7 +223,37 @@ func GoIconButton(parent GoObject, icon *GoIconObj) *GoIconButtonObj {
 		background:  theme.ColorBg,
 		color:       theme.ColorFg,
 		cornerRadius: 4,
-		icon:        icon,
+		iconVG:        icon,
+		size:        24,
+		inset:       layout_gio.UniformInset(4),
+		//clickable: 	 new(widget_gio.Clickable),
+		//description: description,
+	}
+	hIconButton.SetOnPointerRelease(hIconButton.Click)
+	hIconButton.SetOnPointerEnter(nil)
+	hIconButton.SetOnPointerLeave(nil)
+	//hIconButton.SetBorder(BorderSingleLine, 2, 4, Color_Blue)
+	parent.AddControl(hIconButton)
+	return hIconButton
+}
+
+//func GoIconButton(parent GoObject, icon *GoIconObj), description string) *GoIconButtonObj {
+func GoIconPNGButton(parent GoObject, icon *GoIconPNGObj) *GoIconButtonObj {
+	var theme *GoThemeObj = GoApp.Theme()
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	widget := GioWidget{
+		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
+		GoMargin: GoMargin{0,0,0,0},
+		GoPadding: GoPadding{0,0,0,0},
+		Visible: true,
+	}
+	hIconButton := &GoIconButtonObj{
+		GioObject: object,
+		GioWidget: widget,
+		background:  theme.ColorBg,
+		color:       theme.ColorFg,
+		cornerRadius: 4,
+		iconPNG:     icon,
 		size:        24,
 		inset:       layout_gio.UniformInset(4),
 		//clickable: 	 new(widget_gio.Clickable),
@@ -275,9 +306,13 @@ func (ob *GoIconButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions 
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 			size := gtx.Dp(ob.size)
-			if ob.icon != nil {
+			if ob.iconVG != nil || ob.iconPNG != nil {
 				gtx.Constraints.Min = image.Point{X: size}
-				ob.icon.Layout(gtx, ob.color)
+				if ob.iconVG != nil {
+					ob.iconVG.Layout(gtx, ob.color)
+				} else if ob.iconPNG != nil {
+					ob.iconPNG.Layout(gtx)
+				}
 			}
 			return layout_gio.Dimensions{
 				Size: image.Point{X: size, Y: size},

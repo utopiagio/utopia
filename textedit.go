@@ -49,6 +49,7 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 		GoPadding: GoPadding{0,0,0,0},
 		FocusPolicy: StrongFocus,
 		Visible: true,
+		keys: "←|→|↑|↓|⏎|⌤|⎋|⇱|⇲|⌫|⌦|⇞|⇟",
 		//target: nil,
 	}
 	hTextEdit := &GoTextEditObj{
@@ -102,15 +103,19 @@ func (ob *GoTextEditObj) Insert(text string) {
 }
 
 func (ob *GoTextEditObj) KeyEdit(e key_gio.EditEvent) {
+	log.Println("GoTextEditObj::KeyEdit()")
 	ob.Insert(e.Text)
 }
 
 func (ob *GoTextEditObj) KeyPressed(e key_gio.Event) {
+	log.Println("GoTextEditObj::KeyPressed()")
 	ob.editor.processKey(e)
+	//log.Println("REFRESH........")
 	ob.ParentWindow().Refresh()
 }
 
 func (ob *GoTextEditObj) KeyReleased(e key_gio.Event) {
+	log.Println("GoTextEditObj::KeyReleased()")
 	//ob.editor.Insert(text)
 }
 
@@ -224,6 +229,7 @@ func (ob *GoTextEditObj) Text() (text string) {
 }
 
 func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
+	//log.Println("GoTextEditObj::Draw()")
 	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {

@@ -134,7 +134,7 @@ type GoWindowObj struct {
 	GoSize 			// Current, Min and Max sizes
 	GoPos
 	gio *app_gio.Window
-	name string
+	title string
 	frame *GoLayoutObj
 	menubar *GoMenuBarObj
 	statusbar *GoLayoutObj
@@ -149,11 +149,11 @@ type GoWindowObj struct {
 
 }
 
-func GoMainWindow(windowName string) (hWin *GoWindowObj) {
+func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
-	size := GoSize{640, 450, 0, 0, 1500, 1000}
+	size := GoSize{640, 480, 0, 0, 1500, 1200}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, false, "", -1, "", nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
@@ -168,12 +168,12 @@ func GoMainWindow(windowName string) (hWin *GoWindowObj) {
 	return hWin
 }
 
-func GoWindow(windowName string) (hWin *GoWindowObj) {
+func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	//object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
-	size := GoSize{640, 450, 0, 0, 1500, 1000}
+	size := GoSize{640, 480, 0, 0, 1500, 1200}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, false, "", -1, "", nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
@@ -188,12 +188,12 @@ func GoWindow(windowName string) (hWin *GoWindowObj) {
 	return hWin
 }
 
-func GoModalWindow(modalStyle string, windowName string) (hWin *GoWindowObj) {
+func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	//object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{640, 450, 0, 0, 1500, 1000}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowName, nil, nil, nil, nil, true, modalStyle, -1, "", nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, true, modalStyle, -1, "", nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
@@ -223,6 +223,18 @@ func (ob *GoWindowObj) Close() {
 	ob.gio.Perform(system.ActionClose)
 }
 
+func (ob *GoWindowObj) EscFullScreen() {
+	if ob.gio != nil {
+		ob.gio.Option(app_gio.Windowed.Option())
+	}
+}
+
+func (ob *GoWindowObj) GoFullScreen() {
+	if ob.gio != nil {
+		ob.gio.Option(app_gio.Fullscreen.Option())
+	}
+}
+
 func (ob *GoWindowObj) IsMainWindow() bool {
 	//return ob.frame
 	return !ob.modalwindow
@@ -236,6 +248,18 @@ func (ob *GoWindowObj) IsModal() bool {
 func (ob *GoWindowObj) Layout() *GoLayoutObj {
 	//return ob.frame
 	return ob.layout
+}
+
+func (ob *GoWindowObj) Maximize() {
+	if ob.gio != nil {
+		ob.gio.Option(app_gio.Maximized.Option())
+	}
+}
+
+func (ob *GoWindowObj) Minimize() {
+	if ob.gio != nil {
+		ob.gio.Option(app_gio.Minimized.Option())
+	}
 }
 
 func (ob *GoWindowObj) MenuBar() *GoMenuBarObj {
@@ -328,15 +352,28 @@ func (ob *GoWindowObj) SetPadding(left int, top int, right int, bottom int) {
 func (ob *GoWindowObj) SetPos(x int, y int) {
 	ob.X = x
 	ob.Y = y
+	if ob.gio != nil {
+		ob.gio.Option(app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)))
+	}
 }
 
 func (ob *GoWindowObj) SetSize(width int, height int) {
 	ob.Width = width
 	ob.Height = height
+	if ob.gio != nil {
+		ob.gio.Option(app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)))
+	}
 }
 
 func (ob *GoWindowObj) SetSpacing(spacing GoLayoutSpacing) {
 	ob.layout.SetSpacing(spacing)
+}
+
+func (ob *GoWindowObj) SetTitle(title string) {
+	ob.title = title
+	if ob.gio != nil {
+		ob.gio.Option(app_gio.Title(title))
+	}
 }
 
 func (ob *GoWindowObj) Show() {
@@ -354,7 +391,7 @@ func (ob *GoWindowObj) run() {
 	go func() {
 	    // create new window
 	    ob.gio = app_gio.NewWindow(
-	      app_gio.Title(ob.name),
+	      app_gio.Title(ob.title),
 	      app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)),
 	      app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)),
 	    )
@@ -373,7 +410,7 @@ func (ob *GoWindowObj) run() {
 func (ob *GoWindowObj) runModal() (action int, info string) {
     // create new modalwindow
     ob.gio = app_gio.NewWindow(
-      app_gio.Title(ob.name),
+      app_gio.Title(ob.title),
       app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)),
       app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)),
     )
@@ -385,6 +422,14 @@ func (ob *GoWindowObj) runModal() (action int, info string) {
 	switch ob.ModalStyle() {
 	case "GoFileDialog":
 		log.Println("Modal Dialog Style: GoFileDialog")
+		action = ob.ModalAction
+		info = ob.ModalInfo
+	case "GoMsgDialog":
+		log.Println("Modal Dialog Style: GoMsgDialog")
+		action = ob.ModalAction
+		info = ob.ModalInfo
+	case "GoPrintDialog":
+		log.Println("Modal Dialog Style: GoPrintDialog")
 		action = ob.ModalAction
 		info = ob.ModalInfo
 	}
@@ -611,7 +656,9 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 						if event.Priority == pointer_gio.Grabbed {
 							log.Println("GoApp.Keyboard().SetFocusControl(nil)")
 							GoApp.Keyboard().SetFocusControl(nil)
+
 						}
+
 				}
 
 	    }

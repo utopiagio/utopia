@@ -1,10 +1,10 @@
-/* key.go */
+/* keyboard.go */
 
 package utopia
 
 import (
 	//"errors"
-	"log"
+	//"log"
 	//"time"
 	//"os"
 )
@@ -35,43 +35,52 @@ func (k *GoKeyboardObj) GetFocus() (w *GioWidget) {
 }
 
 func (k *GoKeyboardObj) SetFocus(w *GioWidget) bool {
+	//log.Println("GoKeyboardObj::SetFocus")
 	if k.controlFocus == w {
-		log.Println("GoKeyboardObj::ChangeFocus return true......")
+		//log.Println("GoKeyboardObj::SetFocus{k.controlFocus == w} return true......")
 		return true
 	}
 	if k.controlFocus != nil {
+		//log.Println("GoKeyboardObj::ClearFocus")
 		if !k.controlFocus.ClearFocus() {
-			log.Println("GoKeyboardObj::ClearFocus return false......")
+			//log.Println("GoKeyboardObj::ClearFocus return false......")
 			return false
 		}
+		//log.Println("GoKeyboardObj::ClearFocus return true......")
 	}
 
-	log.Println("GoKeyboardObj::ChangeFocus")
+	//log.Println("GoKeyboardObj::ChangeFocus")
 	
 	if w == nil {
 		k.controlFocus = w
 		k.focus = false
 	} else {
 		if w.ChangeFocus(true) {
-			log.Println("GoKeyboardObj::ChangeFocus return true......")
+			//log.Println("GoKeyboardObj::ChangeFocus return true......")
 			k.controlFocus = w
+			k.focusControl = w
 			k.focus = true
+
 		} else {
-			log.Println("GoKeyboardObj::ChangeFocus return false......")
+			//log.Println("GoKeyboardObj::ChangeFocus return false......")
 			return false
 		}
 	}
+	//log.Println("GoKeyboardObj::SetFocus return true......")
 	return true
 	
 }
 
 func (k *GoKeyboardObj) SetFocusControl(w *GioWidget) {
+	//log.Println("GoKeyboardObj::SetFocusControl(w) - k.focusControl = w")
 	k.focusControl = w
 }
 
 func (k *GoKeyboardObj) Update() (ok bool) {
+	
 	ok = true
 	if k.focusControl != k.controlFocus {
+		//log.Println("GoKeyboardObj::Update() - k.SetFocus(k.focusControl)")
 		ok = k.SetFocus(k.focusControl)
 	}
 	return ok

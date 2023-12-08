@@ -37,6 +37,10 @@ type GoPos struct {
 	Y int
 }
 
+func (p GoPos) ImPos() (image.Point) {
+	return image.Point{X: p.X, Y: p.Y}
+}
+
 type GoSize struct {
 	Width int
 	Height int
@@ -327,6 +331,7 @@ type GioWidget struct {
 	onClearFocus func()
 	onSetFocus func()
 
+	keys string
 	onKeyEdit func(e key_gio.EditEvent)
 	onKeyPress func(e key_gio.Event)
 	onKeyRelease func(e key_gio.Event)
@@ -348,7 +353,7 @@ type GioWidget struct {
 	focusEnabled bool
 	FocusPolicy GoFocusPolicy
 	hovered bool
-
+	selected bool
 	//pressedAt time.Duration
 	/*clickable *widget_gio.Clickable
 	draggable *widget_gio.Draggable
@@ -386,9 +391,11 @@ func (w *GioWidget) Clicked() (clicked bool) {
 // func (*GioWidget) ClearFocus()
 // Notifies the App to switch the keyboard focus to nil 
 func (w *GioWidget) ClearFocus() bool {
+	//log.Println("GioWidget:ClearFocus()")
 	if GoApp.Keyboard().ClearFocus(w) {
-		//w.focus = false
+		w.focus = false
 		if w.onClearFocus != nil {
+			//log.Println("w.onClearFocus()")
 			w.onClearFocus()
 		}
 		return true
@@ -414,6 +421,10 @@ func (w *GioWidget) IsFocusEnabled() bool {
 
 func (w *GioWidget) IsHovered() bool {
 	return w.hovered
+}
+
+func (w *GioWidget) IsSelected() bool {
+	return w.selected
 }
 
 func (w *GioWidget) IsVisible() bool {
@@ -484,12 +495,13 @@ func (w *GioWidget) SetBorderWidth(width int) {
 // func (*GioWidget) SetFocus()
 // Notifies the App to switch the keyboard focus to this widget 
 func (w *GioWidget) SetFocus() bool {
+	//log.Println("GioWidget::SetFocus()")
 	if w.FocusPolicy != NoFocus {
 		if GoApp.Keyboard().SetFocus(w) {
 			//w.focus = true
-			log.Println("w.onSetFocus =", w.onSetFocus)
+			//log.Println("w.onSetFocus =", w.onSetFocus)
 			if w.onSetFocus != nil{
-				log.Println("w.onSetFocus()")
+				//log.Println("w.onSetFocus()")
 				w.onSetFocus()
 			}
 			return true
@@ -510,8 +522,13 @@ func (w *GioWidget) SetFocusPolicy(focusPolicy GoFocusPolicy) {
 // func (*GioWidget) ChangeFocus(focus bool)
 // Changes focus on the widget if it can accept keyboard focus
 func (w *GioWidget) ChangeFocus(focus bool) bool {
+	//log.Println("GioWidget::ChangeFocus()")
 	if w.FocusPolicy != NoFocus {
 		w.focus = focus
+		if w.onSetFocus != nil{
+			//log.Println("w.onSetFocus()")
+			w.onSetFocus()
+		}
 		return true
 	}
 	return false
@@ -609,7 +626,13 @@ func (w *GioWidget) SetPadding(left int, top int, right int, bottom int) {
 	w.GoPadding = GoPadding{left, top, right, bottom}
 }
 
+func (w *GioWidget) SetSelected(selected bool) {
+	w.selected = selected
+}
+
 func (w *GioWidget) SetWidth(width int) {
+	w.GoSize.MinWidth = width
+	w.GoSize.MaxWidth = width
 	w.GoSize.Width = width
 }
 
@@ -640,7 +663,7 @@ func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
 		// (Shift) means an optional Shift
 		// These inputs are retrieved as key.Event
 		key_gio.InputOp{
-			Keys: key_gio.Set("F|S|U|D|J|(K|(W|N|Space"),
+			Keys: key_gio.Set(w.keys),
 			Tag:  w, // Use Tag: w as the event routing tag, and retrieve it through gtx.Events(w) in GioWidget::ReceiveEvents() routine.
 		}.Add(gtx.Ops)
 	}
@@ -650,19 +673,21 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 	for _, gtxEvent := range gtx.Events(w) {
 		switch e := gtxEvent.(type) {
 			case key_gio.EditEvent:
-				log.Println("Key::EditEvent -", "Range -", e.Range, "Text -", e.Text)
+				//log.Println("WidgetKey::EditEvent -", "Range -", e.Range, "Text -", e.Text)
 				if w.onKeyEdit != nil {
+					//log.Println("WidgetKey::onKeyEdit() -")
 					w.onKeyEdit(e)
 				}
 			case key_gio.Event:
 				switch e.State {
 					case key_gio.Press:
-						//log.Println("Key::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
+						//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
 						if w.onKeyPress != nil {
+							//log.Println("WidgetKey::onKeyPress() -")
 							w.onKeyPress(e)
 						}
 					case key_gio.Release:
-						//log.Println("Key::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
+						//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
 						if w.onKeyRelease != nil {
 							w.onKeyRelease(e)
 						}
@@ -679,7 +704,9 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 
 						if w.FocusPolicy >= ClickFocus && w.focus == false {
 								//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
-								GoApp.Keyboard().SetFocusControl(w)
+								//GoApp.Keyboard().SetFocusControl(w)
+								//log.Println("GioWidget.SetFocus() -", w)
+								w.SetFocus()
 						}
 						if w.clickEvent.Time == 0 {
 							w.clickEvent = e

@@ -49,6 +49,7 @@ type GoSizePolicy struct {
 
 type GoObject interface {
 	AddControl(GoObject)
+	Clear()
 	Objects() ([]GoObject)
 	Draw(layout_gio.Context) (layout_gio.Dimensions)
 	ObjectType() (string)
@@ -71,9 +72,50 @@ func (ob *GioObject) AddControl(control GoObject) {
 	ob.Controls = append(ob.Controls, control)
 }
 
+func (ob *GioObject) InsertControl(control GoObject, idx int) {
+	if len(ob.Controls) < 1 || idx >= len(ob.Controls) {
+		ob.Controls = append(ob.Controls, control)
+	} else {
+		ob.Controls = append(ob.Controls[:idx + 1], ob.Controls[idx:]...)
+		ob.Controls[idx] = control
+	}
+}
+
+func (ob *GioObject) Clear() {
+	ob.Controls = []GoObject{}
+}
+
 func (ob *GioObject) Objects() []GoObject {
 	return ob.Controls
 }
+
+func (ob *GioObject) DeleteControl(object GoObject) {
+	k := 0
+	for _, v := range ob.Controls {
+	    if v != object {
+	        ob.Controls[k] = v
+	        k++
+	    } else {
+	    	ob.Controls[k] = nil
+	    }
+	}
+	ob.Controls = ob.Controls[:k] // set slice len to remaining elements
+}
+
+/*func (ob *GioObject) DeleteIndex(idx int) {
+	log.Println("GioObject.Controls Length(", len(ob.Controls), ")")
+	log.Println("GioObject.DeleteIndex(", idx, ")")
+	if idx >= 0 && idx < len(ob.Controls) {
+		ob.Controls[idx] = nil
+		log.Println("GioObject.Controls Length(", len(ob.Controls), ")")
+		if len(ob.Controls) == 1 {
+			log.Println("ob.Controls = []GoObject{}")
+			ob.Controls = []GoObject{}
+		} else {
+			ob.Controls = append(ob.Controls[:idx], ob.Controls[idx + 1:]...) // set slice len to remaining elements
+		}
+	}
+}*/
 
 func (ob *GioObject) Draw(layout_gio.Context) (layout_gio.Dimensions) {
 	log.Println("GioObject.Draw()")
@@ -107,6 +149,16 @@ func (ob *GioObject) RemoveControl(object GoObject) {
 	}
 	ob.Controls = ob.Controls[:k] // set slice len to remaining elements
 }
+
+/*func (ob *GioObject) RemoveIndex(idx int) {
+	if idx >= 0 || idx < len(ob.Controls) {
+		if len(ob.Controls) <= 1 || idx >= len(ob.Controls) {
+			ob.Controls = ob.Controls[:idx]
+		} else {
+			ob.Controls = append(ob.Controls[:idx], ob.Controls[idx + 1:]...) // set slice len to remaining elements
+		}
+	}
+}*/
 
 func (ob *GioObject) SizePolicy() *GoSizePolicy {	// widget sizing policy - GoSizePolicy{horiz, vert, fixed}
 	return ob.GoSizePolicy

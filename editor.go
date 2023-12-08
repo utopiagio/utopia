@@ -4,6 +4,7 @@ package utopia
 
 import (
 	//"io"
+	"log"
 	//"unicode/utf8"
 
 	"golang.org/x/text/runes"
@@ -292,6 +293,7 @@ const (
 }*/
 
 func (e *Editor) pointerPressed(evt pointer_gio.Event) {
+	log.Println("Editor::pointerPressed()")
 	//prevCaretPos, _ := e.text.Selection()
 	e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
@@ -305,6 +307,7 @@ func (e *Editor) pointerPressed(evt pointer_gio.Event) {
 }
 
 func (e *Editor) pointerReleased(evt pointer_gio.Event) {
+	log.Println("Editor::pointerReleased()")
 	e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
@@ -337,6 +340,7 @@ func (e *Editor) pointerDragged(evt pointer_gio.Event) {
 }*/
 
 func (e *Editor) processKey(evt key_gio.Event) {
+	log.Println("Editor::processKey()")
 	e.blinkRefresh = true
 	direction := 1
 	moveByWord := evt.Modifiers.Contain(key_gio.ModShortcutAlt)
@@ -366,10 +370,15 @@ func (e *Editor) processKey(evt key_gio.Event) {
 				}
 			}
 		case key_gio.NameUpArrow:
+			log.Println("Editor::MoveLines(-1)")
 			e.text.MoveLines(-1, selAct)
+			e.scrollCaret = true
 		case key_gio.NameDownArrow:
+			log.Println("Editor::MoveLines(+1)")
 			e.text.MoveLines(+1, selAct)
+			e.scrollCaret = true
 		case key_gio.NameLeftArrow:
+			log.Println("Editor::MoveBy(-1)")
 			if moveByWord {
 				e.text.MoveWord(-1*direction, selAct)
 			} else {
@@ -379,6 +388,7 @@ func (e *Editor) processKey(evt key_gio.Event) {
 				e.text.MoveCaret(-1*direction, -1*direction*int(selAct))
 			}
 		case key_gio.NameRightArrow:
+			log.Println("Editor::MoveBy(+1)")
 			if moveByWord {
 				e.text.MoveWord(1*direction, selAct)
 			} else {

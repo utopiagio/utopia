@@ -14,6 +14,7 @@ import (
 	"bufio"
 	"image"
 	"io"
+	//"log"
 	"math"
 	"sort"
 	"unicode"
@@ -231,7 +232,9 @@ func (e *GioTextView) MoveLines(distance int, selAct selectionAction) {
 	pos = e.closestToXY(x, pos.y)
 	e.caret.start = pos.runes
 	e.caret.xoff = x - pos.x
+
 	e.updateSelection(selAct)
+
 }
 
 // calculateViewSize determines the size of the current visible content,
@@ -660,6 +663,7 @@ func (e *GioTextView) MoveWord(distance int, selAct selectionAction) {
 }
 
 func (e *GioTextView) ScrollToCaret() {
+	//log.Println("GioTextView::ScrollToCaret()")
 	caret := e.closestToRune(e.caret.start)
 	if e.SingleLine {
 		var dist int
@@ -670,6 +674,7 @@ func (e *GioTextView) ScrollToCaret() {
 		}
 		e.ScrollRel(dist, 0)
 	} else {
+		
 		miny := caret.y - caret.ascent.Ceil()
 		maxy := caret.y + caret.descent.Ceil()
 		var dist int
@@ -678,6 +683,7 @@ func (e *GioTextView) ScrollToCaret() {
 		} else if d := maxy - (e.scrollOff.Y + e.viewSize.Y); d > 0 {
 			dist = d
 		}
+		//log.Println("ScrollRel - dist =", dist)
 		e.ScrollRel(0, dist)
 	}
 }

@@ -18,6 +18,7 @@ import (
 
 	//archive "golang.org/x/exp/shiny/materialdesign/icons"	// eg: archive.FileFolder
 )
+
 const defaultIconColor = Color_Black
 const defaultIconSize = 24
 
@@ -25,7 +26,7 @@ const defaultIconSize = 24
 // example : folderIcon := GoIcon(parent, archive.FileFolder)
 
 // Icon returns a new Icon from IconVG data.
-func GoIcon(data []byte, args ...interface{}) (*GoIconObj) {
+func GoIconVG(data []byte, args ...interface{}) (*GoIconVGObj) {
 	var color GoColor
 	var size int
 	var text string
@@ -55,7 +56,7 @@ func GoIcon(data []byte, args ...interface{}) (*GoIconObj) {
 
 	//object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	
-	hIcon := &GoIconObj{
+	hIcon := &GoIconVGObj{
 		//GioObject: object,
 		//GioWidget: widget,
 		src: data,
@@ -68,7 +69,7 @@ func GoIcon(data []byte, args ...interface{}) (*GoIconObj) {
 	return hIcon
 }
 
-type GoIconObj struct {
+type GoIconVGObj struct {
 	//GioObject
 	//GioWidget
 
@@ -82,7 +83,7 @@ type GoIconObj struct {
 	imgColor GoColor	//color.NRGBA
 }
 
-/*func (ob *GoIconObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
+/*func (ob *GoIconVGObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
 	
 	if ob.Visible {
@@ -101,20 +102,20 @@ type GoIconObj struct {
 	return dims
 }*/
 
-func (ob *GoIconObj) ObjectType() (string) {
-	return "GoIconObj"
+func (ob *GoIconVGObj) ObjectType() (string) {
+	return "GoIconVGObj"
 }
 
-/*func (ob *GoIconObj) Widget() (*GioWidget) {
+/*func (ob *GoIconVGObj) Widget() (*GioWidget) {
 	return nil
 }*/
 
-func (ob *GoIconObj) Size() (int) {
+func (ob *GoIconVGObj) Size() (int) {
 	return ob.size
 }
 
 // Layout displays the icon with its size set to the X minimum constraint.
-func (ob *GoIconObj) Layout(gtx layout_gio.Context, color GoColor) layout_gio.Dimensions {
+func (ob *GoIconVGObj) Layout(gtx layout_gio.Context, color GoColor) layout_gio.Dimensions {
 	//ob.ReceiveEvents(gtx)
 	
 	sz := gtx.Constraints.Min.X
@@ -138,7 +139,7 @@ func (ob *GoIconObj) Layout(gtx layout_gio.Context, color GoColor) layout_gio.Di
 	}
 }
 
-func (ob *GoIconObj) image(sz int, color GoColor) paint_gio.ImageOp {
+func (ob *GoIconVGObj) image(sz int, color GoColor) paint_gio.ImageOp {
 	if sz == ob.imgSize && color == ob.imgColor {
 		return ob.op
 	}
