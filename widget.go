@@ -346,7 +346,7 @@ type GioWidget struct {
 	onPointerPress func(e pointer_gio.Event)
 	onPointerRelease func(e pointer_gio.Event)
 
-	events pointer_gio.Type
+	events pointer_gio.Kind
 	clicks int
 	clickEvent pointer_gio.Event
 	focus bool
@@ -650,7 +650,7 @@ func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
 		pointer_gio.InputOp{
 			Tag:   w,
 			Grab:  false,
-			Types: w.events,
+			Kinds: w.events,
 		}.Add(gtx.Ops)
 	}
 	if w.focus {
@@ -693,7 +693,7 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 						}
 				}
 			case pointer_gio.Event:
-				switch e.Type {
+				switch e.Kind {
 					case pointer_gio.Press:
 						//log.Println("MousePress:")
 						//log.Println("e.Time: ", uint(e.Time))

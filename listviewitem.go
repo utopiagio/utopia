@@ -7,14 +7,16 @@ import (
 	//"math"
 
 	f32_gio "github.com/utopiagio/utopia/colorf32"
+	font_gio "github.com/utopiagio/gio/font"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
 	layout_gio "github.com/utopiagio/gio/layout"
-	//op_gio "github.com/utopiagio/gio/op"
+	op_gio "github.com/utopiagio/gio/op"
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
-	widget_gio "github.com/utopiagio/gio/widget"
+	//widget_gio "github.com/utopiagio/gio/widget"
+	widget_int "github.com/utopiagio/utopia/internal/widget"
 
 	"golang.org/x/exp/shiny/iconvg"
 )
@@ -91,7 +93,7 @@ type GoListViewItemObj struct {
 	//theme *GoThemeObj
 	color GoColor					// foreground color
 	expanded bool					// true if the tree node is expanded
-	font text_gio.Font				// label font
+	font font_gio.Font				// label font
 	fontSize unit_gio.Sp			// label font size
 	icon []byte						// icon svg data
 	iconColor GoColor				// icon color
@@ -314,7 +316,9 @@ func (ob *GoListViewItemObj) Widget() (*GioWidget) {
 // Layout displays the icon with its size set to the X minimum constraint.
 func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
-	
+	textColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+	textColor := textColorMacro.Stop()
 	dims := layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
@@ -325,7 +329,7 @@ func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) layout_gio.Dimension
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 				paint_gio.ColorOp{Color: ob.ForeColor.NRGBA()}.Add(gtx.Ops)
-				return widget_gio.Label{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label)
+				return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
 			})
 		}),
 	)

@@ -1,17 +1,33 @@
-package utopia
+package widget
 
 import (
-	//"log"
 	"image"
 	"math"
 	"strings"
 
-	key_gio "github.com/utopiagio/gio/io/key"
+	"github.com/utopiagio/gio/gesture"
+	//"github.com/utopiagio/gio/io/clipboard"
+	//"github.com/utopiagio/gio/io/event"
+	//"github.com/utopiagio/gio/io/key"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
+	//"github.com/utopiagio/gio/io/system"
 	"github.com/utopiagio/gio/layout"
 	"github.com/utopiagio/gio/op/clip"
 	"github.com/utopiagio/gio/text"
 	"github.com/utopiagio/gio/unit"
+
+	"github.com/utopiagio/gio/font"
+	//"gioui.org/gesture"
+	//"gioui.org/io/clipboard"
+	//"gioui.org/io/event"
+	//"gioui.org/io/key"
+	//"gioui.org/io/pointer"
+	//"gioui.org/io/system"
+	//"gioui.org/layout"
+	"github.com/utopiagio/gio/op"
+	//"gioui.org/op/clip"
+	//"gioui.org/text"
+	//"gioui.org/unit"
 )
 
 // stringSource is an immutable textSource with a fixed string
@@ -42,13 +58,27 @@ func (s stringSource) ReadAt(b []byte, offset int64) (int, error) {
 
 // ReplaceRunes is unimplemented, as a stringSource is immutable.
 func (s stringSource) ReplaceRunes(byteOffset, runeCount int64, str string) {
-	return
 }
 
-// GioSelectable holds text selection state.
+// Selectable displays selectable text.
 type GioSelectable struct {
-	initialized bool
-	source      stringSource
+	// Alignment controls the alignment of the text.
+	Alignment text.Alignment
+	// MaxLines is the maximum number of lines of text to be displayed.
+	MaxLines int
+	// Truncator is the symbol to use at the end of the final line of text
+	// if text was cut off. Defaults to "…" if left empty.
+	Truncator string
+	// WrapPolicy configures how displayed text will be broken into lines.
+	WrapPolicy text.WrapPolicy
+	// LineHeight controls the distance between the baselines of lines of text.
+	// If zero, a sensible default will be used.
+	LineHeight unit.Sp
+	// LineHeightScale applies a scaling factor to the LineHeight. If zero, a
+	// sensible default will be used.
+	LineHeightScale float32
+	initialized     bool
+	source          stringSource
 	// scratch is a buffer reused to efficiently read text out of the
 	// textView.
 	scratch      []byte
@@ -57,10 +87,9 @@ type GioSelectable struct {
 	focused      bool
 	requestFocus bool
 	dragging     bool
-
-	//dragger      gesture.Drag
-	//scroller     gesture.Scroll
-	//scrollOff    image.Point
+	dragger      gesture.Drag
+	scroller     gesture.Scroll
+	scrollOff    image.Point
 
 	//clicker gesture.Click
 	// events is the list of events not yet processed.
@@ -90,18 +119,65 @@ func (l *GioSelectable) Focused() bool {
 	return l.focused
 }
 
-// PaintSelection paints the contrasting background for selected text.
-func (l *GioSelectable) PaintSelection(gtx layout.Context) {
+func (l *GioSelectable) PointerDoubleClicked(evt pointer_gio.Event) {
+	l.text.MoveCoord(image.Point{
+		X: int(math.Round(float64(evt.Position.X))),
+		Y: int(math.Round(float64(evt.Position.Y))),
+	})
+	l.text.ClearSelection()
+	l.text.SetCaret(0, l.text.Len())
+	l.focused = true
+}
+
+func (l *GioSelectable) PointerPressed(evt pointer_gio.Event) {
+	//prevCaretPos, _ := e.text.Selection()
+	l.text.MoveCoord(image.Point{
+		X: int(math.Round(float64(evt.Position.X))),
+		Y: int(math.Round(float64(evt.Position.Y))),
+	})
+	l.text.ClearSelection()
+	l.focused = true
+	l.dragging = true
+}
+
+func (l *GioSelectable) PointerReleased(evt pointer_gio.Event) {
+	l.text.MoveCoord(image.Point{
+		X: int(math.Round(float64(evt.Position.X))),
+		Y: int(math.Round(float64(evt.Position.Y))),
+	})
+	l.dragging = false
+}
+
+func (l *GioSelectable) PointerDragged(evt pointer_gio.Event) {
+	l.text.MoveCoord(image.Point{
+		X: int(math.Round(float64(evt.Position.X))),
+		Y: int(math.Round(float64(evt.Position.Y))),
+	})
+}
+
+// SetFocused sets the label focused to true or false.
+func (l *GioSelectable) SetFocused(focus bool) {
+	l.focused = focus
+}
+
+// Text returns the contents of the label.
+func (l *GioSelectable) TextView() *GioTextView {
+	return &l.text
+}
+
+// paintSelection paints the contrasting background for selected text.
+func (l *GioSelectable) PaintSelection(gtx layout.Context, material op.CallOp) {
 	l.initialize()
 	if !l.focused {
 		return
 	}
-	l.text.PaintSelection(gtx)
+	l.text.PaintSelection(gtx, material)
 }
 
-func (l *GioSelectable) PaintText(gtx layout.Context) {
+// paintText paints the text glyphs with the provided material.
+func (l *GioSelectable) PaintText(gtx layout.Context, material op.CallOp) {
 	l.initialize()
-	l.text.PaintText(gtx)
+	l.text.PaintText(gtx, material)
 }
 
 // SelectionLen returns the length of the selection, in runes; it is
@@ -157,144 +233,74 @@ func (l *GioSelectable) SetText(s string) {
 	}
 }
 
-// Layout clips to the dimensions of the selectable, updates the shaped text, configures input handling, and invokes
-// content. content is expected to set colors and invoke the Paint methods. content may be nil, in which case nothing
-// will be displayed.
-func (l *GioSelectable) renderSelectable(gtx layout.Context, lt *text.Shaper, font text.Font, size unit.Sp, content layout.Widget) layout.Dimensions {
+// Truncated returns whether the text has been truncated by the text shaper to
+// fit within available constraints.
+func (l *GioSelectable) Truncated() bool {
+	return l.text.Truncated()
+}
+
+// Update the state of the selectable in response to input events.
+func (l *GioSelectable) Update(gtx layout.Context) {
 	l.initialize()
-	l.text.Update(gtx, lt, font, size, l.handleEvents)
+	//l.handleEvents(gtx)
+}
+
+// Layout clips to the dimensions of the selectable, updates the shaped text, configures input handling, and paints
+// the text and selection rectangles. The provided textMaterial and selectionMaterial ops are used to set the
+// paint material for the text and selection rectangles, respectively.
+func (l *GioSelectable) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectionMaterial op.CallOp) layout.Dimensions {
+	l.Update(gtx)
+	l.text.LineHeight = l.LineHeight
+	l.text.LineHeightScale = l.LineHeightScale
+	l.text.Alignment = l.Alignment
+	l.text.MaxLines = l.MaxLines
+	l.text.Truncator = l.Truncator
+	l.text.WrapPolicy = l.WrapPolicy
+	l.text.Layout(gtx, lt, font, size)
 	dims := l.text.Dimensions()
 	defer clip.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
-	
+	pointer_gio.CursorText.Add(gtx.Ops)
 	/*var keys key.Set
 	if l.focused {
-		const keyFilterAllArrows = "(ShortAlt)-(Shift)-[←,→,↑,↓]|(Shift)-[⏎,⌤]|(ShortAlt)-(Shift)-[⌫,⌦]|(Shift)-[⇞,⇟,⇱,⇲]|Short-[C,V,X,A]|Short-(Shift)-Z"
-		keys = keyFilterAllArrows
+		const keyFilter = "(ShortAlt)-(Shift)-[←,→,↑,↓]|(Shift)-[⇞,⇟,⇱,⇲]|Short-[C,X,A]"
+		keys = keyFilter
 	}
 	key.InputOp{Tag: l, Keys: keys}.Add(gtx.Ops)
 	if l.requestFocus {
 		key.FocusOp{Tag: l}.Add(gtx.Ops)
 		key.SoftKeyboardOp{Show: true}.Add(gtx.Ops)
-	}*/
-	//l.requestFocus = false
+	}
+	l.requestFocus = false*/
 
 	//l.clicker.Add(gtx.Ops)
 	//l.dragger.Add(gtx.Ops)
 
-	if content != nil {
-		content(gtx)
-	}
+	l.PaintSelection(gtx, selectionMaterial)
+	l.PaintText(gtx, textMaterial)
 	return dims
 }
 
-func (l *GioSelectable) handleEvents(gtx layout.Context) {
+/*func (l *GioSelectable) handleEvents(gtx layout.Context) {
 	// Flush events from before the previous Layout.
-	//n := copy(l.events, l.events[l.prevEvents:])
-	//l.events = l.events[:n]
-	//l.prevEvents = n
-	//oldStart, oldLen := min(l.text.Selection()), l.text.SelectionLen()
-	//l.processPointer(gtx)
-	//l.processKey(gtx)
+	n := copy(l.events, l.events[l.prevEvents:])
+	l.events = l.events[:n]
+	l.prevEvents = n
+	oldStart, oldLen := min(l.text.Selection()), l.text.SelectionLen()
+	l.processPointer(gtx)
+	l.processKey(gtx)
 	// Queue a SelectEvent if the selection changed, including if it went away.
-	//if newStart, newLen := min(l.text.Selection()), l.text.SelectionLen(); oldStart != newStart || oldLen != newLen {
-		//l.events = append(l.events, SelectEvent{})
-	//}
-}
-
-func (l *GioSelectable) pointerDoubleClicked(evt pointer_gio.Event) {
-	l.text.MoveCoord(image.Point{
-		X: int(math.Round(float64(evt.Position.X))),
-		Y: int(math.Round(float64(evt.Position.Y))),
-	})
-	l.text.ClearSelection()
-	l.text.SetCaret(0, l.text.Len())
-	l.focused = true
-}
-
-func (l *GioSelectable) pointerPressed(evt pointer_gio.Event) {
-	//prevCaretPos, _ := e.text.Selection()
-	l.text.MoveCoord(image.Point{
-		X: int(math.Round(float64(evt.Position.X))),
-		Y: int(math.Round(float64(evt.Position.Y))),
-	})
-	l.text.ClearSelection()
-	l.focused = true
-	l.dragging = true
-}
-
-func (l *GioSelectable) pointerReleased(evt pointer_gio.Event) {
-	l.text.MoveCoord(image.Point{
-		X: int(math.Round(float64(evt.Position.X))),
-		Y: int(math.Round(float64(evt.Position.Y))),
-	})
-	l.dragging = false
-}
-
-func (l *GioSelectable) pointerDragged(evt pointer_gio.Event) {
-	l.text.MoveCoord(image.Point{
-		X: int(math.Round(float64(evt.Position.X))),
-		Y: int(math.Round(float64(evt.Position.Y))),
-	})
-}
-
-func (l *GioSelectable) processKey(evt key_gio.Event) {
-	direction := 1
-	moveByWord := evt.Modifiers.Contain(key_gio.ModShortcutAlt)
-	selAct := selectionClear
-	if evt.Modifiers.Contain(key_gio.ModShift) {
-		selAct = selectionExtend
+	if newStart, newLen := min(l.text.Selection()), l.text.SelectionLen(); oldStart != newStart || oldLen != newLen {
+		l.events = append(l.events, SelectEvent{})
 	}
-	switch evt.Name {
-		case key_gio.NameUpArrow:
-			l.text.MoveLines(-1, selAct)
-		case key_gio.NameDownArrow:
-			l.text.MoveLines(+1, selAct)
-		case key_gio.NameLeftArrow:
-			if moveByWord {
-				l.text.MoveWord(-1*direction, selAct)
-			} else {
-				if selAct == selectionClear {
-					l.text.ClearSelection()
-				}
-				l.text.MoveCaret(-1*direction, -1*direction*int(selAct))
-			}
-		case key_gio.NameRightArrow:
-			if moveByWord {
-				l.text.MoveWord(1*direction, selAct)
-			} else {
-				if selAct == selectionClear {
-					l.text.ClearSelection()
-				}
-				l.text.MoveCaret(1*direction, int(selAct)*direction)
-			}
-		case key_gio.NamePageUp:
-			l.text.MovePages(-1, selAct)
-		case key_gio.NamePageDown:
-			l.text.MovePages(+1, selAct)
-		case key_gio.NameHome:
-			l.text.MoveStart(selAct)
-		case key_gio.NameEnd:
-			l.text.MoveEnd(selAct)
-		// Copy or Cut selection -- ignored if nothing selected.
-		case "C", "X":
-			l.scratch = l.text.SelectedText(l.scratch)
-			/*if text := string(l.scratch); text != "" {
-				clipboard.WriteOp{Text: text}.Add(gtx.Ops)
-			}*/
-		// Select all
-		case "A":
-			l.text.SetCaret(0, l.text.Len())
-	}
-}
-
+}*/
 
 /*func (e *GioSelectable) processPointer(gtx layout.Context) {
 	for _, evt := range e.clickDragEvents(gtx) {
 		switch evt := evt.(type) {
 		case gesture.ClickEvent:
 			switch {
-			case evt.Type == gesture.TypePress && evt.Source == pointer.Mouse,
-				evt.Type == gesture.TypeClick && evt.Source != pointer.Mouse:
+			case evt.Kind == gesture.KindPress && evt.Source == pointer.Mouse,
+				evt.Kind == gesture.KindClick && evt.Source != pointer.Mouse:
 				prevCaretPos, _ := e.text.Selection()
 				e.text.MoveCoord(image.Point{
 					X: int(math.Round(float64(evt.Position.X))),
@@ -328,10 +334,10 @@ func (l *GioSelectable) processKey(evt key_gio.Event) {
 		case pointer.Event:
 			release := false
 			switch {
-			case evt.Type == pointer.Release && evt.Source == pointer.Mouse:
+			case evt.Kind == pointer.Release && evt.Source == pointer.Mouse:
 				release = true
 				fallthrough
-			case evt.Type == pointer.Drag && evt.Source == pointer.Mouse:
+			case evt.Kind == pointer.Drag && evt.Source == pointer.Mouse:
 				if e.dragging {
 					e.text.MoveCoord(image.Point{
 						X: int(math.Round(float64(evt.Position.X))),
@@ -349,10 +355,10 @@ func (l *GioSelectable) processKey(evt key_gio.Event) {
 
 /*func (e *GioSelectable) clickDragEvents(gtx layout.Context) []event.Event {
 	var combinedEvents []event.Event
-	for _, evt := range e.clicker.Events(gtx) {
+	for _, evt := range e.clicker.Update(gtx) {
 		combinedEvents = append(combinedEvents, evt)
 	}
-	for _, evt := range e.dragger.Events(gtx.Metric, gtx, gesture.Both) {
+	for _, evt := range e.dragger.Update(gtx.Metric, gtx, gesture.Both) {
 		combinedEvents = append(combinedEvents, evt)
 	}
 	return combinedEvents
@@ -381,6 +387,20 @@ func (l *GioSelectable) processKey(evt key_gio.Event) {
 	selAct := selectionClear
 	if k.Modifiers.Contain(key.ModShift) {
 		selAct = selectionExtend
+	}
+	if k.Modifiers == key.ModShortcut {
+		switch k.Name {
+		// Copy or Cut selection -- ignored if nothing selected.
+		case "C", "X":
+			e.scratch = e.text.SelectedText(e.scratch)
+			if text := string(e.scratch); text != "" {
+				clipboard.WriteOp{Text: text}.Add(gtx.Ops)
+			}
+		// Select all
+		case "A":
+			e.text.SetCaret(0, e.text.Len())
+		}
+		return
 	}
 	switch k.Name {
 	case key.NameUpArrow:
@@ -413,15 +433,6 @@ func (l *GioSelectable) processKey(evt key_gio.Event) {
 		e.text.MoveStart(selAct)
 	case key.NameEnd:
 		e.text.MoveEnd(selAct)
-	// Copy or Cut selection -- ignored if nothing selected.
-	case "C", "X":
-		e.scratch = e.text.SelectedText(e.scratch)
-		if text := string(e.scratch); text != "" {
-			clipboard.WriteOp{Text: text}.Add(gtx.Ops)
-		}
-	// Select all
-	case "A":
-		e.text.SetCaret(0, e.text.Len())
 	}
 }*/
 

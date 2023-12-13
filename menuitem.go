@@ -12,6 +12,7 @@ import (
 	layout_gio "github.com/utopiagio/gio/layout"
 	op_gio "github.com/utopiagio/gio/op"
 	clip_gio "github.com/utopiagio/gio/op/clip"
+	font_gio "github.com/utopiagio/gio/font"
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	//material_gio "github.com/utopiagio/gio/widget/material"
 	//semantic_gio "github.com/utopiagio/gio/io/semantic"
@@ -19,6 +20,7 @@ import (
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
+	widget_int "github.com/utopiagio/utopia/internal/widget"
 )
 
 /*type ButtonStyle struct {
@@ -80,7 +82,7 @@ type GoMenuItemObj struct {
 	GioObject
 	GioWidget
 	//theme *GoThemeObj
-	font text_gio.Font
+	font font_gio.Font
 	fontSize unit_gio.Sp
 	menuId int
 	text string
@@ -194,12 +196,14 @@ func (ob *GoMenuItemObj) Widget() (*GioWidget) {
 func (ob *GoMenuItemObj) Size(gtx layout_gio.Context) layout_gio.Dimensions {
 	var insetDims layout_gio.Dimensions
 	child := op_gio.Record(gtx.Ops)
-	
+	textColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+	textColor := textColorMacro.Stop()
 	ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims = ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 			//log.Println("Button label color:", ob.color.NRGBA())
 			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			dims := widget_gio.Label{Alignment: text_gio.Middle}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text)
+			dims := widget_int.GioLabel{Alignment: text_gio.Middle}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 			//log.Println("label size: ", dims)
 			return dims
 		})
@@ -214,11 +218,14 @@ func (ob *GoMenuItemObj) Size(gtx layout_gio.Context) layout_gio.Dimensions {
 
 func (ob *GoMenuItemObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
+	textColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+	textColor := textColorMacro.Stop()
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 			//log.Println("Button label color:", ob.color.NRGBA())
 			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			dims := widget_gio.Label{Alignment: text_gio.Middle}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text)
+			dims := widget_int.GioLabel{Alignment: text_gio.Middle}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 			//log.Println("label size: ", dims)
 			return dims
 		})

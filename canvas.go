@@ -11,6 +11,7 @@ import (
 	//"github.com/utopiagio/gio/font/gofont"
 	layout_gio "github.com/utopiagio/gio/layout"
 	clip_gio "github.com/utopiagio/gio/op/clip"
+	font_gio "github.com/utopiagio/gio/font"
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
@@ -48,7 +49,7 @@ type GoCanvasObj struct {
 	GioObject
 	GioWidget
 	//theme *GoThemeObj
-	font text_gio.Font
+	font font_gio.Font
 	fontSize unit_gio.Sp
 	color GoColor
 	background GoColor

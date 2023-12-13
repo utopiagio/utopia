@@ -8,14 +8,15 @@ import (
 	"reflect"
 
 	f32_ui "github.com/utopiagio/utopia/colorf32"
-	
+	font_gio "github.com/utopiagio/gio/font"
 	layout_gio "github.com/utopiagio/gio/layout"
-	//op_gio "github.com/utopiagio/gio/op"
+	op_gio "github.com/utopiagio/gio/op"
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
-	widget_gio "github.com/utopiagio/gio/widget"
+	//widget_gio "github.com/utopiagio/gio/widget"
+	widget_int "github.com/utopiagio/utopia/internal/widget"
 	
 	"golang.org/x/exp/shiny/iconvg"
 
@@ -91,7 +92,7 @@ type GoIconLabelObj struct {
 	GioObject
 	GioWidget
 	color GoColor
-	font               text_gio.Font
+	font               font_gio.Font
 	fontSize           unit_gio.Sp
 	icon []byte
 	iconColor GoColor
@@ -143,7 +144,9 @@ func (ob *GoIconLabelObj) Size() (int) {
 // Layout displays the icon with its size set to the X minimum constraint.
 func (ob *GoIconLabelObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
-	
+	textColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+	textColor := textColorMacro.Stop()
 	dims := layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
@@ -154,7 +157,7 @@ func (ob *GoIconLabelObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 				paint_gio.ColorOp{Color: ob.ForeColor.NRGBA()}.Add(gtx.Ops)
-				return widget_gio.Label{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label)
+				return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
 			})
 		}),
 	)

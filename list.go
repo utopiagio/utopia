@@ -15,6 +15,7 @@ import (
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
+	//widget_int "github.com/utopiagio/utopia/internal/widget"
 )
 
 // fromListPosition converts a layout.Position into two floats representing
@@ -124,7 +125,7 @@ func (s *goScrollbar) Layout(gtx layout_gio.Context, axis layout_gio.Axis, viewp
 	gtx.Constraints.Min = convert(gtx.Constraints.Min)
 	gtx.Constraints.Max = gtx.Constraints.Min
 
-	s.Scrollbar.Layout(gtx, axis, viewportStart, viewportEnd)
+	s.Scrollbar.Update(gtx, axis, viewportStart, viewportEnd)
 
 	// Darken indicator if hovered.
 	if s.Scrollbar.IndicatorHovered() {

@@ -1,20 +1,12 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
-package utopia
+package widget
 
 import (
-	//"io"
-	"log"
-	//"unicode/utf8"
-
-	"golang.org/x/text/runes"
-)
-
-import (
-	//"bufio"
+	"bufio"
 	"image"
 	"io"
-	//"log"
+	"log"
 	"math"
 	"strings"
 	"time"
@@ -22,7 +14,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/utopiagio/gio/f32"
-	//"github.com/utopiagio/gio/gesture"
+	"github.com/utopiagio/gio/gesture"
 	//"github.com/utopiagio/gio/io/clipboard"
 	//"github.com/utopiagio/gio/io/event"
 	key_gio "github.com/utopiagio/gio/io/key"
@@ -31,18 +23,38 @@ import (
 	"github.com/utopiagio/gio/layout"
 	"github.com/utopiagio/gio/op"
 	"github.com/utopiagio/gio/op/clip"
-	text_gio "github.com/utopiagio/gio/text"
+	"github.com/utopiagio/gio/text"
 	"github.com/utopiagio/gio/unit"
-	//widget_gio "github.com/utopiagio/gio/widget"
+
+	//"gioui.org/f32"
+	"github.com/utopiagio/gio/font"
+	//"gioui.org/gesture"
+	//"gioui.org/io/clipboard"
+	//"gioui.org/io/event"
+	//"gioui.org/io/key"
+	//"gioui.org/io/pointer"
+	"github.com/utopiagio/gio/io/semantic"
+	//"gioui.org/io/system"
+	//"gioui.org/layout"
+	//"gioui.org/op"
+	//"gioui.org/op/clip"
+	//"gioui.org/text"
+	//"gioui.org/unit"
 )
 
 // Editor implements an editable and scrollable text area.
 type Editor struct {
 	// text manages the text buffer and provides shaping and cursor positioning
 	// services.
-	text GioTextView //GoTextEditObj//GioTextView
+	text GioTextView
 	// Alignment controls the alignment of text within the editor.
-	Alignment text_gio.Alignment
+	Alignment text.Alignment
+	// LineHeight determines the gap between baselines of text. If zero, a sensible
+	// default will be used.
+	LineHeight unit.Sp
+	// LineHeightScale is multiplied by LineHeight to determine the final gap
+	// between baselines. If zero, a sensible default will be used.
+	LineHeightScale float32
 	// SingleLine force the text to stay on a single line.
 	// SingleLine also sets the scrolling direction to
 	// horizontal.
@@ -65,6 +77,8 @@ type Editor struct {
 	// Filter is the list of characters allowed in the Editor. If Filter is empty,
 	// all characters are allowed.
 	Filter string
+	// WrapPolicy configures how displayed text will be broken into lines.
+	WrapPolicy text.WrapPolicy
 
 	buffer *editBuffer
 	// scratch is a byte buffer that is reused to efficiently read portions of text
@@ -72,9 +86,8 @@ type Editor struct {
 	scratch      []byte
 	eventKey     int
 	blinkStart   time.Time
-	blinkRefresh bool
 	focused      bool
-	//requestFocus bool
+	requestFocus bool
 
 	// ime tracks the state relevant to input methods.
 	ime struct {
@@ -83,12 +96,12 @@ type Editor struct {
 	}
 
 	dragging    bool
-	//dragger     gesture.Drag
-	//scroller    gesture.Scroll
+	dragger     gesture.Drag
+	scroller    gesture.Scroll
 	scrollCaret bool
 	showCaret   bool
 
-	//clicker gesture.Click
+	clicker gesture.Click
 
 	// events is the list of events not yet processed.
 	//events []EditorEvent
@@ -102,6 +115,11 @@ type Editor struct {
 	nextHistoryIdx int
 }
 
+type offEntry struct {
+	runes int
+	bytes int
+}
+
 type imeState struct {
 	selection struct {
 		rng   key_gio.Range
@@ -111,6 +129,16 @@ type imeState struct {
 	start, end int
 }
 
+type maskReader struct {
+	// rr is the underlying reader.
+	rr      io.RuneReader
+	maskBuf [utf8.UTFMax]byte
+	// mask is the utf-8 encoded mask rune.
+	mask []byte
+	// overflow contains excess mask bytes left over after the last Read call.
+	overflow []byte
+}
+
 type selectionAction int
 
 const (
@@ -118,15 +146,15 @@ const (
 	selectionClear
 )
 
-/*func (m *maskReader) Reset(r io.Reader, mr rune) {
+func (m *maskReader) Reset(r io.Reader, mr rune) {
 	m.rr = bufio.NewReader(r)
 	n := utf8.EncodeRune(m.maskBuf[:], mr)
 	m.mask = m.maskBuf[:n]
-}*/
+}
 
 // Read reads from the underlying reader and replaces every
 // rune with the mask rune.
-/*func (m *maskReader) Read(b []byte) (n int, err error) {
+func (m *maskReader) Read(b []byte) (n int, err error) {
 	for len(b) > 0 {
 		var replacement []byte
 		if len(m.overflow) > 0 {
@@ -149,20 +177,20 @@ const (
 		b = b[nn:]
 	}
 	return n, err
-}*/
+}
 
 /*type EditorEvent interface {
 	isEditorEvent()
-}*/
+}
 
 // A ChangeEvent is generated for every user change to the text.
-/*type ChangeEvent struct{}*/
+type ChangeEvent struct{}
 
 // A SubmitEvent is generated when Submit is set
 // and a carriage return key is pressed.
-/*type SubmitEvent struct {
+type SubmitEvent struct {
 	Text string
-}*/
+}
 
 // A SelectEvent is generated when the user selects some text, or changes the
 // selection (e.g. with a shift-click), including if they remove the
@@ -170,7 +198,7 @@ const (
 // it could be a relatively expensive operation (for a large editor), most
 // applications won't actually care about it, and those that do can call
 // Editor.SelectedText() (which can be empty).
-/*type SelectEvent struct{}*/
+type SelectEvent struct{}*/
 
 const (
 	blinksPerSecond  = 1
@@ -183,9 +211,9 @@ const (
 	e.events = nil
 	e.prevEvents = 0
 	return events
-}*/
+}
 
-/*func (e *Editor) processEvents(gtx layout.Context) {
+func (e *Editor) processEvents(gtx layout.Context) {
 	log.Println("editor processEvents()")
 	// Flush events from before the previous Layout.
 	n := copy(e.events, e.events[e.prevEvents:])
@@ -199,9 +227,9 @@ const (
 	if newStart, newLen := min(e.text.Selection()), e.text.SelectionLen(); oldStart != newStart || oldLen != newLen {
 		e.events = append(e.events, SelectEvent{})
 	}
-}*/
+}
 
-/*func (e *Editor) processPointer(gtx layout.Context) {
+func (e *Editor) processPointer(gtx layout.Context) {
 	sbounds := e.text.ScrollBounds()
 	var smin, smax int
 	var axis gesture.Axis
@@ -212,7 +240,7 @@ const (
 		axis = gesture.Vertical
 		smin, smax = sbounds.Min.Y, sbounds.Max.Y
 	}
-	sdist := e.scroller.Scroll(gtx.Metric, gtx, gtx.Now, axis)
+	sdist := e.scroller.Update(gtx.Metric, gtx, gtx.Now, axis)
 	var soff int
 	if e.SingleLine {
 		e.text.ScrollRel(sdist, 0)
@@ -225,9 +253,8 @@ const (
 		switch evt := evt.(type) {
 		case gesture.ClickEvent:
 			switch {
-				log.Println("editor event.Type =", evt.Type)
-			case evt.Type == gesture.TypePress && evt.Source == pointer.Mouse,
-				evt.Type == gesture.TypeClick && evt.Source != pointer.Mouse:
+			case evt.Kind == gesture.KindPress && evt.Source == pointer.Mouse,
+				evt.Kind == gesture.KindClick && evt.Source != pointer.Mouse:
 				prevCaretPos, _ := e.text.Selection()
 				e.blinkStart = gtx.Now
 				e.text.MoveCoord(image.Point{
@@ -243,7 +270,7 @@ const (
 					start, end := e.text.Selection()
 					// If they clicked closer to the end, then change the end to
 					// where the caret used to be (effectively swapping start & end).
-					if e.absValue(end-start) < e.absValue(start-prevCaretPos) {
+					if abs(end-start) < abs(start-prevCaretPos) {
 						e.text.SetCaret(start, prevCaretPos)
 					}
 				} else {
@@ -266,10 +293,10 @@ const (
 		case pointer.Event:
 			release := false
 			switch {
-			case evt.Type == pointer.Release && evt.Source == pointer.Mouse:
+			case evt.Kind == pointer.Release && evt.Source == pointer.Mouse:
 				release = true
 				fallthrough
-			case evt.Type == pointer.Drag && evt.Source == pointer.Mouse:
+			case evt.Kind == pointer.Drag && evt.Source == pointer.Mouse:
 				if e.dragging {
 
 					e.blinkStart = gtx.Now
@@ -292,10 +319,10 @@ const (
 	}
 }*/
 
-func (e *Editor) pointerPressed(evt pointer_gio.Event) {
-	log.Println("Editor::pointerPressed()")
+func (e *Editor) PointerPressed(evt pointer_gio.Event) {
+	log.Println("Editor::PointerPressed()")
 	//prevCaretPos, _ := e.text.Selection()
-	e.blinkRefresh = true
+	//e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
 		Y: int(math.Round(float64(evt.Position.Y))),
@@ -306,9 +333,9 @@ func (e *Editor) pointerPressed(evt pointer_gio.Event) {
 	e.dragging = true
 }
 
-func (e *Editor) pointerReleased(evt pointer_gio.Event) {
-	log.Println("Editor::pointerReleased()")
-	e.blinkRefresh = true
+func (e *Editor) PointerReleased(evt pointer_gio.Event) {
+	log.Println("Editor::PointerReleased()")
+	//e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
 		Y: int(math.Round(float64(evt.Position.Y))),
@@ -317,8 +344,8 @@ func (e *Editor) pointerReleased(evt pointer_gio.Event) {
 	e.dragging = false
 }
 
-func (e *Editor) pointerDragged(evt pointer_gio.Event) {
-	e.blinkRefresh = true
+func (e *Editor) PointerDragged(evt pointer_gio.Event) {
+	//e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
 		Y: int(math.Round(float64(evt.Position.Y))),
@@ -326,22 +353,20 @@ func (e *Editor) pointerDragged(evt pointer_gio.Event) {
 	e.scrollCaret = true
 }
 
-
-
 /*func (e *Editor) clickDragEvents(gtx layout.Context) []event.Event {
 	var combinedEvents []event.Event
-	for _, evt := range e.clicker.Events(gtx) {
+	for _, evt := range e.clicker.Update(gtx) {
 		combinedEvents = append(combinedEvents, evt)
 	}
-	for _, evt := range e.dragger.Events(gtx.Metric, gtx, gesture.Both) {
+	for _, evt := range e.dragger.Update(gtx.Metric, gtx, gesture.Both) {
 		combinedEvents = append(combinedEvents, evt)
 	}
 	return combinedEvents
 }*/
 
-func (e *Editor) processKey(evt key_gio.Event) {
-	log.Println("Editor::processKey()")
-	e.blinkRefresh = true
+func (e *Editor) ProcessKey(evt key_gio.Event) {
+	log.Println("Editor::ProcessKey()")
+	//e.blinkRefresh = true
 	direction := 1
 	moveByWord := evt.Modifiers.Contain(key_gio.ModShortcutAlt)
 	selAct := selectionClear
@@ -406,8 +431,8 @@ func (e *Editor) processKey(evt key_gio.Event) {
 		case key_gio.NameEnd:
 			e.text.MoveEnd(selAct)
 	}
-
 }
+
 /*func (e *Editor) processKey(gtx layout.Context) {
 	if e.text.Changed() {
 		e.events = append(e.events, ChangeEvent{})
@@ -488,9 +513,9 @@ func (e *Editor) processKey(evt key_gio.Event) {
 	if e.text.Changed() {
 		e.events = append(e.events, ChangeEvent{})
 	}
-}*/
+}
 
-/*func (e *Editor) command(gtx layout.Context, k key.Event) {
+func (e *Editor) command(gtx layout.Context, k key.Event) {
 	direction := 1
 	if gtx.Locale.Direction.Progression() == system.TowardOrigin {
 		direction = -1
@@ -499,6 +524,37 @@ func (e *Editor) processKey(evt key_gio.Event) {
 	selAct := selectionClear
 	if k.Modifiers.Contain(key.ModShift) {
 		selAct = selectionExtend
+	}
+	if k.Modifiers.Contain(key.ModShortcut) {
+		switch k.Name {
+		// Initiate a paste operation, by requesting the clipboard contents; other
+		// half is in Editor.processKey() under clipboard.Event.
+		case "V":
+			if !e.ReadOnly {
+				clipboard.ReadOp{Tag: &e.eventKey}.Add(gtx.Ops)
+			}
+		// Copy or Cut selection -- ignored if nothing selected.
+		case "C", "X":
+			e.scratch = e.text.SelectedText(e.scratch)
+			if text := string(e.scratch); text != "" {
+				clipboard.WriteOp{Text: text}.Add(gtx.Ops)
+				if k.Name == "X" && !e.ReadOnly {
+					e.Delete(1)
+				}
+			}
+		// Select all
+		case "A":
+			e.text.SetCaret(0, e.text.Len())
+		case "Z":
+			if !e.ReadOnly {
+				if k.Modifiers.Contain(key.ModShift) {
+					e.redo()
+				} else {
+					e.undo()
+				}
+			}
+		}
+		return
 	}
 	switch k.Name {
 	case key.NameReturn, key.NameEnter:
@@ -551,32 +607,6 @@ func (e *Editor) processKey(evt key_gio.Event) {
 		e.text.MoveStart(selAct)
 	case key.NameEnd:
 		e.text.MoveEnd(selAct)
-	// Initiate a paste operation, by requesting the clipboard contents; other
-	// half is in Editor.processKey() under clipboard.Event.
-	case "V":
-		if !e.ReadOnly {
-			clipboard.ReadOp{Tag: &e.eventKey}.Add(gtx.Ops)
-		}
-	// Copy or Cut selection -- ignored if nothing selected.
-	case "C", "X":
-		e.scratch = e.text.SelectedText(e.scratch)
-		if text := string(e.scratch); text != "" {
-			clipboard.WriteOp{Text: text}.Add(gtx.Ops)
-			if k.Name == "X" && !e.ReadOnly {
-				e.Delete(1)
-			}
-		}
-	// Select all
-	case "A":
-		e.text.SetCaret(0, e.text.Len())
-	case "Z":
-		if !e.ReadOnly {
-			if k.Modifiers.Contain(key.ModShift) {
-				e.redo()
-			} else {
-				e.undo()
-			}
-		}
 	}
 }*/
 
@@ -590,6 +620,11 @@ func (e *Editor) Focused() bool {
 	return e.focused
 }
 
+// SetFocused sets the editor focused or not.
+func (e *Editor) SetFocused(focus bool) {
+	e.focused = focus
+}
+
 // initBuffer should be invoked first in every exported function that accesses
 // text state. It ensures that the underlying text widget is both ready to use
 // and has its fields synced with the editor.
@@ -599,17 +634,17 @@ func (e *Editor) initBuffer() {
 		e.text.SetSource(e.buffer)
 	}
 	e.text.Alignment = e.Alignment
+	e.text.LineHeight = e.LineHeight
+	e.text.LineHeightScale = e.LineHeightScale
 	e.text.SingleLine = e.SingleLine
 	e.text.Mask = e.Mask
+	e.text.WrapPolicy = e.WrapPolicy
 }
 
-// Layout lays out the editor. If content is not nil, it is laid out on top.
-func (e *Editor) Layout(gtx layout.Context, lt *text_gio.Shaper, font text_gio.Font, size unit.Sp, content layout.Widget) layout.Dimensions {
+// Update the state of the editor in response to input events.
+func (e *Editor) Update(gtx layout.Context) {
 	e.initBuffer()
-	e.text.Update(gtx, lt, font, size, nil)//e.processEvents)
-
-	dims := e.layout(gtx, content)
-
+	//e.processEvents(gtx)
 	if e.focused {
 		// Notify IME of selection if it changed.
 		newSel := e.ime.selection
@@ -635,8 +670,16 @@ func (e *Editor) Layout(gtx layout.Context, lt *text_gio.Shaper, font text_gio.F
 
 		e.updateSnippet(gtx, e.ime.start, e.ime.end)
 	}
+}
 
-	return dims
+// Layout lays out the editor using the provided textMaterial as the paint material
+// for the text glyphs+caret and the selectMaterial as the paint material for the
+// selection rectangle.
+func (e *Editor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
+	e.Update(gtx)
+
+	e.text.Layout(gtx, lt, font, size)
+	return e.layout(gtx, textMaterial, selectMaterial)
 }
 
 // updateSnippet adds a key.SnippetOp if the snippet content or position
@@ -685,7 +728,7 @@ func (e *Editor) updateSnippet(gtx layout.Context, start, end int) {
 	}.Add(gtx.Ops)
 }
 
-func (e *Editor) layout(gtx layout.Context, content layout.Widget) layout.Dimensions {
+func (e *Editor) layout(gtx layout.Context, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
 	// Adjust scrolling for new viewport and layout.
 	e.text.ScrollRel(0, 0)
 
@@ -698,7 +741,7 @@ func (e *Editor) layout(gtx layout.Context, content layout.Widget) layout.Dimens
 
 	defer clip.Rect(image.Rectangle{Max: visibleDims.Size}).Push(gtx.Ops).Pop()
 	pointer_gio.CursorText.Add(gtx.Ops)
-	/*var keys key_gio.Set
+	/*var keys key.Set
 	if e.focused {
 		const keyFilterNoLeftUp = "(ShortAlt)-(Shift)-[→,↓]|(Shift)-[⏎,⌤]|(ShortAlt)-(Shift)-[⌫,⌦]|(Shift)-[⇞,⇟,⇱,⇲]|Short-[C,V,X,A]|Short-(Shift)-Z"
 		const keyFilterNoRightDown = "(ShortAlt)-(Shift)-[←,↑]|(Shift)-[⏎,⌤]|(ShortAlt)-(Shift)-[⌫,⌦]|(Shift)-[⇞,⇟,⇱,⇲]|Short-[C,V,X,A]|Short-(Shift)-Z"
@@ -723,38 +766,30 @@ func (e *Editor) layout(gtx layout.Context, content layout.Widget) layout.Dimens
 		default:
 			keys = keyFilterAllArrows
 		}
-	}*/
-	//key_gio.InputOp{Tag: &e.eventKey, Hint: e.InputHint, Keys: keys}.Add(gtx.Ops)
-	if e.blinkRefresh {
-		e.blinkStart = gtx.Now
-		e.blinkRefresh = false
 	}
-	//if e.dragging {//e.requestFocus || e.dragging {
-		//e.blinkStart = gtx.Now
-		//e.focused = true
-		//key_gio.FocusOp{Tag: &e.eventKey}.Add(gtx.Ops)
-		//key_gio.SoftKeyboardOp{Show: true}.Add(gtx.Ops)
-	//}
-	//e.requestFocus = false
+	key.InputOp{Tag: &e.eventKey, Hint: e.InputHint, Keys: keys}.Add(gtx.Ops)
+	if e.requestFocus {
+		key.FocusOp{Tag: &e.eventKey}.Add(gtx.Ops)
+		key.SoftKeyboardOp{Show: true}.Add(gtx.Ops)
+	}
+	e.requestFocus = false*/
 
 	var scrollRange image.Rectangle
 	if e.SingleLine {
 		scrollOffX := e.text.ScrollOff().X
-		scrollRange.Min.X = e.minValue(-scrollOffX, 0)
-		scrollRange.Max.X = e.maxValue(0, textDims.Size.X-(scrollOffX+visibleDims.Size.X))
+		scrollRange.Min.X = min(-scrollOffX, 0)
+		scrollRange.Max.X = max(0, textDims.Size.X-(scrollOffX+visibleDims.Size.X))
 	} else {
 		scrollOffY := e.text.ScrollOff().Y
 		scrollRange.Min.Y = -scrollOffY
-		scrollRange.Max.Y = e.maxValue(0, textDims.Size.Y-(scrollOffY+visibleDims.Size.Y))
+		scrollRange.Max.Y = max(0, textDims.Size.Y-(scrollOffY+visibleDims.Size.Y))
 	}
 	//e.scroller.Add(gtx.Ops, scrollRange)
 
 	//e.clicker.Add(gtx.Ops)
 	//e.dragger.Add(gtx.Ops)
 	e.showCaret = false
-	//log.Println("editor focused =", e.focused)
 	if e.focused {
-
 		now := gtx.Now
 		dt := now.Sub(e.blinkStart)
 		blinking := dt < maxBlinkDuration
@@ -765,39 +800,45 @@ func (e *Editor) layout(gtx layout.Context, content layout.Widget) layout.Dimens
 			redraw.Add(gtx.Ops)
 		}
 		e.showCaret = e.focused && (!blinking || dt%timePerBlink < timePerBlink/2)
-		//log.Println("showCaret =", e.showCaret)
 	}
+	disabled := gtx.Queue == nil
 
-	if content != nil {
-		content(gtx)
+	semantic.Editor.Add(gtx.Ops)
+	if e.Len() > 0 {
+		e.paintSelection(gtx, selectMaterial)
+		e.paintText(gtx, textMaterial)
+	}
+	if !disabled {
+		e.paintCaret(gtx, textMaterial)
 	}
 	return visibleDims
 }
 
-// PaintSelection paints the contrasting background for selected text.
-func (e *Editor) PaintSelection(gtx layout.Context) {
+// paintSelection paints the contrasting background for selected text using the provided
+// material to set the painting material for the selection.
+func (e *Editor) paintSelection(gtx layout.Context, material op.CallOp) {
 	e.initBuffer()
 	if !e.focused {
 		return
 	}
-	e.text.PaintSelection(gtx)
+	e.text.PaintSelection(gtx, material)
 }
 
-func (e *Editor) PaintText(gtx layout.Context) {
+// paintText paints the text glyphs using the provided material to set the fill of the
+// glyphs.
+func (e *Editor) paintText(gtx layout.Context, material op.CallOp) {
 	e.initBuffer()
-	e.text.PaintText(gtx)
+	e.text.PaintText(gtx, material)
 }
 
-func (e *Editor) PaintCaret(gtx layout.Context) {
-	
+// paintCaret paints the text glyphs using the provided material to set the fill material
+// of the caret rectangle.
+func (e *Editor) paintCaret(gtx layout.Context, material op.CallOp) {
 	e.initBuffer()
-	//log.Println("showCaret =", e.showCaret)
-	//log.Println("ReadOnly =", e.ReadOnly)
 	if !e.showCaret || e.ReadOnly {
 		return
 	}
-	e.text.PaintCaret(gtx)
-	//log.Println("(*Editor) PaintCaret")
+	e.text.PaintCaret(gtx, material)
 }
 
 // Len is the length of the editor contents, in runes.
@@ -836,22 +877,26 @@ func (e *Editor) CaretCoords() f32.Point {
 	return e.text.CaretCoords()
 }
 
-// Delete runes from the caret position. The sign of runes specifies the
+// Delete runes from the caret position. The sign of the argument specifies the
 // direction to delete: positive is forward, negative is backward.
 //
-// If there is a selection, it is deleted and counts as a single rune.
-func (e *Editor) Delete(runes int) {
+// If there is a selection, it is deleted and counts as a single grapheme
+// cluster.
+func (e *Editor) Delete(graphemeClusters int) {
 	e.initBuffer()
-	if runes == 0 {
+	if graphemeClusters == 0 {
 		return
 	}
 
 	start, end := e.text.Selection()
 	if start != end {
-		runes -= e.signValue(runes)
+		graphemeClusters -= sign(graphemeClusters)
 	}
 
-	end += runes
+	// Move caret by the target quantity of clusters.
+	e.text.MoveCaret(0, graphemeClusters)
+	// Get the new rune offsets of the selection.
+	start, end = e.text.Selection()
 	e.replace(start, end, "", true)
 	// Reset xoff.
 	e.text.MoveCaret(0, 0)
@@ -929,8 +974,8 @@ func (e *Editor) replace(start, end int, s string, addHistory bool) int {
 	if start > end {
 		start, end = end, start
 	}
-	start = e.minValue(start, length)
-	end = e.minValue(end, length)
+	start = min(start, length)
+	end = min(end, length)
 	replaceSize := end - start
 	el := e.Len()
 	var sc int
@@ -987,7 +1032,9 @@ func (e *Editor) replace(start, end int, s string, addHistory bool) int {
 
 // MoveCaret moves the caret (aka selection start) and the selection end
 // relative to their current positions. Positive distances moves forward,
-// negative distances moves backward. Distances are in runes.
+// negative distances moves backward. Distances are in grapheme clusters,
+// which closely match what users perceive as "characters" even when the
+// characters are multiple code points long.
 func (e *Editor) MoveCaret(startDelta, endDelta int) {
 	e.initBuffer()
 	e.text.MoveCaret(startDelta, endDelta)
@@ -1006,7 +1053,7 @@ func (e *Editor) deleteWord(distance int) {
 	start, end := e.text.Selection()
 	if start != end {
 		e.Delete(1)
-		distance -= e.signValue(distance)
+		distance -= sign(distance)
 	}
 	if distance == 0 {
 		return
@@ -1072,7 +1119,7 @@ func (e *Editor) SetCaret(start, end int) {
 	e.initBuffer()
 	e.text.SetCaret(start, end)
 	e.scrollCaret = true
-	//e.scroller.Stop()
+	e.scroller.Stop()
 }
 
 // SelectedText returns the currently selected text (if any) from the editor.
@@ -1113,28 +1160,28 @@ func (e *Editor) Regions(start, end int, regions []Region) []Region {
 	return e.text.Regions(start, end, regions)
 }
 
-func (e *Editor) maxValue(a, b int) int {
+func max(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
 }
 
-func (e *Editor) minValue(a, b int) int {
+func min(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-func (e *Editor) absValue(n int) int {
+func abs(n int) int {
 	if n < 0 {
 		return -n
 	}
 	return n
 }
 
-func (e *Editor) signValue(n int) int {
+func sign(n int) int {
 	switch {
 	case n < 0:
 		return -1
@@ -1145,127 +1192,6 @@ func (e *Editor) signValue(n int) int {
 	}
 }
 
-// SPDX-License-Identifier: Unlicense OR MIT
-
-
-
-// editBuffer implements a gap buffer for text editing.
-type editBuffer struct {
-	// pos is the byte position for Read and ReadRune.
-	pos int
-
-	// The gap start and end in bytes.
-	gapstart, gapend int
-	text             []byte
-
-	// changed tracks whether the buffer content
-	// has changed since the last call to Changed.
-	changed bool
-}
-
-var _ textSource = (*editBuffer)(nil)
-
-const minSpace = 5
-
-func (e *editBuffer) Changed() bool {
-	c := e.changed
-	e.changed = false
-	return c
-}
-
-func (e *editBuffer) deleteRunes(caret, count int) (bytes int, runes int) {
-	e.moveGap(caret, 0)
-	for ; count < 0 && e.gapstart > 0; count++ {
-		_, s := utf8.DecodeLastRune(e.text[:e.gapstart])
-		e.gapstart -= s
-		bytes += s
-		runes++
-		e.changed = e.changed || s > 0
-	}
-	for ; count > 0 && e.gapend < len(e.text); count-- {
-		_, s := utf8.DecodeRune(e.text[e.gapend:])
-		e.gapend += s
-		e.changed = e.changed || s > 0
-	}
-	return
-}
-
-// moveGap moves the gap to the caret position. After returning,
-// the gap is guaranteed to be at least space bytes long.
-func (e *editBuffer) moveGap(caret, space int) {
-	if e.gapLen() < space {
-		if space < minSpace {
-			space = minSpace
-		}
-		txt := make([]byte, int(e.Size())+space)
-		// Expand to capacity.
-		txt = txt[:cap(txt)]
-		gaplen := len(txt) - int(e.Size())
-		if caret > e.gapstart {
-			copy(txt, e.text[:e.gapstart])
-			copy(txt[caret+gaplen:], e.text[caret:])
-			copy(txt[e.gapstart:], e.text[e.gapend:caret+e.gapLen()])
-		} else {
-			copy(txt, e.text[:caret])
-			copy(txt[e.gapstart+gaplen:], e.text[e.gapend:])
-			copy(txt[caret+gaplen:], e.text[caret:e.gapstart])
-		}
-		e.text = txt
-		e.gapstart = caret
-		e.gapend = e.gapstart + gaplen
-	} else {
-		if caret > e.gapstart {
-			copy(e.text[e.gapstart:], e.text[e.gapend:caret+e.gapLen()])
-		} else {
-			copy(e.text[caret+e.gapLen():], e.text[caret:e.gapstart])
-		}
-		l := e.gapLen()
-		e.gapstart = caret
-		e.gapend = e.gapstart + l
-	}
-}
-
-func (e *editBuffer) Size() int64 {
-	return int64(len(e.text) - e.gapLen())
-}
-
-func (e *editBuffer) gapLen() int {
-	return e.gapend - e.gapstart
-}
-
-func (e *editBuffer) ReadAt(p []byte, offset int64) (int, error) {
-	if len(p) == 0 {
-		return 0, nil
-	}
-	if offset == e.Size() {
-		return 0, io.EOF
-	}
-	var total int
-	if offset < int64(e.gapstart) {
-		n := copy(p, e.text[offset:e.gapstart])
-		p = p[n:]
-		total += n
-		offset += int64(n)
-	}
-	if offset >= int64(e.gapstart) {
-		n := copy(p, e.text[offset+int64(e.gapLen()):])
-		total += n
-	}
-	return total, nil
-}
-
-func (e *editBuffer) ReplaceRunes(byteOffset, runeCount int64, s string) {
-	e.deleteRunes(int(byteOffset), int(runeCount))
-	e.prepend(int(byteOffset), s)
-}
-
-func (e *editBuffer) prepend(caret int, s string) {
-	if !utf8.ValidString(s) {
-		s = runes.ReplaceIllFormed().String(s)
-	}
-
-	e.moveGap(caret, len(s))
-	copy(e.text[caret:], s)
-	e.gapstart += len(s)
-	e.changed = e.changed || len(s) > 0
-}
+//func (s ChangeEvent) isEditorEvent() {}
+//func (s SubmitEvent) isEditorEvent() {}
+//func (s SelectEvent) isEditorEvent() {}

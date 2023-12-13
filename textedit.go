@@ -9,8 +9,9 @@ import (
 
 	//"github.com/utopiagio/gio/internal/f32color"
 	clip_gio "github.com/utopiagio/gio/op/clip"
+	font_gio "github.com/utopiagio/gio/font"
 	key_gio "github.com/utopiagio/gio/io/key"
-	semantic_gio "github.com/utopiagio/gio/io/semantic"
+	//semantic_gio "github.com/utopiagio/gio/io/semantic"
 	layout_gio "github.com/utopiagio/gio/layout"
 	op_gio "github.com/utopiagio/gio/op"
 	paint_gio "github.com/utopiagio/gio/op/paint"
@@ -18,13 +19,21 @@ import (
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
+	//widget_gio "github.com/utopiagio/utopia/internal/widget"
+	widget_int "github.com/utopiagio/utopia/internal/widget"
 )
 
 type GoTextEditObj struct {
 	GioObject
 	GioWidget
-	font     text_gio.Font
+	font     font_gio.Font
 	fontSize unit_gio.Sp
+	// LineHeight controls the distance between the baselines of lines of text.
+	// If zero, a sensible default will be used.
+	lineHeight unit_gio.Sp
+	// LineHeightScale applies a scaling factor to the LineHeight. If zero, a
+	// sensible default will be used.
+	lineHeightScale float32
 	// Color is the text color.
 	color GoColor
 	// Hint contains the text displayed when the editor is empty.
@@ -33,7 +42,7 @@ type GoTextEditObj struct {
 	hintColor GoColor
 	// SelectionColor is the color of the background for selected text.
 	selectionColor GoColor
-	editor         *Editor
+	editor         *widget_int.Editor
 
 	shaper *text_gio.Shaper
 
@@ -60,7 +69,7 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 		hint: 		hintText,
 		hintColor: 		NRGBAColor(MulAlpha(theme.ColorFg.NRGBA(), 0xbb)),
 		selectionColor:	NRGBAColor(MulAlpha(theme.ContrastBg.NRGBA(), 0x60)),
-		editor: 	new(Editor),
+		editor: 	new(widget_int.Editor),
 		shaper: 	theme.Shaper,
 	}
 	hTextEdit.SetOnSetFocus(hTextEdit.GotFocus)
@@ -79,7 +88,7 @@ func (ob *GoTextEditObj) ClearSelection() {
 	ob.editor.ClearSelection()
 }
 
-func (ob *GoTextEditObj) Font() text_gio.Font {
+func (ob *GoTextEditObj) Font() font_gio.Font {
 	return ob.font
 }
 
@@ -89,12 +98,12 @@ func (ob *GoTextEditObj) Focused() bool {
 
 func (ob *GoTextEditObj) GotFocus() {
 	log.Println("GoTextEditObj::GotFocus()")
-	ob.editor.focused = true
+	ob.editor.SetFocused(true)
 }
 
 func (ob *GoTextEditObj) LostFocus() {
 	log.Println("GoTextEditObj::LostFocus()")
-	ob.editor.focused = false
+	ob.editor.SetFocused(false)
 	ob.focus = false
 }
 
@@ -109,7 +118,7 @@ func (ob *GoTextEditObj) KeyEdit(e key_gio.EditEvent) {
 
 func (ob *GoTextEditObj) KeyPressed(e key_gio.Event) {
 	log.Println("GoTextEditObj::KeyPressed()")
-	ob.editor.processKey(e)
+	ob.editor.ProcessKey(e)
 	//log.Println("REFRESH........")
 	ob.ParentWindow().Refresh()
 }
@@ -174,40 +183,40 @@ func (ob *GoTextEditObj) MovePages(pages int, selAct selectionAction) {
 }*/
 
 func (ob *GoTextEditObj) PointerDragged(e pointer_gio.Event) {
-	ob.editor.pointerDragged(e)
+	ob.editor.PointerDragged(e)
 }
 
 func (ob *GoTextEditObj) PointerPressed(e pointer_gio.Event) {
-	ob.editor.pointerPressed(e)
+	ob.editor.PointerPressed(e)
 }
 
 func (ob *GoTextEditObj) PointerReleased(e pointer_gio.Event) {
-	ob.editor.pointerReleased(e)
+	ob.editor.PointerReleased(e)
 	//ob.editor.focused = true
 }
 
 func (ob *GoTextEditObj) SetFont(typeface string, variant string, style GoFontStyle, weight GoFontWeight) {
-	ob.font = text_gio.Font{text_gio.Typeface(typeface), text_gio.Variant(variant), text_gio.Style(int(style)), text_gio.Weight(int(weight))}
+	ob.font = font_gio.Font{font_gio.Typeface(typeface), font_gio.Style(int(style)), font_gio.Weight(int(weight))}
 }
 
 func (ob *GoTextEditObj) SetFontBold(bold bool) {
 	if bold {
-		ob.font.Weight = text_gio.Bold
+		ob.font.Weight = font_gio.Bold
 	} else {
-		ob.font.Weight = text_gio.Light
+		ob.font.Weight = font_gio.Light
 	}
 }
+
+func (ob *GoTextEditObj) SetFontColor(color GoColor) {
+	ob.color = color
+}	
 
 func (ob *GoTextEditObj) SetFontSize(size int) {
 	ob.fontSize = unit_gio.Sp(size)
 }
 
-func (ob *GoTextEditObj) SetFontVariant(variant string) {
-	ob.font.Variant = text_gio.Variant(variant)
-}
-
 func (ob *GoTextEditObj) SetFontWeight(weight GoFontWeight) {
-	ob.font.Weight = text_gio.Weight(int(weight))
+	ob.font.Weight = font_gio.Weight(int(weight))
 }
 
 func (ob *GoTextEditObj) SelectedText() (text string) {
@@ -235,7 +244,7 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
-					return ob.layout(gtx)
+					return ob.Layout(gtx)
 				})
 			})
 		})
@@ -246,18 +255,20 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 	return dims
 }
 
-func (ob *GoTextEditObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
+func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	//log.Println("*GoTextEditObj::layout()")
 	ob.ReceiveEvents(gtx)
-	// *** create hint label macro
+
+
+	/* *** create hint label macro
 	macro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.hintColor.NRGBA()}.Add(gtx.Ops)
 	var maxlines int
 	if ob.editor.SingleLine {
 		maxlines = 1
 	}
-	tl := widget_gio.Label{Alignment: ob.editor.Alignment, MaxLines: maxlines}
-	dims := tl.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.hint)
+	tl := widget_int.GioLabel{Alignment: ob.editor.Alignment, MaxLines: maxlines}
+	dims := tl.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.hint, textColor)
 	call := macro.Stop()
 	// *** end
 	if w := dims.Size.X; gtx.Constraints.Min.X < w {
@@ -288,6 +299,48 @@ func (ob *GoTextEditObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 		return dims //layout_gio.Dimensions{Size: gtx.Constraints.Min}
 	})
 	//defer clip_gio.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Push(gtx.Ops).Pop()
+	defer clip_gio.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
+	// add the events handler to receive widget pointer events
+	pointer_gio.CursorText.Add(gtx.Ops)*/
+
+	// Choose colors.
+	textColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+	textColor := textColorMacro.Stop()
+	hintColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.hintColor.NRGBA()}.Add(gtx.Ops)
+	hintColor := hintColorMacro.Stop()
+	selectionColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: blendDisabledColor(gtx.Queue == nil, ob.selectionColor.NRGBA())}.Add(gtx.Ops)
+	selectionColor := selectionColorMacro.Stop()
+
+	var maxlines int
+	if ob.editor.SingleLine {
+		maxlines = 1
+	}
+
+	macro := op_gio.Record(gtx.Ops)
+	tl := widget_gio.Label{
+		Alignment:       ob.editor.Alignment,
+		MaxLines:        maxlines,
+		LineHeight:      ob.lineHeight,
+		LineHeightScale: ob.lineHeightScale,
+	}
+	dims := tl.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.hint, hintColor)
+	call := macro.Stop()
+
+	if w := dims.Size.X; gtx.Constraints.Min.X < w {
+		gtx.Constraints.Min.X = w
+	}
+	if h := dims.Size.Y; gtx.Constraints.Min.Y < h {
+		gtx.Constraints.Min.Y = h
+	}
+	ob.editor.LineHeight = ob.lineHeight
+	ob.editor.LineHeightScale = ob.lineHeightScale
+	dims = ob.editor.Layout(gtx, ob.shaper, ob.font, ob.fontSize, textColor, selectionColor)
+	if ob.editor.Len() == 0 {
+		call.Add(gtx.Ops)
+	}
 	defer clip_gio.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
 	// add the events handler to receive widget pointer events
 	pointer_gio.CursorText.Add(gtx.Ops)

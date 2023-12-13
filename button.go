@@ -18,8 +18,10 @@ import (
 	//semantic_gio "github.com/utopiagio/gio/io/semantic"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
 	text_gio "github.com/utopiagio/gio/text"
+	font_gio "github.com/utopiagio/gio/font"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
+	widget_int "github.com/utopiagio/utopia/internal/widget"
 )
 
 /*type ButtonStyle struct {
@@ -76,7 +78,7 @@ type GoButtonObj struct {
 	GioObject
 	GioWidget
 	//theme *GoThemeObj
-	font text_gio.Font
+	font font_gio.Font
 	fontSize unit_gio.Sp
 	text string
 	color GoColor
@@ -136,11 +138,14 @@ func (ob *GoButtonObj) ObjectType() (string) {
 
 func (ob *GoButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
+	textColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+	textColor := textColorMacro.Stop()
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 			//log.Println("Button label color:", ob.color.NRGBA())
-			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			dims := widget_gio.Label{Alignment: text_gio.Middle}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text)
+			//paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+			dims := widget_int.GioLabel{Alignment: text_gio.Middle, MaxLines: 2,}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 			//log.Println("label size: ", dims)
 			return dims
 		})

@@ -195,6 +195,7 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	pos := GoPos{-1, -1}
 	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, true, modalStyle, -1, "", nil, nil}
 	hWin.Window = hWin
+
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
 	hWin.menubar = GoMenuBar(hWin.frame)
@@ -385,7 +386,9 @@ func (ob *GoWindowObj) ShowModal() (action int, info string) {
 	return
 }
 
-
+func (ob *GoWindowObj) Title() (title string) {
+	return ob.title
+}
 
 func (ob *GoWindowObj) run() {
 	go func() {
@@ -444,17 +447,17 @@ func (ob *GoWindowObj) runModal() (action int, info string) {
 }
 
 func (ob *GoWindowObj) loop() (err error) {
-	var count int
+	//var count int
 	// ops are the operations from the UI
     var ops op.Ops
 
     // listen for events in the window.
     for {
-		select {
-    	case e := <-ob.gio.Events():
+		//select {
+    	//case e := <-ob.gio.Events():
 
 			// detect what type of event
-			switch  e := e.(type) {
+			switch  e := ob.gio.NextEvent().(type) {
 	      	case system.DestroyEvent:
 	      		log.Println("system.DestroyEvent.....")
 
@@ -464,7 +467,7 @@ func (ob *GoWindowObj) loop() (err error) {
 	      		// Open an new context
 	      		gtx := layout_gio.NewContext(&ops, e)
 	      		//log.Println("Window.update(gtx).....", count)
-	      		count++
+	      		//count++
 	      		ob.update(gtx)	// receiveEvents
 	      		//log.Println("Window.render(gtx).....")
 	      		ob.render(gtx)	// draw layout and signalEvents
@@ -479,7 +482,7 @@ func (ob *GoWindowObj) loop() (err error) {
 				progress = 0
 			}
 			ob.gio.Invalidate()			// redraw window*/
-		}
+		//}
     }
 	return nil
 }
@@ -536,7 +539,7 @@ func (ob *GoWindowObj) signalEvents(gtx layout_gio.Context) {
 		pointer_gio.InputOp{
 			Tag:   0,
 			Grab:  false,
-			Types: pointer_gio.Press,
+			Kinds: pointer_gio.Press,
 		}.Add(gtx.Ops)
 }
 
@@ -547,9 +550,9 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 		if obj.ObjectType() == "GoLayoutObj" {
 			//log.Println("(ob *GoLayoutObj) updateLayout.............")
 			ob.updateLayout(obj, gtx)
-		} else {
+		} /*else {
 			if obj.ObjectType() == "GoButtonObj"{
-				/*button := obj.(*GoButtonObj)
+				button := obj.(*GoButtonObj)
 				if button.Clicked() {
 					log.Println("GoWindow::GoButtonObj:Clicked()")
 					//GoApp.Keyboard().SetFocus(nil)
@@ -575,7 +578,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 					if button.onPress != nil {
 						button.onPress()
 					}
-				}*/
+				}
 			} else if obj.ObjectType() == "GoRadioButtonObj"{
 				button := obj.(*GoRadioButtonObj)
 				if button.Changed() {
@@ -598,7 +601,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 				}
 
 			} else if obj.ObjectType() == "GoSwitchObj" {
-				/*swtch := obj.(*GoSwitchObj)
+				swtch := obj.(*GoSwitchObj)
 				if swtch.Changed() {
 					log.Println("GoWindow::GoSwitchObj:Changed()")
 					if swtch.onChange != nil {
@@ -622,7 +625,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 					if swtch.onPress != nil {
 						swtch.onPress()
 					}
-				}*/
+				}
 			} else if obj.ObjectType() == "GoSliderObj" {
 				slider := obj.(*GoSliderObj)
 				if slider.Changed() {
@@ -639,7 +642,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 				}
 			} //else if obj.objectType() == "GoTextEditObj" {
 				//textedit := obj.(*GoTextEditObj)
-		}
+		}*/
 	}
 	for _, gtxEvent := range gtx.Events(0) {
 		//log.Println("gtxEvent -", gtxEvent.Type)
@@ -651,7 +654,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 		    case pointer_gio.Event:
 		    	//log.Println("ApplicationPointer::Event -", event.Type)
 
-		    	switch event.Type {
+		    	switch event.Kind {
 					case pointer_gio.Press:
 						if event.Priority == pointer_gio.Grabbed {
 							log.Println("GoApp.Keyboard().SetFocusControl(nil)")
@@ -671,9 +674,9 @@ func (ob *GoWindowObj) updateLayout(layout GoObject, gtx layout_gio.Context) {
 	for _, obj := range layout.Objects() {
 		if obj.ObjectType() == "GoLayoutObj" {
 			ob.updateLayout(obj, gtx)
-		} else {
+		}/* else {
 			if obj.ObjectType() == "GoButtonObj"{
-				/*button := obj.(*GoButtonObj)
+				button := obj.(*GoButtonObj)
 				if button.Clicked() {
 					log.Println("GoButtonObj:Clicked()")
 					//GoApp.Keyboard().SetFocus(nil)
@@ -703,7 +706,7 @@ func (ob *GoWindowObj) updateLayout(layout GoObject, gtx layout_gio.Context) {
 					if button.onPress != nil {
 						button.onPress()
 					}
-				}*/
+				}
 			} else if obj.ObjectType() == "GoRadioButtonObj"{
 				button := obj.(*GoRadioButtonObj)
 				if button.Changed() {
@@ -726,7 +729,7 @@ func (ob *GoWindowObj) updateLayout(layout GoObject, gtx layout_gio.Context) {
 				}
 
 			} else if obj.ObjectType() == "GoSwitchObj" {
-				/*swtch := obj.(*GoSwitchObj)
+				swtch := obj.(*GoSwitchObj)
 				if swtch.Changed() {
 					log.Println("GoSwitchObj:Changed()")
 					if swtch.onChange != nil {
@@ -750,7 +753,7 @@ func (ob *GoWindowObj) updateLayout(layout GoObject, gtx layout_gio.Context) {
 					if swtch.onPress != nil {
 						swtch.onPress()
 					}
-				}*/
+				}
 			} else if obj.ObjectType() == "GoSliderObj" {
 				slider := obj.(*GoSliderObj)
 				if slider.Changed() {
@@ -766,7 +769,7 @@ func (ob *GoWindowObj) updateLayout(layout GoObject, gtx layout_gio.Context) {
 					}
 				}
 			}
-		}
+		}*/
 
 	}
 }

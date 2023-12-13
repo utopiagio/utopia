@@ -7,9 +7,14 @@ import (
 
 	"golang.org/x/exp/shiny/materialdesign/icons"
 
+	//"github.com/utopiagio/gio/font/gofont"
+	//"github.com/utopiagio/gio/font/opentype"
+
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
+
+	//"golang.org/x/image/font/gofont/goregular"
 )
 
 // Palette contains the minimal set of colors that a widget may need to
@@ -57,8 +62,11 @@ type GoPalette struct {
 }
 
 func GoTheme(fontCollection []text_gio.FontFace) *GoThemeObj {
+	//ltrFace, _ := opentype.Parse(goregular.TTF)
+	//collection := text_gio[]FontFace{{Face: ltrFace}}
 	th := &GoThemeObj{
-		Shaper: text_gio.NewShaper(fontCollection),
+		Shaper: text_gio.NewShaper(text_gio.NoSystemFonts(), text_gio.WithCollection(fontCollection)),
+
 	}
 	th.GoPalette = GoPalette{
 		ColorBg: 	GoColor(0xffffffff),
