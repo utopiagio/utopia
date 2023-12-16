@@ -1,4 +1,4 @@
-# utopia
+# UtopiaGio
 <a href="https://utopiagio.github.io/docs/">UtopiaGio is a Go framework library</a> built on top of the <a href="https://gioui.org">Gio library module</a>. Gio is a cross-platform immediate mode GUI.
 
 The GoApplication class/structure maintains a list of GoWindows and manages the control of the GoWindows and their running threads.
