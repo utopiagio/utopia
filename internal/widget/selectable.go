@@ -1,3 +1,8 @@
+/* internal/widget/selectable.go */
+
+/* Class GioSelectable */
+
+
 package widget
 
 import (

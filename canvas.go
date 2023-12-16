@@ -150,7 +150,7 @@ func (ob *GoCanvasObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
-					return ob.layout(gtx)
+					return ob.Layout(gtx)
 				})
 			})
 		})
@@ -173,7 +173,7 @@ func (ob *GoCanvasObj) Update() {
 	
 }
 
-func (ob *GoCanvasObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
+func (ob *GoCanvasObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
 
 	// paint object

@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: Unlicense OR MIT
+/* internal/widget/label.go */
+
+/* Class GioLabel */
 
 package widget
 

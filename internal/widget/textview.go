@@ -1,3 +1,7 @@
+/* internal/widget/textview.go */
+
+/* Class GioTextView */
+
 package widget
 
 import (

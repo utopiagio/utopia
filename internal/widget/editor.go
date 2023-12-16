@@ -1,4 +1,7 @@
-// SPDX-License-Identifier: Unlicense OR MIT
+/* internal/widget/editor.go */
+
+/* Class GioEditor */
+
 
 package widget
 
@@ -43,7 +46,7 @@ import (
 )
 
 // Editor implements an editable and scrollable text area.
-type Editor struct {
+type GioEditor struct {
 	// text manages the text buffer and provides shaping and cursor positioning
 	// services.
 	text GioTextView
@@ -179,7 +182,7 @@ func (m *maskReader) Read(b []byte) (n int, err error) {
 	return n, err
 }
 
-/*type EditorEvent interface {
+/*type GioEditorEvent interface {
 	isEditorEvent()
 }
 
@@ -206,14 +209,14 @@ const (
 )
 
 // Events returns available editor events.
-/*func (e *Editor) Events() []EditorEvent {
+/*func (e *GioEditor) Events() []EditorEvent {
 	events := e.events
 	e.events = nil
 	e.prevEvents = 0
 	return events
 }
 
-func (e *Editor) processEvents(gtx layout.Context) {
+func (e *GioEditor) processEvents(gtx layout.Context) {
 	log.Println("editor processEvents()")
 	// Flush events from before the previous Layout.
 	n := copy(e.events, e.events[e.prevEvents:])
@@ -229,7 +232,7 @@ func (e *Editor) processEvents(gtx layout.Context) {
 	}
 }
 
-func (e *Editor) processPointer(gtx layout.Context) {
+func (e *GioEditor) processPointer(gtx layout.Context) {
 	sbounds := e.text.ScrollBounds()
 	var smin, smax int
 	var axis gesture.Axis
@@ -319,8 +322,8 @@ func (e *Editor) processPointer(gtx layout.Context) {
 	}
 }*/
 
-func (e *Editor) PointerPressed(evt pointer_gio.Event) {
-	log.Println("Editor::PointerPressed()")
+func (e *GioEditor) PointerPressed(evt pointer_gio.Event) {
+	log.Println("GioEditor::PointerPressed()")
 	//prevCaretPos, _ := e.text.Selection()
 	//e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
@@ -333,8 +336,8 @@ func (e *Editor) PointerPressed(evt pointer_gio.Event) {
 	e.dragging = true
 }
 
-func (e *Editor) PointerReleased(evt pointer_gio.Event) {
-	log.Println("Editor::PointerReleased()")
+func (e *GioEditor) PointerReleased(evt pointer_gio.Event) {
+	log.Println("GioEditor::PointerReleased()")
 	//e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
@@ -344,7 +347,7 @@ func (e *Editor) PointerReleased(evt pointer_gio.Event) {
 	e.dragging = false
 }
 
-func (e *Editor) PointerDragged(evt pointer_gio.Event) {
+func (e *GioEditor) PointerDragged(evt pointer_gio.Event) {
 	//e.blinkRefresh = true
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
@@ -353,7 +356,7 @@ func (e *Editor) PointerDragged(evt pointer_gio.Event) {
 	e.scrollCaret = true
 }
 
-/*func (e *Editor) clickDragEvents(gtx layout.Context) []event.Event {
+/*func (e *GioEditor) clickDragEvents(gtx layout.Context) []event.Event {
 	var combinedEvents []event.Event
 	for _, evt := range e.clicker.Update(gtx) {
 		combinedEvents = append(combinedEvents, evt)
@@ -364,8 +367,8 @@ func (e *Editor) PointerDragged(evt pointer_gio.Event) {
 	return combinedEvents
 }*/
 
-func (e *Editor) ProcessKey(evt key_gio.Event) {
-	log.Println("Editor::ProcessKey()")
+func (e *GioEditor) ProcessKey(evt key_gio.Event) {
+	log.Println("GioEditor::ProcessKey()")
 	//e.blinkRefresh = true
 	direction := 1
 	moveByWord := evt.Modifiers.Contain(key_gio.ModShortcutAlt)
@@ -395,15 +398,15 @@ func (e *Editor) ProcessKey(evt key_gio.Event) {
 				}
 			}
 		case key_gio.NameUpArrow:
-			log.Println("Editor::MoveLines(-1)")
+			log.Println("GioEditor::MoveLines(-1)")
 			e.text.MoveLines(-1, selAct)
 			e.scrollCaret = true
 		case key_gio.NameDownArrow:
-			log.Println("Editor::MoveLines(+1)")
+			log.Println("GioEditor::MoveLines(+1)")
 			e.text.MoveLines(+1, selAct)
 			e.scrollCaret = true
 		case key_gio.NameLeftArrow:
-			log.Println("Editor::MoveBy(-1)")
+			log.Println("GioEditor::MoveBy(-1)")
 			if moveByWord {
 				e.text.MoveWord(-1*direction, selAct)
 			} else {
@@ -413,7 +416,7 @@ func (e *Editor) ProcessKey(evt key_gio.Event) {
 				e.text.MoveCaret(-1*direction, -1*direction*int(selAct))
 			}
 		case key_gio.NameRightArrow:
-			log.Println("Editor::MoveBy(+1)")
+			log.Println("GioEditor::MoveBy(+1)")
 			if moveByWord {
 				e.text.MoveWord(1*direction, selAct)
 			} else {
@@ -433,7 +436,7 @@ func (e *Editor) ProcessKey(evt key_gio.Event) {
 	}
 }
 
-/*func (e *Editor) processKey(gtx layout.Context) {
+/*func (e *GioEditor) processKey(gtx layout.Context) {
 	if e.text.Changed() {
 		e.events = append(e.events, ChangeEvent{})
 	}
@@ -515,7 +518,7 @@ func (e *Editor) ProcessKey(evt key_gio.Event) {
 	}
 }
 
-func (e *Editor) command(gtx layout.Context, k key.Event) {
+func (e *GioEditor) command(gtx layout.Context, k key.Event) {
 	direction := 1
 	if gtx.Locale.Direction.Progression() == system.TowardOrigin {
 		direction = -1
@@ -611,24 +614,24 @@ func (e *Editor) command(gtx layout.Context, k key.Event) {
 }*/
 
 // Focus requests the input focus for the Editor.
-/*func (e *Editor) Focus() {
+/*func (e *GioEditor) Focus() {
 	e.requestFocus = true
 }*/
 
 // Focused returns whether the editor is focused or not.
-func (e *Editor) Focused() bool {
+func (e *GioEditor) Focused() bool {
 	return e.focused
 }
 
 // SetFocused sets the editor focused or not.
-func (e *Editor) SetFocused(focus bool) {
+func (e *GioEditor) SetFocused(focus bool) {
 	e.focused = focus
 }
 
 // initBuffer should be invoked first in every exported function that accesses
 // text state. It ensures that the underlying text widget is both ready to use
 // and has its fields synced with the editor.
-func (e *Editor) initBuffer() {
+func (e *GioEditor) initBuffer() {
 	if e.buffer == nil {
 		e.buffer = new(editBuffer)
 		e.text.SetSource(e.buffer)
@@ -642,7 +645,7 @@ func (e *Editor) initBuffer() {
 }
 
 // Update the state of the editor in response to input events.
-func (e *Editor) Update(gtx layout.Context) {
+func (e *GioEditor) Update(gtx layout.Context) {
 	e.initBuffer()
 	//e.processEvents(gtx)
 	if e.focused {
@@ -675,7 +678,7 @@ func (e *Editor) Update(gtx layout.Context) {
 // Layout lays out the editor using the provided textMaterial as the paint material
 // for the text glyphs+caret and the selectMaterial as the paint material for the
 // selection rectangle.
-func (e *Editor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
+func (e *GioEditor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
 	e.Update(gtx)
 
 	e.text.Layout(gtx, lt, font, size)
@@ -684,7 +687,7 @@ func (e *Editor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, siz
 
 // updateSnippet adds a key.SnippetOp if the snippet content or position
 // have changed. off and len are in runes.
-func (e *Editor) updateSnippet(gtx layout.Context, start, end int) {
+func (e *GioEditor) updateSnippet(gtx layout.Context, start, end int) {
 	if start > end {
 		start, end = end, start
 	}
@@ -728,7 +731,7 @@ func (e *Editor) updateSnippet(gtx layout.Context, start, end int) {
 	}.Add(gtx.Ops)
 }
 
-func (e *Editor) layout(gtx layout.Context, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
+func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
 	// Adjust scrolling for new viewport and layout.
 	e.text.ScrollRel(0, 0)
 
@@ -816,7 +819,7 @@ func (e *Editor) layout(gtx layout.Context, textMaterial, selectMaterial op.Call
 
 // paintSelection paints the contrasting background for selected text using the provided
 // material to set the painting material for the selection.
-func (e *Editor) paintSelection(gtx layout.Context, material op.CallOp) {
+func (e *GioEditor) paintSelection(gtx layout.Context, material op.CallOp) {
 	e.initBuffer()
 	if !e.focused {
 		return
@@ -826,14 +829,14 @@ func (e *Editor) paintSelection(gtx layout.Context, material op.CallOp) {
 
 // paintText paints the text glyphs using the provided material to set the fill of the
 // glyphs.
-func (e *Editor) paintText(gtx layout.Context, material op.CallOp) {
+func (e *GioEditor) paintText(gtx layout.Context, material op.CallOp) {
 	e.initBuffer()
 	e.text.PaintText(gtx, material)
 }
 
 // paintCaret paints the text glyphs using the provided material to set the fill material
 // of the caret rectangle.
-func (e *Editor) paintCaret(gtx layout.Context, material op.CallOp) {
+func (e *GioEditor) paintCaret(gtx layout.Context, material op.CallOp) {
 	e.initBuffer()
 	if !e.showCaret || e.ReadOnly {
 		return
@@ -842,19 +845,19 @@ func (e *Editor) paintCaret(gtx layout.Context, material op.CallOp) {
 }
 
 // Len is the length of the editor contents, in runes.
-func (e *Editor) Len() int {
+func (e *GioEditor) Len() int {
 	e.initBuffer()
 	return e.text.Len()
 }
 
 // Text returns the contents of the editor.
-func (e *Editor) Text() string {
+func (e *GioEditor) Text() string {
 	e.initBuffer()
 	e.scratch = e.text.Text(e.scratch)
 	return string(e.scratch)
 }
 
-func (e *Editor) SetText(s string) {
+func (e *GioEditor) SetText(s string) {
 	e.initBuffer()
 	if e.SingleLine {
 		s = strings.ReplaceAll(s, "\n", " ")
@@ -865,14 +868,14 @@ func (e *Editor) SetText(s string) {
 }
 
 // CaretPos returns the line & column numbers of the caret.
-func (e *Editor) CaretPos() (line, col int) {
+func (e *GioEditor) CaretPos() (line, col int) {
 	e.initBuffer()
 	return e.text.CaretPos()
 }
 
 // CaretCoords returns the coordinates of the caret, relative to the
 // editor itself.
-func (e *Editor) CaretCoords() f32.Point {
+func (e *GioEditor) CaretCoords() f32.Point {
 	e.initBuffer()
 	return e.text.CaretCoords()
 }
@@ -882,7 +885,7 @@ func (e *Editor) CaretCoords() f32.Point {
 //
 // If there is a selection, it is deleted and counts as a single grapheme
 // cluster.
-func (e *Editor) Delete(graphemeClusters int) {
+func (e *GioEditor) Delete(graphemeClusters int) {
 	e.initBuffer()
 	if graphemeClusters == 0 {
 		return
@@ -903,7 +906,7 @@ func (e *Editor) Delete(graphemeClusters int) {
 	e.ClearSelection()
 }
 
-func (e *Editor) Insert(s string) {
+func (e *GioEditor) Insert(s string) {
 	e.initBuffer()
 	if e.SingleLine {
 		s = strings.ReplaceAll(s, "\n", " ")
@@ -936,7 +939,7 @@ type modification struct {
 
 // undo applies the modification at e.history[e.historyIdx] and decrements
 // e.historyIdx.
-func (e *Editor) undo() {
+func (e *GioEditor) undo() {
 	e.initBuffer()
 	if len(e.history) < 1 || e.nextHistoryIdx == 0 {
 		return
@@ -951,7 +954,7 @@ func (e *Editor) undo() {
 
 // redo applies the modification at e.history[e.historyIdx] and increments
 // e.historyIdx.
-func (e *Editor) redo() {
+func (e *GioEditor) redo() {
 	e.initBuffer()
 	if len(e.history) < 1 || e.nextHistoryIdx == len(e.history) {
 		return
@@ -969,7 +972,7 @@ func (e *Editor) redo() {
 // addHistory controls whether this modification is recorded in the undo
 // history. replace can modify text in positions unrelated to the cursor
 // position.
-func (e *Editor) replace(start, end int, s string, addHistory bool) int {
+func (e *GioEditor) replace(start, end int, s string, addHistory bool) int {
 	length := e.text.Len()
 	if start > end {
 		start, end = end, start
@@ -1035,7 +1038,7 @@ func (e *Editor) replace(start, end int, s string, addHistory bool) int {
 // negative distances moves backward. Distances are in grapheme clusters,
 // which closely match what users perceive as "characters" even when the
 // characters are multiple code points long.
-func (e *Editor) MoveCaret(startDelta, endDelta int) {
+func (e *GioEditor) MoveCaret(startDelta, endDelta int) {
 	e.initBuffer()
 	e.text.MoveCaret(startDelta, endDelta)
 }
@@ -1045,7 +1048,7 @@ func (e *Editor) MoveCaret(startDelta, endDelta int) {
 // Positive is forward, negative is backward.
 // Absolute values greater than one will delete that many words.
 // The selection counts as a single word.
-func (e *Editor) deleteWord(distance int) {
+func (e *GioEditor) deleteWord(distance int) {
 	if distance == 0 {
 		return
 	}
@@ -1101,21 +1104,21 @@ func (e *Editor) deleteWord(distance int) {
 
 // SelectionLen returns the length of the selection, in runes; it is
 // equivalent to utf8.RuneCountInString(e.SelectedText()).
-func (e *Editor) SelectionLen() int {
+func (e *GioEditor) SelectionLen() int {
 	e.initBuffer()
 	return e.text.SelectionLen()
 }
 
 // Selection returns the start and end of the selection, as rune offsets.
 // start can be > end.
-func (e *Editor) Selection() (start, end int) {
+func (e *GioEditor) Selection() (start, end int) {
 	e.initBuffer()
 	return e.text.Selection()
 }
 
 // SetCaret moves the caret to start, and sets the selection end to end. start
 // and end are in runes, and represent offsets into the editor text.
-func (e *Editor) SetCaret(start, end int) {
+func (e *GioEditor) SetCaret(start, end int) {
 	e.initBuffer()
 	e.text.SetCaret(start, end)
 	e.scrollCaret = true
@@ -1123,7 +1126,7 @@ func (e *Editor) SetCaret(start, end int) {
 }
 
 // SelectedText returns the currently selected text (if any) from the editor.
-func (e *Editor) SelectedText() string {
+func (e *GioEditor) SelectedText() string {
 	e.initBuffer()
 	e.scratch = e.text.SelectedText(e.scratch)
 	return string(e.scratch)
@@ -1131,31 +1134,31 @@ func (e *Editor) SelectedText() string {
 
 // ClearSelection clears the selection, by setting the selection end equal to
 // the selection start.
-func (e *Editor) ClearSelection() {
+func (e *GioEditor) ClearSelection() {
 	e.initBuffer()
 	e.text.ClearSelection()
 }
 
 // WriteTo implements io.WriterTo.
-func (e *Editor) WriteTo(w io.Writer) (int64, error) {
+func (e *GioEditor) WriteTo(w io.Writer) (int64, error) {
 	e.initBuffer()
 	return e.text.WriteTo(w)
 }
 
 // Seek implements io.Seeker.
-func (e *Editor) Seek(offset int64, whence int) (int64, error) {
+func (e *GioEditor) Seek(offset int64, whence int) (int64, error) {
 	e.initBuffer()
 	return e.text.Seek(offset, whence)
 }
 
 // Read implements io.Reader.
-func (e *Editor) Read(p []byte) (int, error) {
+func (e *GioEditor) Read(p []byte) (int, error) {
 	e.initBuffer()
 	return e.text.Read(p)
 }
 
 // Regions returns visible regions covering the rune range [start,end).
-func (e *Editor) Regions(start, end int, regions []Region) []Region {
+func (e *GioEditor) Regions(start, end int, regions []Region) []Region {
 	e.initBuffer()
 	return e.text.Regions(start, end, regions)
 }
@@ -1192,6 +1195,6 @@ func sign(n int) int {
 	}
 }
 
-//func (s ChangeEvent) isEditorEvent() {}
+//func (s ChangeEvent) isGioEditorEvent() {}
 //func (s SubmitEvent) isEditorEvent() {}
 //func (s SelectEvent) isEditorEvent() {}

@@ -42,7 +42,7 @@ type GoTextEditObj struct {
 	hintColor GoColor
 	// SelectionColor is the color of the background for selected text.
 	selectionColor GoColor
-	editor         *widget_int.Editor
+	editor         *widget_int.GioEditor
 
 	shaper *text_gio.Shaper
 
@@ -69,7 +69,7 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 		hint: 		hintText,
 		hintColor: 		NRGBAColor(MulAlpha(theme.ColorFg.NRGBA(), 0xbb)),
 		selectionColor:	NRGBAColor(MulAlpha(theme.ContrastBg.NRGBA(), 0x60)),
-		editor: 	new(widget_int.Editor),
+		editor: 	new(widget_int.GioEditor),
 		shaper: 	theme.Shaper,
 	}
 	hTextEdit.SetOnSetFocus(hTextEdit.GotFocus)

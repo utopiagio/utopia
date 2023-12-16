@@ -51,7 +51,9 @@ type GoObject interface {
 	AddControl(GoObject)
 	Clear()
 	Objects() ([]GoObject)
+	DeleteControl(GoObject)
 	Draw(layout_gio.Context) (layout_gio.Dimensions)
+	InsertControl(GoObject, int)
 	ObjectType() (string)
 	ParentControl() (GoObject)
 	ParentWindow() (*GoWindowObj)
@@ -72,21 +74,8 @@ func (ob *GioObject) AddControl(control GoObject) {
 	ob.Controls = append(ob.Controls, control)
 }
 
-func (ob *GioObject) InsertControl(control GoObject, idx int) {
-	if len(ob.Controls) < 1 || idx >= len(ob.Controls) {
-		ob.Controls = append(ob.Controls, control)
-	} else {
-		ob.Controls = append(ob.Controls[:idx + 1], ob.Controls[idx:]...)
-		ob.Controls[idx] = control
-	}
-}
-
 func (ob *GioObject) Clear() {
 	ob.Controls = []GoObject{}
-}
-
-func (ob *GioObject) Objects() []GoObject {
-	return ob.Controls
 }
 
 func (ob *GioObject) DeleteControl(object GoObject) {
@@ -102,30 +91,29 @@ func (ob *GioObject) DeleteControl(object GoObject) {
 	ob.Controls = ob.Controls[:k] // set slice len to remaining elements
 }
 
-/*func (ob *GioObject) DeleteIndex(idx int) {
-	log.Println("GioObject.Controls Length(", len(ob.Controls), ")")
-	log.Println("GioObject.DeleteIndex(", idx, ")")
-	if idx >= 0 && idx < len(ob.Controls) {
-		ob.Controls[idx] = nil
-		log.Println("GioObject.Controls Length(", len(ob.Controls), ")")
-		if len(ob.Controls) == 1 {
-			log.Println("ob.Controls = []GoObject{}")
-			ob.Controls = []GoObject{}
-		} else {
-			ob.Controls = append(ob.Controls[:idx], ob.Controls[idx + 1:]...) // set slice len to remaining elements
-		}
-	}
-}*/
 
 func (ob *GioObject) Draw(layout_gio.Context) (layout_gio.Dimensions) {
 	log.Println("GioObject.Draw()")
 	return layout_gio.Dimensions{}
 }
 
-func (ob *GioObject) ObjectType() (string) {
+func (ob *GioObject) InsertControl(control GoObject, idx int) {
+	if len(ob.Controls) < 1 || idx >= len(ob.Controls) {
+		ob.Controls = append(ob.Controls, control)
+	} else {
+		ob.Controls = append(ob.Controls[:idx + 1], ob.Controls[idx:]...)
+		ob.Controls[idx] = control
+	}
+}
+
+func (ob *GioObject) Objects() []GoObject {
+	return ob.Controls
+}
+
+/*func (ob *GioObject) ObjectType() (string) {
 	log.Println("GioObject.ObjectType() -", ob)
 	return ""
-}
+}*/
 
 func (ob *GioObject) ParentControl() (GoObject) {
 	return ob.Parent
