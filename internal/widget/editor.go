@@ -1,9 +1,8 @@
-/* internal/widget/editor.go */
+// SPDX-License-Identifier: Unlicense OR MIT
 
-/* Class GioEditor */
+/* github.com/utopiagio/utopia/internal/widget/editor.go */
 
-
-package widget
+package widget	/* Class GioEditor */
 
 import (
 	"bufio"

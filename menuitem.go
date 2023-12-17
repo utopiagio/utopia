@@ -1,4 +1,6 @@
-/* menuItem.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/menuitem.go */
 
 package utopia
 

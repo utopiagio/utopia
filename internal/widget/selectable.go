@@ -1,9 +1,8 @@
-/* internal/widget/selectable.go */
+// SPDX-License-Identifier: Unlicense OR MIT
 
-/* Class GioSelectable */
+/* github.com/utopiagio/utopia/internal/widget/selectable.go */
 
-
-package widget
+package widget	/* Class GioSelectable */
 
 import (
 	"image"

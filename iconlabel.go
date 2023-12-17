@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/iconlabel.go */
+
 package utopia
 
 import (
@@ -7,7 +11,7 @@ import (
 	"log"
 	"reflect"
 
-	f32_ui "github.com/utopiagio/utopia/colorf32"
+	"github.com/utopiagio/utopia/internal/f32color"
 	font_gio "github.com/utopiagio/gio/font"
 	layout_gio "github.com/utopiagio/gio/layout"
 	op_gio "github.com/utopiagio/gio/op"
@@ -189,7 +193,7 @@ func (ob *GoIconLabelObj) image(sz int, color GoColor) paint_gio.ImageOp {
 	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: int(float32(sz) * dy / dx)}})
 	var ico iconvg.Rasterizer
 	ico.SetDstImage(img, img.Bounds(), draw.Src)
-	m.Palette[0] = f32_ui.NRGBAToLinearRGBA(color.NRGBA())
+	m.Palette[0] = f32color.NRGBAToLinearRGBA(color.NRGBA())
 	iconvg.Decode(&ico, ob.icon, &iconvg.DecodeOptions{
 		Palette: &m.Palette,
 	})

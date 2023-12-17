@@ -1,4 +1,6 @@
-/* clipboard.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/clipboard.go */
 
 package utopia
 

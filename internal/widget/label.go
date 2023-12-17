@@ -1,8 +1,8 @@
-/* internal/widget/label.go */
+// SPDX-License-Identifier: Unlicense OR MIT
 
-/* Class GioLabel */
+/* github.com/utopiagio/utopia/internal/widget/label.go */
 
-package widget
+package widget	/* Class GioLabel */
 
 import (
 	"image"

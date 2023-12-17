@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
+/* github.com/utopiagio/utopia/textedit.go */
+
 package utopia
 
 import (

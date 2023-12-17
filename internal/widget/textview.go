@@ -1,8 +1,8 @@
-/* internal/widget/textview.go */
+// SPDX-License-Identifier: Unlicense OR MIT
 
-/* Class GioTextView */
+/* github.com/utopiagio/utopia/internal/widget/textview.go */
 
-package widget
+package widget	/* Class GioTextView */
 
 import (
 	"bufio"

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/listviewitem.go */
+
 package utopia
 
 import (
@@ -6,7 +10,7 @@ import (
 	"image/draw"
 	//"math"
 
-	f32_gio "github.com/utopiagio/utopia/colorf32"
+	"github.com/utopiagio/utopia/internal/f32color"
 	font_gio "github.com/utopiagio/gio/font"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
 	layout_gio "github.com/utopiagio/gio/layout"
@@ -364,7 +368,7 @@ func (ob *GoListViewItemObj) image(sz int, color GoColor) paint_gio.ImageOp {
 	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: int(float32(sz) * dy / dx)}})
 	var ico iconvg.Rasterizer
 	ico.SetDstImage(img, img.Bounds(), draw.Src)
-	m.Palette[0] = f32_gio.NRGBAToLinearRGBA(color.NRGBA())
+	m.Palette[0] = f32color.NRGBAToLinearRGBA(color.NRGBA())
 	iconvg.Decode(&ico, ob.icon, &iconvg.DecodeOptions{
 		Palette: &m.Palette,
 	})

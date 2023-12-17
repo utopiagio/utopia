@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
+/* github.com/utopiagio/utopia/internal/widget/buffer.go */
+
 package widget
 
 import (

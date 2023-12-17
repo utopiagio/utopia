@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/popupwindow.go */
+
 package utopia
 
 import (

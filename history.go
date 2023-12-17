@@ -1,4 +1,6 @@
-/* history.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/history.go */
 
 package utopia
 

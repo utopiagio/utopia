@@ -1,4 +1,6 @@
-/* keyboard.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/keyboard.go */
 
 package utopia
 

@@ -1,4 +1,6 @@
-/* canvas.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/canvas.go */
 
 package utopia
 

@@ -1,4 +1,4 @@
-package colorf32
+package f32color
 
 import (
 	"image/color"

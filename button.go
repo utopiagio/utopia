@@ -1,4 +1,6 @@
-/* button.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/button.go */
 
 package utopia
 

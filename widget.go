@@ -1,4 +1,6 @@
-/* widget.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/widget.go */
 
 package utopia
 

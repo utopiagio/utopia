@@ -1,4 +1,6 @@
-/* layout.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/layout.go */
 
 package utopia
 

@@ -1,4 +1,6 @@
-/* canvascircle.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/canvascircle.go */
 
 package utopia
 

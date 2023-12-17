@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
+/* github.com/utopiagio/utopia/checkbox.go */
+
 package utopia
 
 import (
 	semantic_gio "github.com/utopiagio/gio/io/semantic"
 	layout_gio "github.com/utopiagio/gio/layout"
+	widget_int "github.com/utopiagio/utopia/internal/widget"
 	widget_gio "github.com/utopiagio/gio/widget"
 )
 
 type GoCheckBoxObj struct {
 	GioObject
 	GioWidget
-	checkable
+	checkable widget_int.GioCheckable
 	checkBox *widget_gio.Bool
 }
 
 func GoCheckBox(parent GoObject, label string) *GoCheckBoxObj {
 	var theme *GoThemeObj = GoApp.Theme()
-	var checkbox *widget_gio.Bool = new(widget_gio.Bool)
+	var GioCheckbox *widget_gio.Bool = new(widget_gio.Bool)
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -28,16 +31,16 @@ func GoCheckBox(parent GoObject, label string) *GoCheckBoxObj {
 	hCheckBox := &GoCheckBoxObj{
 		GioObject: object,
 		GioWidget: widget,
-		checkBox: checkbox,
-		checkable: checkable{
-			label:              label,
-			color:              theme.ColorFg,
-			iconColor:          theme.ContrastBg,
-			fontSize:           theme.TextSize, // * 14.0 / 16.0,
-			size:               26,
-			shaper:             theme.Shaper,
-			checkedStateIcon:   theme.Icon.CheckBoxChecked,
-			uncheckedStateIcon: theme.Icon.CheckBoxUnchecked,
+		checkBox: GioCheckbox,
+		checkable: widget_int.GioCheckable{
+			Label:              label,
+			Color:              theme.ColorFg.NRGBA(),
+			IconColor:          theme.ContrastBg.NRGBA(),
+			TextSize:           theme.TextSize, // * 14.0 / 16.0,
+			Size:               26,
+			Shaper:             theme.Shaper,
+			CheckedStateIcon:   theme.Icon.CheckBoxChecked,
+			UncheckedStateIcon: theme.Icon.CheckBoxUnchecked,
 		},
 	}
 	parent.AddControl(hCheckBox)
@@ -50,7 +53,7 @@ func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
-					return ob.layout(gtx)
+					return ob.Layout(gtx)
 				})
 			})
 		})
@@ -62,10 +65,10 @@ func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 }
 
 // Layout updates the checkBox and displays it.
-func (ob *GoCheckBoxObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
+func (ob *GoCheckBoxObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	return ob.checkBox.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		semantic_gio.CheckBox.Add(gtx.Ops)
-		return ob.checkable.layout(gtx, ob.checkBox.Value, ob.checkBox.Hovered() || ob.checkBox.Focused())
+		return ob.checkable.Layout(gtx, ob.checkBox.Value, ob.checkBox.Hovered() || ob.checkBox.Focused())
 	})
 }
 

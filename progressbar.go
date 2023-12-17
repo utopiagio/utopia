@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
+/* github.com/utopiagio/utopia/progressbar.go */
+
 package utopia
 
 import (

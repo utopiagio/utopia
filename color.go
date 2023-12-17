@@ -1,4 +1,6 @@
-/* utopia/color.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/color.go */
 
 package utopia
 

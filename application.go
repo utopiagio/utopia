@@ -1,4 +1,6 @@
-/* application.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/application.go */
 
 package utopia
 

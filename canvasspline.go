@@ -1,4 +1,6 @@
-/* canvasspline.go */
+// SPDX-License-Identifier: Unlicense OR MIT
+
+/* github.com/utopiagio/utopia/canvasspline.go */
 
 package utopia
 

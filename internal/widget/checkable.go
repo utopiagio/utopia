@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
-package utopia
+/* github.com/utopiagio/utopia/internal/widget/checkable.go */
+
+package widget
 
 import (
 	"image"
-	//"image/color"
+	"image/color"
 
-	//"github.com/utopiagio/gio/internal/f32color"
+	"github.com/utopiagio/utopia/internal/f32color"
 	layout_gio "github.com/utopiagio/gio/layout"
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	font_gio "github.com/utopiagio/gio/font"
@@ -15,38 +17,33 @@ import (
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
-	widget_int "github.com/utopiagio/utopia/internal/widget"
+	//widget_int "github.com/utopiagio/utopia/internal/widget"
 )
-
-type checkable struct {
-	label              string
-	color              GoColor
-	font               font_gio.Font
-	fontSize           unit_gio.Sp
-	iconColor          GoColor
-	size               unit_gio.Dp
-	shaper             *text_gio.Shaper
-	checkedStateIcon   *widget_gio.Icon
-	uncheckedStateIcon *widget_gio.Icon
+type GioCheckable struct {
+	Label              string
+	Color              color.NRGBA
+	Font               font_gio.Font
+	TextSize           unit_gio.Sp
+	IconColor          color.NRGBA
+	Size               unit_gio.Dp
+	Shaper             *text_gio.Shaper
+	CheckedStateIcon   *widget_gio.Icon
+	UncheckedStateIcon *widget_gio.Icon
 }
 
-func (ob *checkable) layout(gtx layout_gio.Context, checked, hovered bool) layout_gio.Dimensions {
+func (c *GioCheckable) Layout(gtx layout_gio.Context, checked, hovered bool) layout_gio.Dimensions {
 	var icon *widget_gio.Icon
-	textColorMacro := op_gio.Record(gtx.Ops)
-	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-	textColor := textColorMacro.Stop()
-
 	if checked {
-		icon = ob.checkedStateIcon
+		icon = c.CheckedStateIcon
 	} else {
-		icon = ob.uncheckedStateIcon
+		icon = c.UncheckedStateIcon
 	}
 
 	dims := layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.Stack{Alignment: layout_gio.Center}.Layout(gtx,
 				layout_gio.Stacked(func(gtx layout_gio.Context) layout_gio.Dimensions {
-					size := gtx.Dp(ob.size) * 4 / 3
+					size := gtx.Dp(c.Size) * 4 / 3
 					dims := layout_gio.Dimensions{
 						Size: image.Point{X: size, Y: size},
 					}
@@ -54,7 +51,7 @@ func (ob *checkable) layout(gtx layout_gio.Context, checked, hovered bool) layou
 						return dims
 					}
 
-					background := MulAlpha(ob.iconColor.NRGBA(), 70)
+					background := f32color.MulAlpha(c.IconColor, 70)
 
 					b := image.Rectangle{Max: image.Pt(size, size)}
 					paint_gio.FillShape(gtx.Ops, background, clip_gio.Ellipse(b).Op(gtx.Ops))
@@ -63,10 +60,10 @@ func (ob *checkable) layout(gtx layout_gio.Context, checked, hovered bool) layou
 				}),
 				layout_gio.Stacked(func(gtx layout_gio.Context) layout_gio.Dimensions {
 					return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-						size := gtx.Dp(ob.size)
-						col := ob.iconColor.NRGBA()
+						size := gtx.Dp(c.Size)
+						col := c.IconColor
 						if gtx.Queue == nil {
-							col = DisabledBlend(col)
+							col = f32color.Disabled(col)
 						}
 						gtx.Constraints.Min = image.Point{X: size}
 						icon.Layout(gtx, col)
@@ -80,8 +77,9 @@ func (ob *checkable) layout(gtx layout_gio.Context, checked, hovered bool) layou
 
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-				paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-				return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
+				colMacro := op_gio.Record(gtx.Ops)
+				paint_gio.ColorOp{Color: c.Color}.Add(gtx.Ops)
+				return widget_gio.Label{}.Layout(gtx, c.Shaper, c.Font, c.TextSize, c.Label, colMacro.Stop())
 			})
 		}),
 	)
