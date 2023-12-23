@@ -14,6 +14,8 @@ import (
 	layout_gio "github.com/utopiagio/gio/layout"
 	op_gio "github.com/utopiagio/gio/op"
 	paint_gio "github.com/utopiagio/gio/op/paint"
+
+	"github.com/utopiagio/utopia/metrics"
 )
 
 type GoProgressCircleObj struct {
@@ -75,8 +77,8 @@ func (ob *GoProgressCircleObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dim
 			})
 		})
 		ob.dims = dims
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

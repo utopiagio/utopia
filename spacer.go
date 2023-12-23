@@ -13,6 +13,8 @@ import (
 	layout_gio "github.com/utopiagio/gio/layout"
 	//semantic_gio "github.com/utopiagio/gio/io/semantic"
 	unit_gio "github.com/utopiagio/gio/unit"
+
+	"github.com/utopiagio/utopia/metrics"
 )
 
 func GoSpacer(parent GoObject, space int) (hObj *GoSpacerObj) {
@@ -87,8 +89,8 @@ func (ob *GoSpacerObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 		})
 		ob.dims = dims
 		//log.Println("SpacerDims: ", dims)
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 		//log.Println("SpacerSize:", ob.Width, ob.Height)
 	}
 	return dims

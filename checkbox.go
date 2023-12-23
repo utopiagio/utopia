@@ -9,6 +9,8 @@ import (
 	layout_gio "github.com/utopiagio/gio/layout"
 	widget_int "github.com/utopiagio/utopia/internal/widget"
 	widget_gio "github.com/utopiagio/gio/widget"
+
+	"github.com/utopiagio/utopia/metrics"
 )
 
 type GoCheckBoxObj struct {
@@ -58,8 +60,8 @@ func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 			})
 		})
 		ob.dims = dims
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

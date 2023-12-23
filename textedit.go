@@ -23,6 +23,8 @@ import (
 	widget_gio "github.com/utopiagio/gio/widget"
 	//widget_gio "github.com/utopiagio/utopia/internal/widget"
 	widget_int "github.com/utopiagio/utopia/internal/widget"
+
+	"github.com/utopiagio/utopia/metrics"
 )
 
 type GoTextEditObj struct {
@@ -251,8 +253,8 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 			})
 		})
 		ob.dims = dims
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

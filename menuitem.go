@@ -23,6 +23,8 @@ import (
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
 	widget_int "github.com/utopiagio/utopia/internal/widget"
+
+	"github.com/utopiagio/utopia/metrics"
 )
 
 /*type ButtonStyle struct {
@@ -179,8 +181,8 @@ func (ob *GoMenuItemObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 		//log.Println("MarginDims: ", dims)
 		ob.dims = dims
 
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 		//log.Println("MenuItem.Width: ", ob.Width)
 		//log.Println("MenuItem.Height: ", ob.Height)
 	}

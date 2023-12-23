@@ -17,6 +17,8 @@ import (
 	//paint_gio "github.com/utopiagio/gio/op/paint"
 	//unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
+
+	"github.com/utopiagio/utopia/metrics"
 )
 
 // ListStyle configures the presentation of a layout_gio.List with a scrollbar.
@@ -179,8 +181,8 @@ func (ob *GoListViewObj) Draw(gtx layout_gio.Context) layout_gio.Dimensions {
 			})
 		})
 		ob.dims = dims
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

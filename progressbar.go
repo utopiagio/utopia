@@ -13,6 +13,8 @@ import (
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	unit_gio "github.com/utopiagio/gio/unit"
+
+	"github.com/utopiagio/utopia/metrics"
 )
 
 type GoProgressBarObj struct {
@@ -103,8 +105,8 @@ func (ob *GoProgressBarObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimens
 			})
 		})
 		ob.dims = dims
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

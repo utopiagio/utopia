@@ -16,6 +16,7 @@ import (
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
 	//widget_gio "github.com/utopiagio/gio/widget"
+	"github.com/utopiagio/utopia/metrics"
 )
 
 type GoSwitchObj struct {
@@ -122,8 +123,8 @@ func (ob *GoSwitchObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 			})
 		})
 		ob.dims = dims
-		ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

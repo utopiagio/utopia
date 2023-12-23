@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 	"os"
+
 	app_gio "github.com/utopiagio/gio/app"
 	"github.com/utopiagio/gio/font/gofont"
 	key_gio "github.com/utopiagio/gio/io/key"
@@ -19,6 +20,9 @@ import (
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
 	_ "github.com/utopiagio/gio/widget"
+
+	"github.com/utopiagio/utopia/desktop"
+	"github.com/utopiagio/utopia/metrics"
 )
 
 type (
@@ -27,12 +31,14 @@ type (
 )
 
 var GoDpr float32
+var GoSpr float32
 var GoApp *GoApplicationObj = nil
 
 type GoApplicationObj struct {
 	name string
 	windows	[]*GoWindowObj
 	clipboard *GoClipBoardObj
+	//desktop *GoDeskTopObj
 	keyboard *GoKeyboardObj
 	// Theme contains semantic style data. Extends `material.Theme`.
 	theme *GoThemeObj
@@ -40,7 +46,7 @@ type GoApplicationObj struct {
 	// Shaper cache of registered fonts.
 	shaper *text_gio.Shaper
 	//fontCollection []text_gio.FontFace
-	dpr float32
+	//dpr float32
 }
 
 func GoApplication(appName string) (a *GoApplicationObj) {
@@ -48,6 +54,7 @@ func GoApplication(appName string) (a *GoApplicationObj) {
 	if clipboard.init() != nil {
 		log.Println("ClipBoard Not Available!")
 	}
+	desktop.Init()
 	keyboard := GoKeyboard()
 	/*if keyboard.init() != nil {
 		log.Println("Keyboard Not Available!")
@@ -56,6 +63,7 @@ func GoApplication(appName string) (a *GoApplicationObj) {
 	GoApp = &GoApplicationObj{
 		name: appName,
 		clipboard: clipboard,
+		//desktop: desktop,
 		keyboard: keyboard,
 		theme: theme,
 		//fontCollection: gofont.Collection(),
@@ -149,13 +157,14 @@ type GoWindowObj struct {
 	popupmenus []*GoPopupMenuObj
 	popupwindow *GoPopupWindowObj
 
+	onConfig func()
 }
 
 func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{640, 480, 0, 0, 1500, 1200}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
@@ -175,7 +184,7 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{640, 480, 0, 0, 1500, 1200}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
@@ -195,7 +204,7 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{640, 450, 0, 0, 1500, 1000}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, true, modalStyle, -1, "", nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, true, modalStyle, -1, "", nil, nil, nil}
 	hWin.Window = hWin
 
 	hWin.frame = GoVFlexBoxLayout(hWin)
@@ -305,6 +314,31 @@ func (ob *GoWindowObj) ObjectType() (string) {
 	return "GoWindowObj"
 }
 
+func (ob *GoWindowObj) ClientPos() (x int, y int) {
+	//log.Println("ob.gio.HWND() = ", ob.gio.HWND())
+	//log.Println("GoWindowObj::ClientPos:()")
+	//log.Println("ob.Pos = ", ob.X, ob.Y)
+	x, y, _, _ = desktop.GetClientRect(ob.gio.HWND())
+	x = metrics.PxToDp(GoDpr, x)
+	y = metrics.PxToDp(GoDpr, y)
+	//log.Println("GoWindowObj::ClientPos:", x, y)
+	return
+}
+
+func (ob *GoWindowObj) Pos() (x int, y int) {
+	//log.Println("ob.gio.HWND() = ", ob.gio.HWND())
+	//log.Println("GoWindowObj::Pos:()")
+	//log.Println("ob.Pos = ", ob.X, ob.Y)
+	x, y, _, _ = desktop.GetWindowRect(ob.gio.HWND())
+	x = metrics.PxToDp(GoDpr, x)
+	y = metrics.PxToDp(GoDpr, y)
+	//log.Println("GoWindowObj::Pos:", x, y)
+	//ob.X = x
+	//ob.Y = y
+	return
+}
+
+
 func (ob *GoWindowObj) Widget() (*GioWidget) {
 	return nil
 }
@@ -348,6 +382,10 @@ func (ob *GoWindowObj) SetMargin(left int, top int, right int, bottom int) {
 	ob.layout.SetMargin(left, top, right, bottom)
 }
 
+func (ob *GoWindowObj) SetOnConfig(f func()) {
+	ob.onConfig = f
+}
+
 func (ob *GoWindowObj) SetPadding(left int, top int, right int, bottom int) {
 	ob.layout.SetPadding(left, top, right, bottom)
 }
@@ -355,6 +393,10 @@ func (ob *GoWindowObj) SetPadding(left int, top int, right int, bottom int) {
 func (ob *GoWindowObj) SetPos(x int, y int) {
 	ob.X = x
 	ob.Y = y
+	//log.Println("GoWindowObj::SetPos:", x, y)
+	//log.Println("GoDpr =", GoDpr)
+	//log.Println("GoWindowObj::SetPos unit_gio:", unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y))
+	//log.Println("GoWindowObj::SetPos metrics:", metrics.PxToDp(GoDpr, ob.X), metrics.PxToDp(GoDpr, ob.Y))
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)))
 	}
@@ -363,8 +405,13 @@ func (ob *GoWindowObj) SetPos(x int, y int) {
 func (ob *GoWindowObj) SetSize(width int, height int) {
 	ob.Width = width
 	ob.Height = height
+	//log.Println("GoWindowObj::SetSize:", width, height)
+	//log.Println("GoDpr =", GoDpr)
+	//log.Println("GoWindowObj::SetSize: unit_gio", unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height))
+	//log.Println("GoWindowObj::SetSize metrics:", metrics.DpToPx(GoDpr, ob.Width), metrics.PxToDp(GoDpr, ob.Height))
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)))
+		//ob.gio.Option(app_gio.Size(ob.Width, ob.Height))
 	}
 }
 
@@ -377,6 +424,34 @@ func (ob *GoWindowObj) SetTitle(title string) {
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Title(title))
 	}
+}
+
+func (ob *GoWindowObj) ClientSize() (width int, height int) {
+	var x,y int
+	//log.Println("GoWindowObj::ClientSize:()")
+	//log.Println("ob.ClientSize = ", ob.Width, ob.Height)
+	x, y, width, height = desktop.GetClientRect(ob.gio.HWND())
+	//log.Println("GoWindowObj::ClientRect:", x, y, width, height)
+	//width -= x
+	//height -= y
+	width = metrics.PxToDp(GoDpr, width - x)
+	height = metrics.PxToDp(GoDpr, height - y)
+	//log.Println("GoWindowObj::ClientSize:", width, height)
+	return
+}
+
+func (ob *GoWindowObj) Size() (width int, height int) {
+	var x,y int
+	//log.Println("GoWindowObj::Size:()")
+	//log.Println("ob.Size = ", ob.Width, ob.Height)
+	x, y, width, height = desktop.GetWindowRect(ob.gio.HWND())
+	//log.Println("GoWindowObj::Rect:", x, y, width, height)
+	//width -= x
+	//height -= y
+	width = metrics.PxToDp(GoDpr, width - x)
+	height = metrics.PxToDp(GoDpr, height - y)
+	//log.Println("GoWindowObj::Size:", width, height)
+	return
 }
 
 func (ob *GoWindowObj) Show() {
@@ -460,9 +535,8 @@ func (ob *GoWindowObj) loop() (err error) {
 
 			// detect what type of event
 			switch  e := ob.gio.NextEvent().(type) {
-	      	case system.DestroyEvent:
+					case system.DestroyEvent:
 	      		log.Println("system.DestroyEvent.....")
-
 	      		return e.Err
 	      	// this is sent when the application should re-render.
 	      	case system.FrameEvent:
@@ -477,7 +551,12 @@ func (ob *GoWindowObj) loop() (err error) {
 	      		//e.Frame(gtx.Ops)
 	      		//log.Println("Window.paint(e, gtx).....")
 	      		ob.paint(e, gtx)
+	      	case app_gio.ConfigEvent:
+	      		if ob.onConfig != nil {
+	      			ob.onConfig()
+	      		}
 	      	}
+	      
 	    /*case p := <-progressIncrementer:
 			progress += p
 			if progress > 1 {
@@ -495,9 +574,7 @@ func (ob *GoWindowObj) paint(e system.FrameEvent, gtx layout_gio.Context) {
 }
 
 func (ob *GoWindowObj) render(gtx layout_gio.Context) layout_gio.Dimensions {
-	// set global screen pixel size
-	GoDpr = gtx.Metric.PxPerDp
-	//log.Println("GoDpr =", GoDpr)
+	
 	// signal for window events
 	ob.signalEvents(gtx)
 		
@@ -546,8 +623,11 @@ func (ob *GoWindowObj) signalEvents(gtx layout_gio.Context) {
 }
 
 func (ob *GoWindowObj) update(gtx layout_gio.Context) {
-
 	//log.Println("(ob *GoWindowObj) update.............")
+	// set global screen pixel size
+	GoDpr = gtx.Metric.PxPerDp
+	GoSpr = gtx.Metric.PxPerSp
+	//log.Println("GoDpr =", GoDpr)
 	for _, obj := range ob.frame.Controls {
 		if obj.ObjectType() == "GoLayoutObj" {
 			//log.Println("(ob *GoLayoutObj) updateLayout.............")
