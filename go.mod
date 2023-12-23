@@ -12,6 +12,7 @@ require (
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
 	golang.org/x/exp/shiny v0.0.0-20231006140011-7918f672742d
 	golang.org/x/image v0.13.0
+	golang.org/x/sys v0.6.0
 	golang.org/x/text v0.13.0
 )
 
@@ -21,6 +22,5 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c // indirect
-	golang.org/x/sys v0.6.0 // indirect
 )
 
