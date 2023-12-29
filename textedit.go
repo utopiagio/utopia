@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	_ "log"
 	"image"
 	"image/color"
 
@@ -96,17 +96,24 @@ func (ob *GoTextEditObj) Font() font_gio.Font {
 	return ob.font
 }
 
+func (ob *GoTextEditObj) FontBold() bool {
+	if ob.font.Weight == 300 {
+		return true
+	}
+	return false
+}
+
 func (ob *GoTextEditObj) Focused() bool {
 	return ob.editor.Focused()
 }
 
 func (ob *GoTextEditObj) GotFocus() {
-	log.Println("GoTextEditObj::GotFocus()")
+	//log.Println("GoTextEditObj::GotFocus()")
 	ob.editor.SetFocused(true)
 }
 
 func (ob *GoTextEditObj) LostFocus() {
-	log.Println("GoTextEditObj::LostFocus()")
+	//log.Println("GoTextEditObj::LostFocus()")
 	ob.editor.SetFocused(false)
 	ob.focus = false
 }
@@ -116,19 +123,19 @@ func (ob *GoTextEditObj) Insert(text string) {
 }
 
 func (ob *GoTextEditObj) KeyEdit(e key_gio.EditEvent) {
-	log.Println("GoTextEditObj::KeyEdit()")
+	//log.Println("GoTextEditObj::KeyEdit()")
 	ob.Insert(e.Text)
 }
 
 func (ob *GoTextEditObj) KeyPressed(e key_gio.Event) {
-	log.Println("GoTextEditObj::KeyPressed()")
+	//log.Println("GoTextEditObj::KeyPressed()")
 	ob.editor.ProcessKey(e)
 	//log.Println("REFRESH........")
 	ob.ParentWindow().Refresh()
 }
 
 func (ob *GoTextEditObj) KeyReleased(e key_gio.Event) {
-	log.Println("GoTextEditObj::KeyReleased()")
+	//log.Println("GoTextEditObj::KeyReleased()")
 	//ob.editor.Insert(text)
 }
 
@@ -199,7 +206,7 @@ func (ob *GoTextEditObj) PointerReleased(e pointer_gio.Event) {
 	//ob.editor.focused = true
 }
 
-func (ob *GoTextEditObj) SetFont(typeface string, variant string, style GoFontStyle, weight GoFontWeight) {
+func (ob *GoTextEditObj) SetFont(typeface string, style GoFontStyle, weight GoFontWeight) {
 	ob.font = font_gio.Font{font_gio.Typeface(typeface), font_gio.Style(int(style)), font_gio.Weight(int(weight))}
 }
 
@@ -317,6 +324,9 @@ func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	selectionColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: blendDisabledColor(gtx.Queue == nil, ob.selectionColor.NRGBA())}.Add(gtx.Ops)
 	selectionColor := selectionColorMacro.Stop()
+	cursorColorMacro := op_gio.Record(gtx.Ops)
+	paint_gio.ColorOp{Color: blendDisabledColor(gtx.Queue == nil, Color_Black.NRGBA())}.Add(gtx.Ops)
+	cursorColor := cursorColorMacro.Stop()
 
 	var maxlines int
 	if ob.editor.SingleLine {
@@ -341,7 +351,7 @@ func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	}
 	ob.editor.LineHeight = ob.lineHeight
 	ob.editor.LineHeightScale = ob.lineHeightScale
-	dims = ob.editor.Layout(gtx, ob.shaper, ob.font, ob.fontSize, textColor, selectionColor)
+	dims = ob.editor.Layout(gtx, ob.shaper, ob.font, ob.fontSize, textColor, selectionColor, cursorColor)
 	if ob.editor.Len() == 0 {
 		call.Add(gtx.Ops)
 	}

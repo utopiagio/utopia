@@ -125,13 +125,13 @@ func (ob *GoMenuItemObj) Click(e pointer_gio.Event) {
 		for idx := 0; idx < len(ob.menuItems); idx++ {
 			popupMenu.layout.AddControl(ob.menuItems[idx])
 		}
-	
 		popupMenu.Show()
 	} else {
 		ob.ParentWindow().ClearPopupMenus()
 		if ob.onClick != nil {
 			ob.onClick()
 		}
+		ob.ParentWindow().Refresh()
 	}
 	/*for idx := 0; idx < len(ob.ParentWindow().menuItems); idx++ {
 		for idx := 0; idx < len(ob.menuItems); idx++ {

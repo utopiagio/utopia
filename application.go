@@ -228,7 +228,8 @@ func (ob *GoWindowObj) AddPopupMenu() (popupMenu *GoPopupMenuObj) {
 }
 
 func (ob *GoWindowObj) ClearPopupMenus() {
-	ob.popupmenus = nil
+	ob.popupmenus = []*GoPopupMenuObj{}
+	ob.Refresh()
 }
 
 func (ob *GoWindowObj) Close() {
@@ -432,8 +433,6 @@ func (ob *GoWindowObj) ClientSize() (width int, height int) {
 	//log.Println("ob.ClientSize = ", ob.Width, ob.Height)
 	x, y, width, height = desktop.GetClientRect(ob.gio.HWND())
 	//log.Println("GoWindowObj::ClientRect:", x, y, width, height)
-	//width -= x
-	//height -= y
 	width = metrics.PxToDp(GoDpr, width - x)
 	height = metrics.PxToDp(GoDpr, height - y)
 	//log.Println("GoWindowObj::ClientSize:", width, height)
@@ -446,8 +445,6 @@ func (ob *GoWindowObj) Size() (width int, height int) {
 	//log.Println("ob.Size = ", ob.Width, ob.Height)
 	x, y, width, height = desktop.GetWindowRect(ob.gio.HWND())
 	//log.Println("GoWindowObj::Rect:", x, y, width, height)
-	//width -= x
-	//height -= y
 	width = metrics.PxToDp(GoDpr, width - x)
 	height = metrics.PxToDp(GoDpr, height - y)
 	//log.Println("GoWindowObj::Size:", width, height)
@@ -597,7 +594,6 @@ func (ob *GoWindowObj) render(gtx layout_gio.Context) layout_gio.Dimensions {
 		ob.popupwindow.Draw(gtx)
 		ob.popupwindow.layout.Draw(gtx)
 	}
-
 	return dims
 }
 

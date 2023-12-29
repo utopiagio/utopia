@@ -415,6 +415,6 @@ func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
 				ob.Widget().MinWidth = metrics.PxToDp(GoDpr, dims.Size.X)
 			}
 		}
-		ob.Widget().MinHeight = metrics.PxToDp(GoDpr, ob.Widget().dims.Size.X)
+		ob.Widget().MinHeight = metrics.PxToDp(GoDpr, ob.Widget().dims.Size.Y)
 	}
 }

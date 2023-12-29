@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	//"log"
+	"log"
 	"image"
 	//"image/color"
 
@@ -27,7 +27,7 @@ func GoPopupWindow(parent GoObject) (hPopupWindow *GoPopupWindowObj) {
 	hPopupWindow.layout = GoPopupMenuLayout(hPopupWindow)
 	//hPopupMenu.layout.SetPadding(3,3,3,3)
 	hPopupWindow.layout.SetBorder(BorderSingleLine, 1, 3, Color_Blue)
-	hPopupWindow.SetOnPointerRelease(hPopupWindow.Click)
+	hPopupWindow.SetOnPointerPress(hPopupWindow.Click)
 	hPopupWindow.SetOnPointerEnter(nil)
 	hPopupWindow.SetOnPointerLeave(nil)
 	return hPopupWindow
@@ -43,6 +43,7 @@ type GoPopupWindowObj struct {
 }
 
 func (ob *GoPopupWindowObj) Click(e pointer_gio.Event) {
+	log.Println("PopupWindow::Click()")
 	ob.Hide()
 }
 

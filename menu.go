@@ -119,7 +119,6 @@ func (ob *GoMenuObj) AddItem(text string) (*GoMenuItemObj) {
 }
 
 func (ob *GoMenuObj) Click(e pointer_gio.Event) {
-	//log.Println("GoMenuObj::Click()")
 	ob.ParentWindow().ClearPopupMenus()
 	popupMenu := ob.ParentWindow().AddPopupMenu()
 	popupMenu.Clear()

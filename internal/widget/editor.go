@@ -8,7 +8,7 @@ import (
 	"bufio"
 	"image"
 	"io"
-	"log"
+	_ "log"
 	"math"
 	"strings"
 	"time"
@@ -16,7 +16,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/utopiagio/gio/f32"
-	"github.com/utopiagio/gio/gesture"
+	//"github.com/utopiagio/gio/gesture"
 	//"github.com/utopiagio/gio/io/clipboard"
 	//"github.com/utopiagio/gio/io/event"
 	key_gio "github.com/utopiagio/gio/io/key"
@@ -88,6 +88,7 @@ type GioEditor struct {
 	scratch      []byte
 	eventKey     int
 	blinkStart   time.Time
+	blinkRefresh bool
 	focused      bool
 	requestFocus bool
 
@@ -98,12 +99,12 @@ type GioEditor struct {
 	}
 
 	dragging    bool
-	dragger     gesture.Drag
-	scroller    gesture.Scroll
+	//dragger     gesture.Drag
+	//scroller    gesture.Scroll
 	scrollCaret bool
 	showCaret   bool
 
-	clicker gesture.Click
+	//clicker gesture.Click
 
 	// events is the list of events not yet processed.
 	//events []EditorEvent
@@ -322,9 +323,10 @@ func (e *GioEditor) processPointer(gtx layout.Context) {
 }*/
 
 func (e *GioEditor) PointerPressed(evt pointer_gio.Event) {
-	log.Println("GioEditor::PointerPressed()")
+	//log.Println("GioEditor::PointerPressed()")
 	//prevCaretPos, _ := e.text.Selection()
-	//e.blinkRefresh = true
+	e.blinkRefresh = true
+	//e.blinkStart = gtx.Now
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
 		Y: int(math.Round(float64(evt.Position.Y))),
@@ -336,8 +338,9 @@ func (e *GioEditor) PointerPressed(evt pointer_gio.Event) {
 }
 
 func (e *GioEditor) PointerReleased(evt pointer_gio.Event) {
-	log.Println("GioEditor::PointerReleased()")
-	//e.blinkRefresh = true
+	//log.Println("GioEditor::PointerReleased()")
+	e.blinkRefresh = true
+	//e.blinkStart = gtx.Now
 	e.text.MoveCoord(image.Point{
 		X: int(math.Round(float64(evt.Position.X))),
 		Y: int(math.Round(float64(evt.Position.Y))),
@@ -367,8 +370,8 @@ func (e *GioEditor) PointerDragged(evt pointer_gio.Event) {
 }*/
 
 func (e *GioEditor) ProcessKey(evt key_gio.Event) {
-	log.Println("GioEditor::ProcessKey()")
-	//e.blinkRefresh = true
+	//log.Println("GioEditor::ProcessKey()")
+	e.blinkRefresh = true
 	direction := 1
 	moveByWord := evt.Modifiers.Contain(key_gio.ModShortcutAlt)
 	selAct := selectionClear
@@ -397,15 +400,15 @@ func (e *GioEditor) ProcessKey(evt key_gio.Event) {
 				}
 			}
 		case key_gio.NameUpArrow:
-			log.Println("GioEditor::MoveLines(-1)")
+			//log.Println("GioEditor::MoveLines(-1)")
 			e.text.MoveLines(-1, selAct)
 			e.scrollCaret = true
 		case key_gio.NameDownArrow:
-			log.Println("GioEditor::MoveLines(+1)")
+			//log.Println("GioEditor::MoveLines(+1)")
 			e.text.MoveLines(+1, selAct)
 			e.scrollCaret = true
 		case key_gio.NameLeftArrow:
-			log.Println("GioEditor::MoveBy(-1)")
+			//log.Println("GioEditor::MoveBy(-1)")
 			if moveByWord {
 				e.text.MoveWord(-1*direction, selAct)
 			} else {
@@ -415,7 +418,7 @@ func (e *GioEditor) ProcessKey(evt key_gio.Event) {
 				e.text.MoveCaret(-1*direction, -1*direction*int(selAct))
 			}
 		case key_gio.NameRightArrow:
-			log.Println("GioEditor::MoveBy(+1)")
+			//log.Println("GioEditor::MoveBy(+1)")
 			if moveByWord {
 				e.text.MoveWord(1*direction, selAct)
 			} else {
@@ -677,11 +680,11 @@ func (e *GioEditor) Update(gtx layout.Context) {
 // Layout lays out the editor using the provided textMaterial as the paint material
 // for the text glyphs+caret and the selectMaterial as the paint material for the
 // selection rectangle.
-func (e *GioEditor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
+func (e *GioEditor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectMaterial, cursorMaterial op.CallOp) layout.Dimensions {
 	e.Update(gtx)
 
 	e.text.Layout(gtx, lt, font, size)
-	return e.layout(gtx, textMaterial, selectMaterial)
+	return e.layout(gtx, textMaterial, selectMaterial, cursorMaterial)
 }
 
 // updateSnippet adds a key.SnippetOp if the snippet content or position
@@ -730,7 +733,12 @@ func (e *GioEditor) updateSnippet(gtx layout.Context, start, end int) {
 	}.Add(gtx.Ops)
 }
 
-func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial op.CallOp) layout.Dimensions {
+func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial, cursorMaterial op.CallOp) layout.Dimensions {
+	if e.blinkRefresh {
+		e.blinkStart = gtx.Now
+		e.blinkRefresh = false
+	}
+
 	// Adjust scrolling for new viewport and layout.
 	e.text.ScrollRel(0, 0)
 
@@ -804,14 +812,13 @@ func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial op.C
 		e.showCaret = e.focused && (!blinking || dt%timePerBlink < timePerBlink/2)
 	}
 	disabled := gtx.Queue == nil
-
 	semantic.Editor.Add(gtx.Ops)
 	if e.Len() > 0 {
 		e.paintSelection(gtx, selectMaterial)
 		e.paintText(gtx, textMaterial)
 	}
 	if !disabled {
-		e.paintCaret(gtx, textMaterial)
+		e.paintCaret(gtx, cursorMaterial)
 	}
 	return visibleDims
 }
@@ -1121,7 +1128,7 @@ func (e *GioEditor) SetCaret(start, end int) {
 	e.initBuffer()
 	e.text.SetCaret(start, end)
 	e.scrollCaret = true
-	e.scroller.Stop()
+	//e.scroller.Stop()
 }
 
 // SelectedText returns the currently selected text (if any) from the editor.
