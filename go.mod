@@ -7,7 +7,7 @@ require (
 	github.com/go-text/typesetting v0.1.0
 	github.com/kr/pretty v0.3.1
 	github.com/phin1x/go-ipp v1.6.1
-	github.com/utopiagio/gio v0.0.0-20231224092929-85196c8d1ea3
+	github.com/utopiagio/gio v0.0.1
 	golang.design/x/clipboard v0.7.0
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	golang.org/x/exp/shiny v0.0.0-20231226003508-02704c960a9b
@@ -23,5 +23,3 @@ require (
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect
 )
-
-replace github.com/utopiagio/gio => ../gio
