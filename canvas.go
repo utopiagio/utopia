@@ -29,7 +29,7 @@ func GoCanvas(parent GoObject) (hObj *GoCanvasObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{100, 100, 100, 100, 1000, 1000},
+		GoSize: GoSize{100, 100, 100, 100, 1000, 1000, 100, 100},
 		
 		FocusPolicy: StrongFocus,
 		Visible: true,
@@ -159,8 +159,8 @@ func (ob *GoCanvasObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 			})
 		})
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
 	}
 	return dims
 }

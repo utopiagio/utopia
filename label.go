@@ -7,9 +7,7 @@ package utopia
 import (
 	"log"
 	"image"
-	//"image/color"
-
-	
+		
 	f32_gio "github.com/utopiagio/gio/f32"
 	font_gio "github.com/utopiagio/gio/font"
 	layout_gio "github.com/utopiagio/gio/layout"
@@ -24,7 +22,6 @@ import (
 	"github.com/utopiagio/utopia/metrics"
 	
 	"golang.org/x/image/math/fixed"
-
 )
 
 type GoTextAlignment uint8
@@ -82,36 +79,27 @@ type TextInfo struct {
 
 
 func GoLabel(parent GoObject, text string) (hObj *GoLabelObj) {
-	//var fontSize unit_gio.Sp = 12
 	theme := GoApp.Theme()
-	//theme := GoTheme(gofont_gio.Collection())
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
-		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215},
+		GoPadding: GoPadding{4,2,4,2},
+		GoSize: GoSize{0, 0, 300, 26, 16777215, 16777215, 300, 26},
 		FocusPolicy: NoFocus,
 		Visible: true,
-		//target: nil,
 	}
 	hLabel := &GoLabelObj{
-		GioObject: object,
-		GioWidget: widget,
+		GioObject: 	object,
+		GioWidget: 	widget,
 		fontSize: 	theme.TextSize,
-		maxLines:	1,
+		maxLines:	0,
 		text: 		text,
+		wrap: 		true,
 		color: 		theme.ColorFg,
 		selectionColor:	NRGBAColor(MulAlpha(theme.ContrastBg.NRGBA(), 0x60)),
 		shaper: 	theme.Shaper,
-		//state: 		nil,
 	}
-	//maroon := ColorFromRGB(127, 0, 0)
-	//hLabel.color = maroon
-	//hLabel.font.Weight = text_gio.Bold 			// Thin - Medium - Bold
-	//hLabel.font.Style = text_gio.Italic 		// Regular - Italic
-	//hLabel.font.Variant = "Mono"	// Mono - Smallcaps
-	
 	parent.AddControl(hLabel)
 	return hLabel
 }
@@ -119,25 +107,24 @@ func GoLabel(parent GoObject, text string) (hObj *GoLabelObj) {
 type GoLabelObj struct {
 	GioObject
 	GioWidget
-	//GioSelectable
 	alignment text_gio.Alignment
 	font font_gio.Font
 	fontSize unit_gio.Sp
 	maxLines int
 	text string
-	
+	wrap bool
 
 	// Truncator is the text that will be shown at the end of the final
 	// line if MaxLines is exceeded. Defaults to "…" if empty.
 	truncator string
 	// WrapPolicy configures how displayed text will be broken into lines.
-	wrapPolicy text_gio.WrapPolicy
+	wrapPolicy text_gio.WrapPolicy		// default text.gio.WrapHeuristically
 	// LineHeight controls the distance between the baselines of lines of text.
 	// If zero, a sensible default will be used.
-	lineHeight unit_gio.Sp
+	lineHeight unit_gio.Sp 				// default zero
 	// LineHeightScale applies a scaling factor to the LineHeight. If zero, a
 	// sensible default will be used.
-	lineHeightScale float32
+	lineHeightScale float32				// default zero
 	color GoColor
 	selectionColor GoColor
 	//textAlign text.Alignment
@@ -204,6 +191,24 @@ func (ob *GoLabelObj) LostFocus() {
 	ob.focus = false
 }
 
+func (ob *GoLabelObj) SetExpandingHeight() {
+	ob.SetVertSizePolicy(ExpandingHeight)
+}
+
+func (ob *GoLabelObj) SetExpandingWidth() {
+	ob.SetHorizSizePolicy(ExpandingWidth)
+}
+
+func (ob *GoLabelObj) SetFixedHeight(height int) {
+	ob.SetVertSizePolicy(FixedHeight)
+	ob.Height = height
+}
+
+func (ob *GoLabelObj) SetFixedWidth(width int) {
+	ob.SetHorizSizePolicy(FixedWidth)
+	ob.Width = width
+}
+
 func (ob *GoLabelObj) SetFont(typeface string, style GoFontStyle, weight GoFontWeight) {
 	ob.font = font_gio.Font{font_gio.Typeface(typeface), font_gio.Style(int(style)), font_gio.Weight(int(weight))}
 }
@@ -213,6 +218,14 @@ func (ob *GoLabelObj) SetFontBold(bold bool) {
 		ob.font.Weight = font_gio.Bold
 	} else {
 		ob.font.Weight = font_gio.Light
+	}
+}
+
+func (ob *GoLabelObj) SetFontItalic(italic bool) {
+	if italic {
+		ob.font.Style = font_gio.Italic
+	} else {
+		ob.font.Style = font_gio.Regular
 	}
 }
 
@@ -232,16 +245,19 @@ func (ob *GoLabelObj) SetHiliteColor(color GoColor) {
 	ob.selectionColor = color
 }
 
-func (ob *GoLabelObj) SetFontItalic(italic bool) {
-	if italic {
-		ob.font.Style = font_gio.Italic
-	} else {
-		ob.font.Style = font_gio.Regular
+func (ob *GoLabelObj) SetMaxLines(size int) {
+	ob.maxLines = size
+	if ob.selectable == true {
+		ob.state.MaxLines = size
 	}
 }
 
-func (ob *GoLabelObj) SetMaxLines(size int) {
-	ob.maxLines = size
+func (ob *GoLabelObj) SetPreferredHeight() {
+	ob.SetVertSizePolicy(PreferredHeight)
+}
+
+func (ob *GoLabelObj) SetPreferredWidth() {
+	ob.SetHorizSizePolicy(PreferredWidth)
 }
 
 func (ob *GoLabelObj) pointerDoubleClicked(e pointer_gio.Event) {
@@ -299,10 +315,6 @@ func (ob *GoLabelObj) SetSelectable(selectable bool) {
 	}
 }
 
-/*func (ob *GoLabelObj) SetSizePolicy(horiz GoSizeType, vert GoSizeType) {
-	ob.setSizePolicy(GetSizePolicy(horiz, vert))
-}*/
-
 func (ob *GoLabelObj) SetText(text string) {
 	ob.text = text
 	if ob.selectable == true {
@@ -321,6 +333,10 @@ func (ob *GoLabelObj) SetTextColor(color GoColor) {
 	ob.color = color
 }
 
+func (ob *GoLabelObj) SetWrap(wrap bool) {
+	ob.wrap = wrap
+}
+
 func (ob *GoLabelObj) Text() (text string) {
 	return ob.text
 }
@@ -330,51 +346,98 @@ func (ob *GoLabelObj) TextColor() (color GoColor) {
 }
 
 func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
+	log.Println("GoLabelObj::Draw()")
+	cs := gtx.Constraints
+	//clipper := gtx.Constraints
+	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
+	
+	width := metrics.DpToPx(GoDpr, ob.Width)
+	height := metrics.DpToPx(GoDpr, ob.Height)
+	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		log.Println("FixedWidth............")
+		//log.Println("object Width = (", width, " )")
+		cs.Min.X = min(cs.Max.X, width)
+		log.Println("cs.Min.X = (", cs.Min.X, " )")
+		cs.Max.X = min(cs.Max.X, width)
+		log.Println("cs.Max.X = (", cs.Max.X, " )")
+	/*case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = min(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case PreferredWidth:		// SizeHint is Preferred
+		log.Println("PreferredWidth............")
+		log.Println("object MinWidth = (", minWidth, " )")
+		log.Println("object MaxWidth = (", maxWidth, " )")
+		cs.Min.X = max(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)
+	/*case MaximumWidth:			// SizeHint is Maximum
+		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case ExpandingWidth:
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	}
+
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = min(cs.Max.Y, height)
+		cs.Max.Y = min(cs.Max.Y, height)
+	/*case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = min(cs.Min.Y, minHeight)
+		cs.Max.Y = min(cs.Max.Y, maxHeight)
+	/*case MaximumHeight:			// SizeHint is Maximum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case ExpandingHeight:
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+
+	gtx.Constraints = cs
+	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
-					return ob.layout(gtx)
+					//return ob.Layout(gtx, clipper)
+					return ob.Layout(gtx)
 				})
 			})
 		})
+
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		log.Println("GoLabel::Height: ", dims.Size.Y)
 	}
 	return dims
 }
 
-func (ob *GoLabelObj) layout(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	//paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+//func (ob *GoLabelObj) Layout(gtx layout_gio.Context, clipper layout_gio.Constraints) (dims layout_gio.Dimensions) {
+func (ob *GoLabelObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()
 	selectColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.selectionColor.NRGBA()}.Add(gtx.Ops)
 	selectionColor := selectColorMacro.Stop()
-	//lbl := widget_gio.Label{Alignment: ob.alignment, MaxLines: ob.maxLines} //, Selectable: ob.state}
-	//if ob.state == nil {
 	if ob.selectable == false {
+		//dims, _ = ob.LayoutDetailed(gtx, clipper, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 		dims, _ = ob.LayoutDetailed(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
+		log.Println("(GioLabel) Layout dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
 		return dims
 	} else {
 		ob.ReceiveEvents(gtx)
-		dims := ob.state.Layout(gtx, ob.shaper, ob.font, ob.fontSize, textColor, selectionColor)	//, func(gtx layout_gio.Context) layout_gio.Dimensions {
-			//paint_gio.ColorOp{Color: ob.selectionColor.NRGBA()}.Add(gtx.Ops)
-			//ob.state.PaintSelection(gtx, selectionColor)
-			//paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			//ob.state.PaintText(gtx, textColor)
-			
-			//return layout_gio.Dimensions{}
-		//})
+		dims = ob.state.Layout(gtx, ob.shaper, ob.font, ob.fontSize, textColor, selectionColor)	//, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		defer clip_gio.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
-		//log.Println("dims.Size.X:", dims.Size.X)
-		//log.Println("ob.MaxWidth", ob.MaxWidth)
-		/*if ob.MaxWidth < dims.Size.X {
-			dims.Size.X = ob.MaxWidth
-		}*/
 		pointer_gio.CursorText.Add(gtx.Ops)
 		// add the events handler to receive widget pointer events
 		ob.SignalEvents(gtx)
@@ -383,10 +446,15 @@ func (ob *GoLabelObj) layout(gtx layout_gio.Context) (dims layout_gio.Dimensions
 }
 
 // Layout the label with the given shaper, font, size, text, and material, returning metadata about the shaped text.
-func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string, textMaterial op_gio.CallOp) (layout_gio.Dimensions, TextInfo) {
+//func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, clipper layout_gio.Constraints, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string, textMaterial op_gio.CallOp) (dims layout_gio.Dimensions, textInfo TextInfo) {
+func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string, textMaterial op_gio.CallOp) (dims layout_gio.Dimensions, textInfo TextInfo) {
 	cs := gtx.Constraints
 	textSize := fixed.I(gtx.Sp(size))
 	lineHeight := fixed.I(gtx.Sp(ob.lineHeight))
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	if ob.wrap {
+		maxWidth = cs.Max.X
+	}
 	lt.LayoutString(text_gio.Parameters{
 		Font:            font,
 		PxPerEm:         textSize,
@@ -394,7 +462,7 @@ func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper
 		Truncator:       ob.truncator,
 		Alignment:       ob.alignment,
 		WrapPolicy:      ob.wrapPolicy,
-		MaxWidth:        cs.Max.X,
+		MaxWidth:        maxWidth,
 		MinWidth:        cs.Min.X,
 		Locale:          gtx.Locale,
 		LineHeight:      lineHeight,
@@ -421,7 +489,8 @@ func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper
 	viewport.Max = viewport.Max.Add(it.padding.Max)
 	clipStack := clip_gio.Rect(viewport).Push(gtx.Ops)
 	call.Add(gtx.Ops)
-	dims := layout_gio.Dimensions{Size: it.bounds.Size()}
+	dims = layout_gio.Dimensions{Size: it.bounds.Size()}
+	log.Println("(GioLabel) it.Bounds dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
 	dims.Size = cs.Constrain(dims.Size)
 	dims.Baseline = dims.Size.Y - it.baseline
 	clipStack.Pop()
@@ -429,7 +498,7 @@ func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper
 }
 
 
-func (ob *GoLabelObj) render(gtx layout_gio.Context, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string) layout_gio.Dimensions {
+/*func (ob *GoLabelObj) render(gtx layout_gio.Context, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string) layout_gio.Dimensions {
 	cs := gtx.Constraints
 	textSize := fixed.I(gtx.Sp(size))
 	lt.LayoutString(text_gio.Parameters{
@@ -464,8 +533,9 @@ func (ob *GoLabelObj) render(gtx layout_gio.Context, lt *text_gio.Shaper, font f
 	dims.Size = cs.Constrain(dims.Size)		// fill existing space
 	dims.Baseline = dims.Size.Y - it.baseline
 	clipStack.Pop()
+
 	return dims
-}
+}*/
 
 func (ob *GoLabelObj) ObjectType() (string) {
 	return "GoLabelObj"
@@ -482,7 +552,7 @@ func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215},
+		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
 		//target: nil,
 	}
@@ -511,7 +581,7 @@ func H2Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215},
+		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
 	}
 	hLabel := &GoLabelObj{
@@ -539,7 +609,7 @@ func H3Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215},
+		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
 	}
 	hLabel := &GoLabelObj{
@@ -566,7 +636,7 @@ func H4Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215},
+		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
 	}
 	hLabel := &GoLabelObj{
@@ -593,7 +663,7 @@ func H5Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215},
+		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
 	}
 	hLabel := &GoLabelObj{
@@ -620,7 +690,7 @@ func H6Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215},
+		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
 	}
 	hLabel := &GoLabelObj{

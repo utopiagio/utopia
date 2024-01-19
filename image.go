@@ -16,6 +16,7 @@ import (
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	unit_gio "github.com/utopiagio/gio/unit"
 	//widget_gio "github.com/utopiagio/gio/widget"
+	"github.com/utopiagio/utopia/metrics"
 )
 
 func GoImage(parent GoObject, src string) (hObj *GoImageObj) {
@@ -37,7 +38,7 @@ func GoImage(parent GoObject, src string) (hObj *GoImageObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{100, 100, 100, 100, 1000, 1000},
+		GoSize: GoSize{100, 100, 100, 100, 1000, 1000, 100, 100},
 		FocusPolicy: NoFocus,
 		Visible: true,
 		//target: nil,
@@ -92,8 +93,8 @@ func (ob *GoImageObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) 
 			})
 		})
 		ob.dims = dims
-		//ob.Width = (int(float32(dims.Size.X) / GoDpr))
-		//ob.Height = (int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }

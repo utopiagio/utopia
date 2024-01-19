@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	//"log"
+	"log"
 	"image"
 	"image/color"
 	"math"
@@ -48,12 +48,12 @@ func GoMenuItem(parent GoObject, text string, menuId int, action func()) (hObj *
 	//var fontSize unit_gio.Sp = 14
 	var theme *GoThemeObj = GoApp.Theme()
 
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, FixedHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{100, 30, 100, 30, 1000, 30},
+		GoSize: GoSize{100, 24, 100, 24, 1000, 24, 100, 24},
 		FocusPolicy: StrongFocus,
 		Visible: true,
 	}
@@ -73,7 +73,7 @@ func GoMenuItem(parent GoObject, text string, menuId int, action func()) (hObj *
 		},
 		shaper: theme.Shaper,
 	}
-	hMenuItem.SetSizePolicy(FixedWidth, FixedHeight)
+	//hMenuItem.SetSizePolicy(FixedWidth, FixedHeight)
 	hMenuItem.SetOnPointerRelease(hMenuItem.Click)
 	hMenuItem.SetOnPointerEnter(nil)
 	hMenuItem.SetOnPointerLeave(nil)
@@ -163,8 +163,65 @@ func (ob *GoMenuItemObj) Text() (text string) {
 }
 
 func (ob *GoMenuItemObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
-	//log.Println("gtx.Constraints.Max: ", dims)
+	log.Println("GoMenuItemObj::Draw()")
+	cs := gtx.Constraints
+	//clipper := gtx.Constraints
+	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
+	
+	width := metrics.DpToPx(GoDpr, ob.Width)
+	height := metrics.DpToPx(GoDpr, ob.Height)
+	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		log.Println("FixedWidth............")
+		log.Println("object Width = (", width, " )")
+		cs.Min.X = min(cs.Max.X, width)
+		log.Println("cs.Min.X = (", cs.Min.X, " )")
+		cs.Max.X = min(cs.Max.X, width)
+		log.Println("cs.Max.X = (", cs.Max.X, " )")
+	/*case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = min(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case PreferredWidth:		// SizeHint is Preferred
+		log.Println("PreferredWidth............")
+		log.Println("object MinWidth = (", minWidth, " )")
+		log.Println("object MaxWidth = (", maxWidth, " )")
+		cs.Min.X = max(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)
+	/*case MaximumWidth:			// SizeHint is Maximum
+		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case ExpandingWidth:
+		log.Println("ExpandingWidth............")
+		
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	}
+
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = min(cs.Max.Y, height)
+		cs.Max.Y = min(cs.Max.Y, height)
+	/*case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = min(cs.Min.Y, minHeight)
+		cs.Max.Y = min(cs.Max.Y, maxHeight)
+	/*case MaximumHeight:			// SizeHint is Maximum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case ExpandingHeight:
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+
+	gtx.Constraints = cs
+	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
 	if ob.Visible {
 	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
@@ -178,13 +235,10 @@ func (ob *GoMenuItemObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 			//log.Println("BorderDims: ", borderDims)
 			return borderDims
 		})
-		//log.Println("MarginDims: ", dims)
 		ob.dims = dims
 
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
-		//log.Println("MenuItem.Width: ", ob.Width)
-		//log.Println("MenuItem.Height: ", ob.Height)
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
@@ -197,7 +251,7 @@ func (ob *GoMenuItemObj) Widget() (*GioWidget) {
 	return &ob.GioWidget
 }
 
-func (ob *GoMenuItemObj) Size(gtx layout_gio.Context) layout_gio.Dimensions {
+func (ob *GoMenuItemObj) Size(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	var insetDims layout_gio.Dimensions
 	child := op_gio.Record(gtx.Ops)
 	textColorMacro := op_gio.Record(gtx.Ops)
@@ -205,18 +259,13 @@ func (ob *GoMenuItemObj) Size(gtx layout_gio.Context) layout_gio.Dimensions {
 	textColor := textColorMacro.Stop()
 	ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims = ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-			//log.Println("Button label color:", ob.color.NRGBA())
 			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			dims := widget_int.GioLabel{Alignment: text_gio.Middle}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
-			//log.Println("label size: ", dims)
+			dims := widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 			return dims
 		})
 		return insetDims
 	})
 	child.Stop()
-	//log.Println("insetDims ", insetDims)
-	//log.Println("MenuItem.Length = ", (int(float32(insetDims.Size.X) / GoDpr)))
-	//return image.Point{int(float32(insetDims.Size.X + 20) / GoDpr), int(float32(insetDims.Size.Y) / GoDpr)}
 	return insetDims
 }
 
@@ -227,29 +276,20 @@ func (ob *GoMenuItemObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	textColor := textColorMacro.Stop()
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-			//log.Println("Button label color:", ob.color.NRGBA())
 			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			dims := widget_int.GioLabel{Alignment: text_gio.Middle}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
-			//log.Println("label size: ", dims)
+			dims := widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 			return dims
 		})
-		//log.Println("inset size: ", insetDims)
 		return insetDims
 	})
 }
 
 func (ob *GoMenuItemObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio.Dimensions {
-	min := gtx.Constraints.Min
 	//semantic_gio.Button.Add(gtx.Ops)
-	
-	return layout_gio.Stack{Alignment: layout_gio.Center}.Layout(gtx,
+	return layout_gio.Stack{}.Layout(gtx,
 		layout_gio.Expanded(func(gtx layout_gio.Context) layout_gio.Dimensions {
-		//layout_gio.Fixed(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			rr := gtx.Dp(ob.cornerRadius)
-			constraints := gtx.Constraints.Min
-			constraints.X = gtx.Dp(unit_gio.Dp(ob.Parent.Widget().MinWidth))
-			//constraints.X = ob.Parent.MinWidth
-			defer clip_gio.UniformRRect(image.Rectangle{Max: constraints}, rr).Push(gtx.Ops).Pop()
+			defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Max}, rr).Push(gtx.Ops).Pop()
 			background := ob.background.NRGBA()
 			switch {
 			case gtx.Queue == nil:
@@ -262,10 +302,9 @@ func (ob *GoMenuItemObj) layout(gtx layout_gio.Context, w layout_gio.Widget) lay
 				drawInk(gtx, c)
 			}*/
 			ob.SignalEvents(gtx)
-			return layout_gio.Dimensions{Size: gtx.Constraints.Min}
+			return layout_gio.Dimensions{Size: gtx.Constraints.Max}
 		}),
 		layout_gio.Stacked(func(gtx layout_gio.Context) layout_gio.Dimensions {
-			gtx.Constraints.Min = min
 			return layout_gio.Center.Layout(gtx, w)
 		}),
 	)

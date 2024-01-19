@@ -7,7 +7,7 @@ package utopia
 import (
 	"image"
 	//"image/color"
-	//"log"
+	"log"
 	"math"
 	"github.com/utopiagio/gio/op/clip"
 	"github.com/utopiagio/gio/f32"
@@ -77,8 +77,9 @@ func (ob *GoProgressCircleObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dim
 			})
 		})
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
+		log.Println("GoProgressCircle::Height: ", dims.Size.Y)
 	}
 	return dims
 }

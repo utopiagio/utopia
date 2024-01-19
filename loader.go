@@ -6,6 +6,7 @@ package utopia
 
 import (
 	"image"
+	"log"
 	"math"
 	"time"
 
@@ -53,8 +54,9 @@ func (ob *GoLoaderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 			})
 		})
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
+		log.Println("GoLoader::Height: ", dims.Size.Y)
 	}
 	return dims
 }

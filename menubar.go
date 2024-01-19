@@ -5,31 +5,21 @@
 package utopia
 
 import (
-	//"log"
+	"log"
 	"image"
-	//"math"
-	//"time"
-
-	//"github.com/utopiagio/gio/f32"
+	
 	layout_gio "github.com/utopiagio/gio/layout"
-	//op_gio "github.com/utopiagio/gio/op"
-	//clip_gio "github.com/utopiagio/gio/op/clip"
-	//paint_gio "github.com/utopiagio/gio/op/paint"
-	//unit_gio "github.com/utopiagio/gio/unit"
 
 	"github.com/utopiagio/utopia/metrics"
 )
 
 func GoMenuBar(parent GoObject) (hObj *GoMenuBarObj) {
-	//var fontSize unit_gio.Sp = 14
-	//var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, FixedHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{100, 24, 1000, 24, 1000, 24},
-		
+		GoSize: GoSize{100, 24, 100, 24, 1000, 24, 100, 24},
 		FocusPolicy: NoFocus,
 		Visible: false,
 	}
@@ -48,10 +38,7 @@ func GoMenuBar(parent GoObject) (hObj *GoMenuBarObj) {
 type GoMenuBarObj struct {
 	GioObject
 	GioWidget
-	//background GoColor
-	//cornerRadius unit_gio.Dp
 	layout *GoLayoutObj
-	//menuOffset []int
 	menus []*GoMenuObj
 }
 
@@ -63,33 +50,65 @@ func (ob *GoMenuBarObj) AddMenu(text string) (*GoMenuObj){
 
 
 func (ob *GoMenuBarObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	//var paddingDims layout_gio.Dimensions
-	//log.Println("gtx.Constraints.Max: ", gtx.Constraints.Max)
-	//dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
+	log.Println("GoMenuBarObj::Draw()")
+	cs := gtx.Constraints
+	width := metrics.DpToPx(GoDpr, ob.Width)
+	height := metrics.DpToPx(GoDpr, ob.Height)
+	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		cs.Min.X = min(cs.Max.X, width)
+		cs.Max.X = min(cs.Max.X, width)
+	/*case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = min(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case PreferredWidth:		// SizeHint is Preferred
+		cs.Min.X = max(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)
+	/*case MaximumWidth:			// SizeHint is Maximum
+		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case ExpandingWidth:
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	}
 
-	//log.Println("gtx.Constraints.Max: ", dims)
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = min(cs.Max.Y, height)
+		cs.Max.Y = min(cs.Max.Y, height)
+	/*case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = min(cs.Min.Y, minHeight)
+		cs.Max.Y = min(cs.Max.Y, maxHeight)
+	/*case MaximumHeight:			// SizeHint is Maximum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case ExpandingHeight:
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+
+	gtx.Constraints = cs
+	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
 	if ob.Visible {
 		ob.repack(gtx)
-	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
-			borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
-				paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
-					barDims := ob.render(gtx)
-					//log.Println("BarDims: ", barDims)
-					return barDims
+			return ob.GoBorder.Layout(gtx, func(gtx C) D {
+				return ob.GoPadding.Layout(gtx, func(gtx C) D {
+					return ob.Layout(gtx)
 				})
-				//log.Println("PaddingDims: ", paddingDims)
-				return paddingDims
 			})
-			//log.Println("BorderDims: ", borderDims)
-			return borderDims
 		})
-		//log.Println("GoMenuBar dims: ", dims)
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
-		//log.Println("GoMenuBar Size:", ob.Width, ",", ob.Height)
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
@@ -98,7 +117,7 @@ func (ob *GoMenuBarObj) MenuOffset(id int) (int) {
 	var offset int
 	if id > len(ob.menus) {return 0}
 	for idx := 0; idx < id; idx++ {
-		offset += ob.menus[idx].Width
+		offset += ob.menus[idx].AbsWidth
 	}
 	return offset
 }
@@ -117,56 +136,16 @@ func (ob *GoMenuBarObj) SetFixedHeight(height int) {
 	ob.MaxHeight = height
 }
 
-func (ob *GoMenuBarObj) render(gtx layout_gio.Context) layout_gio.Dimensions {
-	//log.Println("MenuBar Height: ", ob.Height())
-	//log.Println("MenuBar Width: ", ob.Width())
-	/*height := gtx.Dp(unit_gio.Dp(ob.Height))
-	//height := gtx.Dp(ob.Height)
-
-	//log.Println("MenuBar height: ", height)
-	width := gtx.Dp(unit_gio.Dp(ob.Width))
-	//width := gtx.Dp(ob.Width)
-	//log.Println("MenuBar width: ", width)
-	if ob.SizePolicy().HFlex {
-		width = gtx.Constraints.Max.X
-		//log.Println("MenuBar width: ", width)
-	}
-	if ob.SizePolicy().VFlex {
-		height = gtx.Constraints.Max.Y
-		//log.Println("MenuBar height: ", height)
-	}*/
-	// Save the operations in an independent ops value (the cache).
-	//macro := op_gio.Record(gtx.Ops)
+func (ob *GoMenuBarObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	layoutDims := ob.layout.flex_gio.Layout(gtx, ob.layout.flexControls... )
-	//call := macro.Stop()
 	dims := image.Point{X: layoutDims.Size.X, Y: layoutDims.Size.Y}
-	//r := dims
-	
-	//r.X += ob.GoPadding.Left + ob.GoPadding.Right
-	//r.Y += ob.GoPadding.Top + ob.GoPadding.Bottom
-	
-	//rr := gtx.Dp(ob.cornerRadius)
-	//defer clip_gio.UniformRRect(image.Rectangle{Max: r}, rr).Push(gtx.Ops).Pop()
-
-	// paint background
-	//background := ob.background.NRGBA()
-	//paint_gio.Fill(gtx.Ops, background)
-	// Draw the operations from the cache.
-	//call.Add(gtx.Ops)
-	//layoutDims := ob.layout.flex_gio.Layout(gtx, ob.layout.flexControls... )
 	return layout_gio.Dimensions{Size: dims}
 }
 
 func (ob *GoMenuBarObj) repack(gtx layout_gio.Context) {
 	ob.layout.flexControls = []layout_gio.FlexChild{}
 	for i := 0; i < len(ob.Controls); i++ {
-		
 		ob.layout.addFlexControl(ob.Controls[i])
-		/*if ob.controls[i].sizePolicy().HFixed {
-			ob.addRigidControl(ob.controls[i])
-		} else {
-			ob.addFlexedControl(ob.controls[i])
-		}*/
 		if ob.Controls[i].ObjectType() == "GoLayoutObj" {
 			ob.Controls[i].(*GoLayoutObj).repack(gtx)
 		}

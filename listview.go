@@ -33,6 +33,7 @@ type GoListViewObj struct {
 	itemSize int
 	//itemList []*GoListViewItemObj
 	currentItem *GoListViewItemObj
+	layout *GoLayoutObj
 
 	onItemClicked func([]int)
 	onItemDoubleClicked func([]int)
@@ -51,6 +52,7 @@ func GoListView(parent GoObject) *GoListViewObj {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{4,4,4,4},
+		GoSize: GoSize{100, 100, 100, 100, 1000, 1000, 100, 100},
 		Visible: true,
 		//target: nil,
 	}
@@ -78,7 +80,9 @@ func GoListView(parent GoObject) *GoListViewObj {
 		columns: 1,
 		itemSize: 24,
 		itemColor: Color_Black,
+		layout: nil,
 	}
+	hListView.layout = GoVFlexBoxLayout(hListView)
 	parent.AddControl(hListView)
 	return hListView
 }
@@ -164,16 +168,71 @@ func (ob *GoListViewObj) SetOnItemClicked(f func([]int)) {
 func (ob *GoListViewObj) SetOnItemDoubleClicked(f func([]int)) {
 	ob.onItemDoubleClicked = f
 }
-/*func (ob *GoListBoxObj) SetSizePolicy(horiz GoSizeType, vert GoSizeType) {
-	ob.SetSizePolicy(GetSizePolicy(horiz, vert))
-}*/
 
-func (ob *GoListViewObj) Draw(gtx layout_gio.Context) layout_gio.Dimensions {
-	dims := layout_gio.Dimensions{Size: gtx.Constraints.Max,}
+func (ob *GoListViewObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
+	log.Println("GoListViewObj::Draw()")
+	cs := gtx.Constraints
+	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
+	
+	width := metrics.DpToPx(GoDpr, ob.Width)
+	height := metrics.DpToPx(GoDpr, ob.Height)
+	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		log.Println("FixedWidth............")
+		//log.Println("object Width = (", width, " )")
+		cs.Min.X = min(cs.Max.X, width)
+		log.Println("cs.Min.X = (", cs.Min.X, " )")
+		cs.Max.X = min(cs.Max.X, width)
+		log.Println("cs.Max.X = (", cs.Max.X, " )")
+	/*case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = min(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case PreferredWidth:		// SizeHint is Preferred
+		log.Println("PreferredWidth............")
+		log.Println("object MinWidth = (", minWidth, " )")
+		log.Println("object MaxWidth = (", maxWidth, " )")
+		cs.Min.X = max(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)
+	/*case MaximumWidth:			// SizeHint is Maximum
+		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case ExpandingWidth:
+		log.Println("ExpandingWidth............")
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+
+	}
+
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = min(cs.Max.Y, height)
+		cs.Max.Y = min(cs.Max.Y, height)
+	/*case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = min(cs.Min.Y, minHeight)
+		cs.Max.Y = min(cs.Max.Y, maxHeight)
+	/*case MaximumHeight:			// SizeHint is Maximum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case ExpandingHeight:
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+
+	gtx.Constraints = cs
+	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
+					//return ob.Layout(gtx, func(gtx C) D {
 					return ob.Layout(gtx, len(ob.Controls), func(gtx C, i int) D {
 						return ob.Controls[i].Draw(gtx)
 					})
@@ -181,11 +240,33 @@ func (ob *GoListViewObj) Draw(gtx layout_gio.Context) layout_gio.Dimensions {
 			})
 		})
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
+
+/*func (ob *GoListViewObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
+	ob.ReceiveEvents(gtx)
+	width := gtx.Dp(unit_gio.Dp(ob.Width))
+	height := gtx.Dp(unit_gio.Dp(ob.Height))
+	if ob.SizePolicy().HFlex {
+		width = gtx.Constraints.Max.X
+	}
+	if ob.SizePolicy().VFlex {
+		height = gtx.Constraints.Max.Y
+	}
+	dims := image.Point{X: width, Y: height}
+	rr := gtx.Dp(ob.cornerRadius)
+	defer clip_gio.UniformRRect(image.Rectangle{Max: dims}, rr).Push(gtx.Ops).Pop()
+	// paint background
+	background := ob.background.NRGBA()
+	paint_gio.Fill(gtx.Ops, background)
+	// add the events handler to receive widget pointer events
+	ob.SignalEvents(gtx)
+	ob.layout.Draw(gtx)
+	return layout_gio.Dimensions{Size: dims}
+}*/
 
 // layout the list and its scrollbar.
 func (ob *GoListViewObj) Layout(gtx layout_gio.Context, length int, w layout_gio.ListElement) layout_gio.Dimensions {

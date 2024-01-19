@@ -162,7 +162,7 @@ type GoWindowObj struct {
 
 func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
-	size := GoSize{640, 480, 0, 0, 1500, 1200}
+	size := GoSize{320, 480, 640, 480, 1500, 1200, 640, 480}
 	pos := GoPos{-1, -1}
 	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil, nil}
 	hWin.Window = hWin
@@ -182,7 +182,7 @@ func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	//object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
-	size := GoSize{640, 480, 0, 0, 1500, 1200}
+	size := GoSize{0, 0, 640, 480, 1500, 1200, 640, 480}
 	pos := GoPos{-1, -1}
 	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, false, "", -1, "", nil, nil, nil}
 	hWin.Window = hWin
@@ -202,7 +202,7 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	//object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
-	size := GoSize{640, 450, 0, 0, 1500, 1000}
+	size := GoSize{0, 0, 640, 450, 1500, 1000, 640, 450}
 	pos := GoPos{-1, -1}
 	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, true, modalStyle, -1, "", nil, nil, nil}
 	hWin.Window = hWin
@@ -428,26 +428,19 @@ func (ob *GoWindowObj) SetTitle(title string) {
 }
 
 func (ob *GoWindowObj) ClientSize() (width int, height int) {
-	var x,y int
 	//log.Println("GoWindowObj::ClientSize:()")
 	//log.Println("ob.ClientSize = ", ob.Width, ob.Height)
-	x, y, width, height = desktop.GetClientRect(ob.gio.HWND())
-	//log.Println("GoWindowObj::ClientRect:", x, y, width, height)
-	width = metrics.PxToDp(GoDpr, width - x)
-	height = metrics.PxToDp(GoDpr, height - y)
+	_, _, width, height = desktop.GetClientRect(ob.gio.HWND())
+	width = metrics.PxToDp(GoDpr, width)
+	height = metrics.PxToDp(GoDpr, height)
 	//log.Println("GoWindowObj::ClientSize:", width, height)
 	return
 }
 
 func (ob *GoWindowObj) Size() (width int, height int) {
-	var x,y int
-	//log.Println("GoWindowObj::Size:()")
-	//log.Println("ob.Size = ", ob.Width, ob.Height)
-	x, y, width, height = desktop.GetWindowRect(ob.gio.HWND())
-	//log.Println("GoWindowObj::Rect:", x, y, width, height)
-	width = metrics.PxToDp(GoDpr, width - x)
-	height = metrics.PxToDp(GoDpr, height - y)
-	//log.Println("GoWindowObj::Size:", width, height)
+	_, _, width, height = desktop.GetWindowRect(ob.gio.HWND())
+	width = metrics.PxToDp(GoDpr, width)
+	height = metrics.PxToDp(GoDpr, height)
 	return
 }
 

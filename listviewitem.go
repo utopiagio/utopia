@@ -39,23 +39,22 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 	color = defaultIconColor
 	size = defaultIconSize
 	//text = ""
-	_, err := iconvg.DecodeMetadata(data)
-	if err != nil {
-		return nil
+	if data != nil {
+		_, err := iconvg.DecodeMetadata(data)
+		if err != nil {
+			return nil
+		}
 	}
 	
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{24, 24, 24, 24, 1000, 1000},
+		GoSize: GoSize{24, 24, 24, 24, 1000, 1000, 24, 24},
 		FocusPolicy: StrongFocus,
 		Visible: true,
-
 		ForeColor: theme.ColorFg,
-		
-		//target: nil,
 	}
 	
 	hListViewItem := &GoListViewItemObj{
@@ -71,10 +70,8 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 		label: text,
 		level: listLevel,
 		id: listId,
-		//parentList: parent,
 		shaper: theme.Shaper,
 	}
-	hListViewItem.SetSizePolicy(FixedWidth, FixedHeight)
 	hListViewItem.SetOnSetFocus(hListViewItem.SetHighlight)
 	hListViewItem.SetOnClearFocus(hListViewItem.ClearHighlight)
 	hListViewItem.SetOnPointerClick(hListViewItem.Clicked)
@@ -88,8 +85,6 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 	case "GoListViewObj":
 		hListViewItem.listView = parent.(*GoListViewObj)
 	}
-	//hListViewItem.listView.AddControl(hListViewItem)
-	//hListViewItem.listView.InsertControl(hListViewItem, listId)
 	return hListViewItem
 }
 
@@ -198,13 +193,64 @@ func (ob *GoListViewItemObj) DoubleClicked(e pointer_gio.Event) {
 }
 
 func (ob *GoListViewItemObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
-	/*X = gtx.Constraints.Max.X
-	Y = gtx.Constraints.Max.Y
-	if ob.SizePolicy.Horiz == FixedWidth {X = ob.X}
-	if ob.SizePolicy.Vert == FixedHeight {Y = ob.Y}*/
-	gtx.Constraints.Min = image.Point{ob.MinWidth, 0}
-	gtx.Constraints.Max = image.Point{ob.MaxWidth, 5000}
+	log.Println("GoListViewItemObj::Draw()")
+	cs := gtx.Constraints
+	//clipper := gtx.Constraints
+	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
+	
+	width := metrics.DpToPx(GoDpr, ob.Width)
+	height := metrics.DpToPx(GoDpr, ob.Height)
+	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		log.Println("FixedWidth............")
+		log.Println("object Width = (", width, " )")
+		cs.Min.X = min(cs.Max.X, width)
+		log.Println("cs.Min.X = (", cs.Min.X, " )")
+		cs.Max.X = min(cs.Max.X, width)
+		log.Println("cs.Max.X = (", cs.Max.X, " )")
+	/*case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = min(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case PreferredWidth:		// SizeHint is Preferred
+		log.Println("PreferredWidth............")
+		log.Println("object MinWidth = (", minWidth, " )")
+		log.Println("object MaxWidth = (", maxWidth, " )")
+		cs.Min.X = max(cs.Min.X, minWidth)
+		cs.Max.X = min(cs.Max.X, maxWidth)
+	/*case MaximumWidth:			// SizeHint is Maximum
+		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
+		cs.Max.X = min(cs.Max.X, maxWidth)*/
+	case ExpandingWidth:
+		log.Println("ExpandingWidth............")
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	}
+
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = min(cs.Max.Y, height)
+		cs.Max.Y = min(cs.Max.Y, height)
+	/*case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = min(cs.Min.Y, minHeight)
+		cs.Max.Y = min(cs.Max.Y, maxHeight)
+	/*case MaximumHeight:			// SizeHint is Maximum
+		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
+		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+	case ExpandingHeight:
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+
+	gtx.Constraints = cs
+	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
 	if ob.Visible {
 	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C, ) D {
@@ -215,8 +261,8 @@ func (ob *GoListViewItemObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimen
 			})
 		})
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
@@ -320,25 +366,37 @@ func (ob *GoListViewItemObj) Widget() (*GioWidget) {
 }
 
 // Layout displays the icon with its size set to the X minimum constraint.
-func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
+func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	ob.ReceiveEvents(gtx)
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()
-	dims := layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
-		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
-			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-				gtx.Constraints.Min = image.Point{X: ob.iconSize}
-				return ob.layoutIcon(gtx)
-			})
-		}),
-		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
-			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-				paint_gio.ColorOp{Color: ob.ForeColor.NRGBA()}.Add(gtx.Ops)
-				return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
-			})
-		}),
-	)
+	log.Println("GoListViewItemObj LabelText :", ob.label)
+	if ob.icon != nil {
+		dims = layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
+			layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
+				return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
+					gtx.Constraints.Min = image.Point{X: ob.iconSize}
+					return ob.layoutIcon(gtx)
+				})
+			}),
+			layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
+				return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
+					paint_gio.ColorOp{Color: ob.ForeColor.NRGBA()}.Add(gtx.Ops)
+					return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
+				})
+			}),
+		)
+	} else {
+		dims = layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
+			layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
+				return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
+					paint_gio.ColorOp{Color: ob.ForeColor.NRGBA()}.Add(gtx.Ops)
+					return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
+				})
+			}),
+		)
+	}
 	rect := image.Point{X: dims.Size.X, Y: dims.Size.Y}
 	defer clip_gio.Rect{Max: rect}.Push(gtx.Ops).Pop()
 	ob.SignalEvents(gtx)

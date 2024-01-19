@@ -44,12 +44,14 @@ func (p GoPos) ImPos() (image.Point) {
 }
 
 type GoSize struct {
-	Width int
-	Height int
 	MinWidth int
 	MinHeight int
+	Width int
+	Height int
 	MaxWidth int
 	MaxHeight int
+	AbsWidth int
+	AbsHeight int
 }
 
 func (s GoSize) ImMax() (image.Point) {
@@ -633,8 +635,6 @@ func (w *GioWidget) SetSelected(selected bool) {
 }
 
 func (w *GioWidget) SetWidth(width int) {
-	w.GoSize.MinWidth = width
-	w.GoSize.MaxWidth = width
 	w.GoSize.Width = width
 }
 

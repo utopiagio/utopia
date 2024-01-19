@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	//"log"
+	"log"
 	//"image/color"
 
 	layout_gio "github.com/utopiagio/gio/layout"
@@ -255,9 +255,7 @@ func (ob *GoLayoutObj) SetAlignment(alignment GoLayoutAlignment) {
 		ob.list_gio.Alignment = layout_gio.Alignment(uint8(alignment))	// layout_gio.Alignment
 	}
 }
-/*func (ob *GoLayoutObj) SetSizePolicy(horiz GoSizeType, vert GoSizeType) {
-	ob.SetSizePolicy(GetSizePolicy(horiz, vert))
-}*/
+
 
 func (ob *GoLayoutObj) SetSpacing(spacing GoLayoutSpacing) {
 	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout || ob.style == PopupMenuLayout {
@@ -364,8 +362,8 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 			})
 		}
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
@@ -396,25 +394,26 @@ func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
 		}
 	} else if ob.style == PopupMenuLayout {
 		ob.flexControls = []layout_gio.FlexChild{}
+		ob.Width = 0
+		ob.Height = 0
+		ob.MinWidth = 0
+		ob.MinHeight = 0
 		for i := 0; i < len(ob.Controls); i++ {
 			ob.addFlexControl(ob.Controls[i])
-			parent := ob.Controls[i].ParentControl()
-			if i == 0 {
-				parent.Widget().dims.Size.X = 0
-				parent.Widget().dims.Size.Y = 0
-				ob.dims.Size.X = 0
-				ob.dims.Size.Y = 0
-			}
 			dims := ob.Controls[i].(*GoMenuItemObj).Size(gtx)
-			ob.Widget().dims.Size.Y += dims.Size.Y
-			if dims.Size.X > parent.Widget().dims.Size.X {
-				parent.Widget().dims.Size.X = dims.Size.X
-				ob.Widget().dims.Size.X = dims.Size.X
-			
-				parent.Widget().MinWidth = metrics.PxToDp(GoDpr, dims.Size.X)
-				ob.Widget().MinWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+			ob.Height += metrics.PxToDp(GoDpr, dims.Size.Y)
+			menuItemWidth := metrics.PxToDp(GoDpr, dims.Size.X)
+			log.Println("menuItemWidth =", menuItemWidth)
+			if menuItemWidth > ob.Width {
+				ob.Width = menuItemWidth
+				ob.MinWidth = menuItemWidth
 			}
 		}
-		ob.Widget().MinHeight = metrics.PxToDp(GoDpr, ob.Widget().dims.Size.Y)
+		ob.MinHeight = ob.Height
+		log.Println("ob.Controls[] Size =", ob.Width)
+		for i := 0; i < len(ob.Controls); i++ {
+			// + 1 to allow for rounding errors
+			ob.Controls[i].(*GoMenuItemObj).MaxWidth = ob.Width// + 1
+		}
 	}
 }

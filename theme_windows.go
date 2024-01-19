@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
-/* github.com/utopiagio/utopia/theme.go */
+/* github.com/utopiagio/utopia/theme_windows.go */
 
 package utopia
 
@@ -129,7 +129,11 @@ func GoTheme(fontCollection []text_gio.FontFace) *GoThemeObj {
 	th.Icon.RadioUnchecked = mustIcon(widget_gio.NewIcon(icons.ToggleRadioButtonUnchecked))
 
 	// 38dp is on the lower end of possible finger size.
-	th.FingerSize = 38
+	th.FingerSize = 12
+	// 6dp is the mimimum radius of slider finger
+	th.ThumbRadius = 6
+	// 2dp is the minimum size of slider track width
+	th.TrackWidth = 4
 
 	return th
 }
@@ -149,6 +153,10 @@ type GoThemeObj struct {
 
 	// FingerSize is the minimum touch target size.
 	FingerSize unit_gio.Dp
+	// ThumbRadius is the mimimum radius of slider finger
+	ThumbRadius unit_gio.Dp
+	// TrackWidth is the minimum size of slider track width
+	TrackWidth unit_gio.Dp 
 }
 
 // Regular returns a collection of all available Go font faces.

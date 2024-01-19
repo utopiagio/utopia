@@ -5,6 +5,7 @@
 package utopia
 
 import (
+	"log"
 	"image"
 	//"image/color"
 
@@ -27,6 +28,7 @@ type GoSwitchObj struct {
 		enabled  GoColor
 		disabled GoColor
 		track    GoColor
+		outline  GoColor
 	}
 	//goSwitch *widget_gio.Bool
 	state bool
@@ -56,7 +58,9 @@ func GoSwitch(parent GoObject, description string) *GoSwitchObj {
 	}
 	hSwitch.color.enabled = theme.ContrastBg
 	hSwitch.color.disabled = theme.ColorBg
-	hSwitch.color.track = NRGBAColor(MulAlpha(theme.ColorFg.NRGBA(), 0x88))
+	//hSwitch.color.track = NRGBAColor(MulAlpha(theme.ColorFg.NRGBA(), 0x88))
+	hSwitch.color.track = theme.ColorBg
+	hSwitch.color.outline = theme.ContrastBg
 	hSwitch.SetOnPointerRelease(hSwitch.Clicked)
 	hSwitch.SetOnPointerEnter(nil)
 	hSwitch.SetOnPointerLeave(nil)
@@ -118,23 +122,24 @@ func (ob *GoSwitchObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
-					return ob.layout(gtx)
+					return ob.Layout(gtx)
 				})
 			})
 		})
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
+		log.Println("GoSwitch::Height: ", dims.Size.Y)
 	}
 	return dims
 }
 
 // Layout updates the switch and displays it.
-func (ob *GoSwitchObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
+func (ob *GoSwitchObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
-	trackWidth := gtx.Dp(36)
-	trackHeight := gtx.Dp(16)
-	thumbSize := gtx.Dp(20)
+	trackWidth := gtx.Dp(40)
+	trackHeight := gtx.Dp(18)
+	thumbSize := gtx.Dp(12)
 	trackOff := (thumbSize - trackHeight) / 2
 
 	// Draw track.
@@ -142,6 +147,10 @@ func (ob *GoSwitchObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	trackRect := image.Rectangle{Max: image.Point{
 		X: trackWidth,
 		Y: trackHeight,
+	}}
+	outlineRect := image.Rectangle{Max: image.Point{
+		X: trackWidth + 2,
+		Y: trackHeight + 2,
 	}}
 	col := ob.color.disabled.NRGBA()
 	if ob.state {
@@ -151,8 +160,15 @@ func (ob *GoSwitchObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 		col = DisabledBlend(col)
 	}
 	trackColor := ob.color.track.NRGBA()
-	t := op_gio.Offset(image.Point{Y: trackOff}).Push(gtx.Ops)
-	cl := clip_gio.UniformRRect(trackRect, trackCorner).Push(gtx.Ops)
+	outlineColor := ob.color.outline.NRGBA()
+	t := op_gio.Offset(image.Point{X: 0, Y: 1}).Push(gtx.Ops)
+	cl := clip_gio.UniformRRect(outlineRect, trackCorner + 1).Push(gtx.Ops)
+	paint_gio.ColorOp{Color: outlineColor}.Add(gtx.Ops)
+	paint_gio.PaintOp{}.Add(gtx.Ops)
+	cl.Pop()
+	t.Pop()
+	t = op_gio.Offset(image.Point{X: 1, Y: 2}).Push(gtx.Ops)
+	cl = clip_gio.UniformRRect(trackRect, trackCorner).Push(gtx.Ops)
 	paint_gio.ColorOp{Color: trackColor}.Add(gtx.Ops)
 	paint_gio.PaintOp{}.Add(gtx.Ops)
 	cl.Pop()
@@ -177,11 +193,12 @@ func (ob *GoSwitchObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 
 	// Compute thumb offset.
 	if ob.state {
-		xoff := trackWidth - thumbSize
+		xoff := trackWidth - thumbSize - 10
 		defer op_gio.Offset(image.Point{X: xoff}).Push(gtx.Ops).Pop()
 	}
 
-	thumbRadius := thumbSize / 2
+	thumbCentre := trackHeight / 2
+	thumbRadius := thumbSize / 2 	// thumbCentre?
 
 	circle := func(x, y, r int) clip_gio.Op {
 		b := image.Rectangle{
@@ -194,22 +211,22 @@ func (ob *GoSwitchObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	if ob.IsHovered() || ob.HasFocus() {
 		r := thumbRadius * 10 / 17
 		background := MulAlpha(ob.color.enabled.NRGBA(), 70)
-		paint_gio.FillShape(gtx.Ops, background, circle(thumbRadius, thumbRadius, r))
+		paint_gio.FillShape(gtx.Ops, background, circle(thumbCentre + 2, thumbCentre + 2, r))
 	}
 
 	// Draw thumb shadow, a translucent disc slightly larger than the
 	// thumb itself.
 	// Center shadow horizontally and slightly adjust its Y.
-	paint_gio.FillShape(gtx.Ops, argb(0x55000000), circle(thumbRadius, thumbRadius+gtx.Dp(.25), thumbRadius+1))
+	paint_gio.FillShape(gtx.Ops, ob.color.enabled.NRGBA(), circle(thumbCentre + 2, thumbCentre + 2 + gtx.Dp(.25), thumbRadius+1))
 
 	// Draw thumb.
-	paint_gio.FillShape(gtx.Ops, col, circle(thumbRadius, thumbRadius, thumbRadius))
+	paint_gio.FillShape(gtx.Ops, col, circle(thumbCentre + 2, thumbCentre + 2 + gtx.Dp(.25), thumbRadius))
 
 	// Set up click area.
 	clickSize := gtx.Dp(40)
 	clickOff := image.Point{
 		X: (thumbSize - clickSize) / 2,
-		Y: (trackHeight-clickSize)/2 + trackOff,
+		Y: (trackHeight-clickSize) / 2 + trackOff,
 	}
 	defer op_gio.Offset(clickOff).Push(gtx.Ops).Pop()
 	sz := image.Pt(clickSize, clickSize)
@@ -223,6 +240,6 @@ func (ob *GoSwitchObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 		return layout_gio.Dimensions{Size: sz}
 	})*/
 
-	dims := image.Point{X: trackWidth, Y: thumbSize}
+	dims := image.Point{X: trackWidth + 2, Y: trackHeight + 4}
 	return layout_gio.Dimensions{Size: dims}
 }

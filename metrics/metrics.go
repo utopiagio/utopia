@@ -30,34 +30,36 @@ func DpToPx(dpr float32, v int) int {
 	return int(math.Round(float64(nonZero(dpr)) * float64(v)))
 }
 
-// PxToDp converts v px to dp.		PXPerDp
+// PxToDp converts v px to dp.
 func PxToDp(dpr float32, v int) int {
-	return int(float64(v) / nonZero(dpr))
+	return int((float64(v) / float64(nonZero(dpr))) + 0.5)
 }
 
-// Sp converts v to pixels, rounded to the nearest integer value. PxPerSp
-func SpToPx(spr float32, v int) int {
-	return int(math.Round(float64(nonZero(spr)) * float64(v)))
+// Sp converts v to pixels, rounded to the nearest integer value.
+func SpToPx(spr float32, sp int) int {
+	return int(math.Round(float64(nonZero(spr)) * float64(sp)))
 }
 
-// PxToSp converts v px to sp.		PXPerSp
-func PxToSp(spr float32, v int) int {
-	return int(float64(v) / nonZero(spr))
+// PxToSp converts v px to sp.
+func PxToSp(spr float32, px int) int {
+	return int((float64(px) / float64(nonZero(spr))) + 0.5)
 }
 
 // DpToSp converts v dp to sp.
-func DpToSp(dpr float32, spr float32, v float32) int {
-	return SpToPx(spr, int(float64(v) * nonZero(dpr) / nonZero(spr)))
+func DpToSp(dpr float32, spr float32, dp int) (sp float32) {
+	px := (math.Round(float64(nonZero(dpr)) * float64(dp)))
+	return float32((px) / float64(nonZero(spr)))
 }
 
 // SpToDp converts v sp to dp.
-func SpToDp(spr float32, dpr float32, v float32) int {
-	return DpToPx(dpr, int(float64(v) * nonZero(spr) / nonZero(dpr)))
+func SpToDp(spr float32, dpr float32, sp float32) (dp int) {
+	px := (math.Round(float64(nonZero(spr)) * float64(sp)))
+	return int((px) / float64(nonZero(dpr)) + 0.5)
 }
 
-func nonZero(v float32) float64 {
+func nonZero(v float32) float32 {
 	if v == 0. {
 		return 1
 	}
-	return float64(v)
+	return float32(v)
 }

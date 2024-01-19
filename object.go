@@ -32,7 +32,7 @@ const(
 	FixedWidth GoSizeType		= 0x0000
 	FixedHeight GoSizeType		= 0x0001
 	MinimumWidth GoSizeType		= 0x0002
-	MinimuHeight GoSizeType		= 0x0004
+	MinimumHeight GoSizeType	= 0x0004
 	MaximumWidth GoSizeType		= 0x0008
 	MaximumHeight GoSizeType	= 0x0010
 	PreferredWidth GoSizeType	= 0x0020
@@ -61,7 +61,9 @@ type GoObject interface {
 	ParentWindow() (*GoWindowObj)
 	RemoveControl(GoObject)
 	SizePolicy() (*GoSizePolicy)
+	SetHorizSizePolicy(horiz GoSizeType)
 	SetSizePolicy(horiz GoSizeType, vert GoSizeType)
+	SetVertSizePolicy(vert GoSizeType)
 	Widget() (*GioWidget)
 }
 
@@ -154,7 +156,14 @@ func (ob *GioObject) SizePolicy() *GoSizePolicy {	// widget sizing policy - GoSi
 	return ob.GoSizePolicy
 }
 
+func (ob *GioObject) SetHorizSizePolicy(horiz GoSizeType) {	// widget sizing policy - GoSizePolicy{horiz, vert, fixed}
+	ob.GoSizePolicy = GetSizePolicy(horiz, ob.GoSizePolicy.Vert)
+}
+
 func (ob *GioObject) SetSizePolicy(horiz GoSizeType, vert GoSizeType) {	// widget sizing policy - GoSizePolicy{horiz, vert, fixed}
 	ob.GoSizePolicy = GetSizePolicy(horiz, vert)
 }
 
+func (ob *GioObject) SetVertSizePolicy(vert GoSizeType) {	// widget sizing policy - GoSizePolicy{horiz, vert, fixed}
+	ob.GoSizePolicy = GetSizePolicy(ob.GoSizePolicy.Horiz, vert)
+}

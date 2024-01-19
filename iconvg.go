@@ -24,7 +24,7 @@ import (
 )
 
 const defaultIconColor = Color_Black
-const defaultIconSize = 24
+const defaultIconSize = 20
 
 
 // example : folderIcon := GoIcon(parent, archive.FileFolder)

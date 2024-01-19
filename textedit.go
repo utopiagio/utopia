@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	_ "log"
+	"log"
 	"image"
 	"image/color"
 
@@ -60,6 +60,7 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
+		GoSize: GoSize{0, 0, 200, 200, 16777215, 16777215, 200, 200},
 		FocusPolicy: StrongFocus,
 		Visible: true,
 		keys: "←|→|↑|↓|⏎|⌤|⎋|⇱|⇲|⌫|⌦|⇞|⇟",
@@ -234,14 +235,16 @@ func (ob *GoTextEditObj) SelectedText() (text string) {
 	return ob.editor.SelectedText()
 }
 
-
-
-/*func (ob *GoTextEditObj) SetSizePolicy(horiz GoSizeType, vert GoSizeType) {
-	ob.SetSizePolicy(GetSizePolicy(horiz, vert))
-}*/
+func (ob *GoTextEditObj) SetSingleLine(singleLine bool) () {
+	ob.editor.SingleLine = singleLine
+}
 
 func (ob *GoTextEditObj) SetText(text string) {
 	ob.editor.SetText(text)
+}
+
+func (ob *GoTextEditObj) SingleLine() (singleLine bool) {
+	return ob.editor.SingleLine
 }
 
 func (ob *GoTextEditObj) Text() (text string) {
@@ -249,8 +252,33 @@ func (ob *GoTextEditObj) Text() (text string) {
 }
 
 func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	//log.Println("GoTextEditObj::Draw()")
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
+	log.Println("GoTextEditObj::Draw()")
+	/*if gtx.Constraints.Min.X > metrics.DpToPx(GoDpr, ob.MinWidth) {
+		gtx.Constraints.Min.X = metrics.DpToPx(GoDpr, ob.MinWidth)
+	}
+	if gtx.Constraints.Min.Y > metrics.DpToPx(GoDpr, ob.MinHeight) {
+		gtx.Constraints.Min.Y = metrics.DpToPx(GoDpr, ob.MinHeight)
+	}
+	if gtx.Constraints.Max.X > metrics.DpToPx(GoDpr, ob.MaxWidth) {
+		gtx.Constraints.Max.X = metrics.DpToPx(GoDpr, ob.MaxWidth)
+	}
+	if gtx.Constraints.Max.Y > metrics.DpToPx(GoDpr, ob.MaxHeight) {
+		gtx.Constraints.Max.Y = metrics.DpToPx(GoDpr, ob.MaxHeight)
+	}*/
+	
+
+	if ob.SizePolicy().Horiz == FixedWidth {
+		gtx.Constraints.Min.X = metrics.DpToPx(GoDpr, ob.Width)
+		gtx.Constraints.Max.X = gtx.Constraints.Min.X
+	}
+	if ob.SizePolicy().Vert == FixedHeight {
+		gtx.Constraints.Min.Y = metrics.DpToPx(GoDpr, ob.Height)
+		gtx.Constraints.Max.Y = gtx.Constraints.Min.Y
+	}
+	
+	cs := gtx.Constraints
+	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
@@ -260,8 +288,8 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 			})
 		})
 		ob.dims = dims
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
@@ -343,12 +371,12 @@ func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	dims := tl.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.hint, hintColor)
 	call := macro.Stop()
 
-	if w := dims.Size.X; gtx.Constraints.Min.X < w {
+	/*if w := dims.Size.X; gtx.Constraints.Min.X < w {
 		gtx.Constraints.Min.X = w
 	}
 	if h := dims.Size.Y; gtx.Constraints.Min.Y < h {
 		gtx.Constraints.Min.Y = h
-	}
+	}*/
 	ob.editor.LineHeight = ob.lineHeight
 	ob.editor.LineHeightScale = ob.lineHeightScale
 	dims = ob.editor.Layout(gtx, ob.shaper, ob.font, ob.fontSize, textColor, selectionColor, cursorColor)
@@ -359,6 +387,7 @@ func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	// add the events handler to receive widget pointer events
 	pointer_gio.CursorText.Add(gtx.Ops)
 	ob.SignalEvents(gtx)
+
 	return dims
 }
 

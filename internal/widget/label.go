@@ -6,6 +6,7 @@ package widget	/* Class GioLabel */
 
 import (
 	"image"
+	"log"
 
 
 	"github.com/utopiagio/gio/io/semantic"
@@ -105,6 +106,7 @@ func (l GioLabel) LayoutDetailed(gtx layout.Context, lt *text.Shaper, font font.
 	dims.Size = cs.Constrain(dims.Size)
 	dims.Baseline = dims.Size.Y - it.baseline
 	clipStack.Pop()
+	log.Println("(c *GioLabel Layout dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
 	return dims, TextInfo{Truncated: it.truncated}
 }
 
