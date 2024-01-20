@@ -107,7 +107,6 @@ func (ob *GoSliderObj) Widget() (*GioWidget) {
 func (ob *GoSliderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	log.Println("GoSliderObj::Draw()")
 	cs := gtx.Constraints
-	//clipper := gtx.Constraints
 	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
 	
 	width := metrics.DpToPx(GoDpr, ob.Width)
@@ -119,24 +118,17 @@ func (ob *GoSliderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 	
 	switch ob.SizePolicy().Horiz {
 	case FixedWidth:			// SizeHint is Fixed
-		log.Println("FixedWidth............")
-		//log.Println("object Width = (", width, " )")
-		cs.Min.X = min(cs.Max.X, width)
-		log.Println("cs.Min.X = (", cs.Min.X, " )")
-		cs.Max.X = min(cs.Max.X, width)
-		log.Println("cs.Max.X = (", cs.Max.X, " )")
-	/*case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = min(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		cs.Min.X = min(cs.Max.X, width)			// constrain to ob.Width
+		cs.Max.X = min(cs.Max.X, width)			// constrain to ob.Width
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = minWidth						// set to ob.MinWidth
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
 	case PreferredWidth:		// SizeHint is Preferred
-		log.Println("PreferredWidth............")
-		log.Println("object MinWidth = (", minWidth, " )")
-		log.Println("object MaxWidth = (", maxWidth, " )")
-		cs.Min.X = max(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)
-	/*case MaximumWidth:			// SizeHint is Maximum
-		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		cs.Min.X = max(cs.Min.X, minWidth)		// constrain to ob.MinWidth
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+	case MaximumWidth:			// SizeHint is Maximum
+		cs.Max.X = maxWidth						// set to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
 	case ExpandingWidth:
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 		cs.Min.X = cs.Max.X						// set to cs.Max.X
@@ -144,24 +136,23 @@ func (ob *GoSliderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 
 	switch ob.SizePolicy().Vert {
 	case FixedHeight:			// SizeHint is Fixed 
-		cs.Min.Y = min(cs.Max.Y, height)
-		cs.Max.Y = min(cs.Max.Y, height)
-	/*case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		cs.Min.Y = min(cs.Max.Y, height)		// constrain to ob.Height
+		cs.Max.Y = min(cs.Max.Y, height)		// constrain to ob.Height
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = minHeight					// set to ob.MinHeight
+		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
 	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = min(cs.Min.Y, minHeight)
-		cs.Max.Y = min(cs.Max.Y, maxHeight)
-	/*case MaximumHeight:			// SizeHint is Maximum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		cs.Min.Y = min(cs.Min.Y, minHeight)		// constrain to ob.MinHeight
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+	case MaximumHeight:			// SizeHint is Maximum
+		cs.Max.Y = maxHeight					// set to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	case ExpandingHeight:
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
-
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
@@ -173,7 +164,6 @@ func (ob *GoSliderObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 		ob.dims = dims
 		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
 		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
-		log.Println("GoSlider::Height: ", dims.Size.Y)
 	}
 	return dims
 }

@@ -253,32 +253,53 @@ func (ob *GoTextEditObj) Text() (text string) {
 
 func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	log.Println("GoTextEditObj::Draw()")
-	/*if gtx.Constraints.Min.X > metrics.DpToPx(GoDpr, ob.MinWidth) {
-		gtx.Constraints.Min.X = metrics.DpToPx(GoDpr, ob.MinWidth)
-	}
-	if gtx.Constraints.Min.Y > metrics.DpToPx(GoDpr, ob.MinHeight) {
-		gtx.Constraints.Min.Y = metrics.DpToPx(GoDpr, ob.MinHeight)
-	}
-	if gtx.Constraints.Max.X > metrics.DpToPx(GoDpr, ob.MaxWidth) {
-		gtx.Constraints.Max.X = metrics.DpToPx(GoDpr, ob.MaxWidth)
-	}
-	if gtx.Constraints.Max.Y > metrics.DpToPx(GoDpr, ob.MaxHeight) {
-		gtx.Constraints.Max.Y = metrics.DpToPx(GoDpr, ob.MaxHeight)
-	}*/
-	
-
-	if ob.SizePolicy().Horiz == FixedWidth {
-		gtx.Constraints.Min.X = metrics.DpToPx(GoDpr, ob.Width)
-		gtx.Constraints.Max.X = gtx.Constraints.Min.X
-	}
-	if ob.SizePolicy().Vert == FixedHeight {
-		gtx.Constraints.Min.Y = metrics.DpToPx(GoDpr, ob.Height)
-		gtx.Constraints.Max.Y = gtx.Constraints.Min.Y
-	}
-	
 	cs := gtx.Constraints
 	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
-	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0}}
+	
+	width := metrics.DpToPx(GoDpr, ob.Width)
+	height := metrics.DpToPx(GoDpr, ob.Height)
+	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		cs.Min.X = min(cs.Max.X, width)			// constrain to ob.Width
+		cs.Max.X = min(cs.Max.X, width)			// constrain to ob.Width
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = minWidth						// set to ob.MinWidth
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
+	case PreferredWidth:		// SizeHint is Preferred
+		cs.Min.X = max(cs.Min.X, minWidth)		// constrain to ob.MinWidth
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+	case MaximumWidth:			// SizeHint is Maximum
+		cs.Max.X = maxWidth						// set to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	case ExpandingWidth:
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	}
+
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = min(cs.Max.Y, height)		// constrain to ob.Height
+		cs.Max.Y = min(cs.Max.Y, height)		// constrain to ob.Height
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = minHeight					// set to ob.MinHeight
+		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = min(cs.Min.Y, minHeight)		// constrain to ob.MinHeight
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+	case MaximumHeight:			// SizeHint is Maximum
+		cs.Max.Y = maxHeight					// set to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	case ExpandingHeight:
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+	gtx.Constraints = cs
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {

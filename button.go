@@ -166,26 +166,19 @@ func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
-
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
-	//dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
-	//log.Println("gtx.Constraints.Max: ", dims)
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
-	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 				paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
 					return ob.Layout(gtx)
 				})
-				//log.Println("PaddingDims: ", paddingDims)
 				return paddingDims
 			})
-			//log.Println("BorderDims: ", borderDims)
 			return borderDims
 		})
 		ob.dims = dims
-		//log.Println("ButtonDims: ", dims)
 		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
 		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}

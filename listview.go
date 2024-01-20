@@ -6,7 +6,7 @@ package utopia
 
 import (
 	"log"
-	//"image"
+	"image"
 	//"image/color"
 	"math"
 
@@ -227,7 +227,7 @@ func (ob *GoListViewObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 	}
 
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {

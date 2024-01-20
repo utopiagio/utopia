@@ -400,19 +400,16 @@ func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) 
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
-
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
-					//return ob.Layout(gtx, clipper)
 					return ob.Layout(gtx)
 				})
 			})
 		})
-
 		ob.dims = dims
 		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
 		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))

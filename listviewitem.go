@@ -104,14 +104,10 @@ type GoListViewItemObj struct {
 	label string					// text displayed
 	level int						// tree level 0 ...
 	listView *GoListViewObj			// view to display all listViewItems
-	//parentList GoObject				// *GoListViewObj or *GoListViewItemObj
-	
-	
-	
+		
 	shaper *text_gio.Shaper
 	
 	//onClick func()
-	
 	
 	// Cached values.
 	op       paint_gio.ImageOp
@@ -250,7 +246,7 @@ func (ob *GoListViewItemObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimen
 	}
 
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C, ) D {

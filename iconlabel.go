@@ -168,9 +168,8 @@ func (ob *GoIconLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensio
 	}
 
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
-	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C, ) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
 				return ob.GoPadding.Layout(gtx, func(gtx C) D {
@@ -179,9 +178,8 @@ func (ob *GoIconLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensio
 			})
 		})
 		ob.dims = dims
-		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
-		log.Println("GoIconLabel::Height: ", dims.Size.Y)
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }

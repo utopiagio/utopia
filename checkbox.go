@@ -6,6 +6,7 @@ package utopia
 
 import (
 	"log"
+	"image"
 	semantic_gio "github.com/utopiagio/gio/io/semantic"
 	layout_gio "github.com/utopiagio/gio/layout"
 	widget_int "github.com/utopiagio/utopia/internal/widget"
@@ -54,7 +55,6 @@ func GoCheckBox(parent GoObject, label string) *GoCheckBoxObj {
 func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	log.Println("GoLabelObj::Draw()")
 	cs := gtx.Constraints
-	//clipper := gtx.Constraints
 	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
 	
 	width := metrics.DpToPx(GoDpr, ob.Width)
@@ -106,9 +106,8 @@ func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
-
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			return ob.GoBorder.Layout(gtx, func(gtx C) D {
@@ -118,9 +117,8 @@ func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 			})
 		})
 		ob.dims = dims
-		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
-		log.Println("GoCheckBox::Height: ", dims.Size.Y)
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
