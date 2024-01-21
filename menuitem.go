@@ -245,8 +245,8 @@ func (ob *GoMenuItemObj) Size(gtx layout_gio.Context) (dims layout_gio.Dimension
 	ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims = ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			dims := widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
-			return dims
+			labelDims := widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
+			return labelDims
 		})
 		return insetDims
 	})

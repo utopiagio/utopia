@@ -6,12 +6,12 @@ package utopia
 
 import (
 	"log"
-	//"image"
+	"image"
 	//"image/color"
 
 	layout_gio "github.com/utopiagio/gio/layout"
 	//widget_gio "github.com/utopiagio/gio/widget"
-	//unit_gio "github.com/utopiagio/gio/unit"
+	unit_gio "github.com/utopiagio/gio/unit"
 	"github.com/utopiagio/utopia/metrics"
 )
 
@@ -227,7 +227,7 @@ func GoVFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 }
 
 func GoPopupMenuLayout(parent GoObject) (hObj *GoLayoutObj) {
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -321,8 +321,7 @@ func (ob *GoLayoutObj) addRigidControl(control GoObject) {
 
 func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	log.Println("GoLayoutObj::Draw()")
-	/*cs := gtx.Constraints
-
+	cs := gtx.Constraints
 	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
 	
 	width := metrics.DpToPx(GoDpr, ob.Width)
@@ -368,8 +367,8 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
 	gtx.Constraints = cs
-	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}} */
-	dims = layout_gio.Dimensions{Size: gtx.Constraints.Max,}
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
+	//dims = layout_gio.Dimensions{Size: gtx.Constraints.Max,}
 	if ob.Visible {
 		if ob.style == HBoxLayout || ob.style == VBoxLayout {
 			log.Println("BoxLayout style:", ob.style)
@@ -389,16 +388,16 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
 						layoutDims := ob.flex_gio.Layout(gtx, ob.flexControls... )
-						log.Println("LayoutDims: ", layoutDims)
+						//log.Println("LayoutDims: ", layoutDims)
 						return layoutDims
 					})
-					log.Println("Layout PaddingDims: ", paddingDims)
+					//log.Println("Layout PaddingDims: ", paddingDims)
 					return paddingDims
 				})
-				log.Println("Layout BorderDims: ", borderDims)
+				//log.Println("Layout BorderDims: ", borderDims)
 				return borderDims
 			})
-			log.Println("Layout MarginDims: ", dims)
+			//log.Println("Layout MarginDims: ", dims)
 		}  else if ob.style == PopupMenuLayout {
 			log.Println("PopupMenuLayout style:", ob.style)
 			ob.repack(gtx)
@@ -406,8 +405,8 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
 						layoutDims := ob.flex_gio.Layout(gtx, ob.flexControls... )
-						//layoutDims.Size.X = gtx.Dp(unit_gio.Dp(ob.MinWidth))
-						//layoutDims.Size.Y = gtx.Dp(unit_gio.Dp(ob.MinHeight))
+						layoutDims.Size.X = gtx.Dp(unit_gio.Dp(ob.MinWidth))
+						layoutDims.Size.Y = gtx.Dp(unit_gio.Dp(ob.MinHeight))
 						return layoutDims
 					})
 					//log.Println("Layout PaddingDims: ", paddingDims)
@@ -450,17 +449,20 @@ func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
 		for i := 0; i < len(ob.Controls); i++ {
 			ob.addFlexControl(ob.Controls[i])
 			dims := ob.Controls[i].(*GoMenuItemObj).Size(gtx)
-			ob.Height += metrics.PxToDp(GoDpr, dims.Size.Y)
+			//ob.Height += metrics.PxToDp(GoDpr, dims.Size.Y)
+			//log.Println("dims.Size.Y :", dims.Size.Y)
+			ob.Height += dims.Size.Y - 1 		// ******* why (-1) *******
 			menuItemWidth := metrics.PxToDp(GoDpr, dims.Size.X)
 			if menuItemWidth > ob.Width {
 				ob.Width = menuItemWidth
 				ob.MinWidth = menuItemWidth
 			}
 		}
+		ob.Height = metrics.PxToDp(GoDpr, ob.Height)
 		ob.MinHeight = ob.Height
+		
 		for i := 0; i < len(ob.Controls); i++ {
-			// + 1 to allow for rounding errors   ***Check rounding errors
-			ob.Controls[i].(*GoMenuItemObj).MaxWidth = ob.Width// + 1
+			ob.Controls[i].(*GoMenuItemObj).MaxWidth = ob.Width
 		}
 	}
 }
