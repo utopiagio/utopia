@@ -348,7 +348,6 @@ func (ob *GoLabelObj) TextColor() (color GoColor) {
 func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	log.Println("GoLabelObj::Draw()")
 	cs := gtx.Constraints
-	//clipper := gtx.Constraints
 	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
 	
 	width := metrics.DpToPx(GoDpr, ob.Width)
@@ -427,7 +426,6 @@ func (ob *GoLabelObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions
 	paint_gio.ColorOp{Color: ob.selectionColor.NRGBA()}.Add(gtx.Ops)
 	selectionColor := selectColorMacro.Stop()
 	if ob.selectable == false {
-		//dims, _ = ob.LayoutDetailed(gtx, clipper, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 		dims, _ = ob.LayoutDetailed(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 		log.Println("(GioLabel) Layout dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
 		return dims
@@ -443,7 +441,6 @@ func (ob *GoLabelObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions
 }
 
 // Layout the label with the given shaper, font, size, text, and material, returning metadata about the shaped text.
-//func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, clipper layout_gio.Constraints, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string, textMaterial op_gio.CallOp) (dims layout_gio.Dimensions, textInfo TextInfo) {
 func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string, textMaterial op_gio.CallOp) (dims layout_gio.Dimensions, textInfo TextInfo) {
 	cs := gtx.Constraints
 	textSize := fixed.I(gtx.Sp(size))
@@ -487,52 +484,12 @@ func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper
 	clipStack := clip_gio.Rect(viewport).Push(gtx.Ops)
 	call.Add(gtx.Ops)
 	dims = layout_gio.Dimensions{Size: it.bounds.Size()}
-	log.Println("(GioLabel) it.Bounds dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
+	//log.Println("(GioLabel) it.Bounds dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
 	dims.Size = cs.Constrain(dims.Size)
 	dims.Baseline = dims.Size.Y - it.baseline
 	clipStack.Pop()
 	return dims, TextInfo{Truncated: it.truncated}
 }
-
-
-/*func (ob *GoLabelObj) render(gtx layout_gio.Context, lt *text_gio.Shaper, font font_gio.Font, size unit_gio.Sp, txt string) layout_gio.Dimensions {
-	cs := gtx.Constraints
-	textSize := fixed.I(gtx.Sp(size))
-	lt.LayoutString(text_gio.Parameters{
-		Font:      font,
-		PxPerEm:   textSize,
-		MaxLines:  ob.maxLines,
-		Alignment: ob.alignment,
-	}, txt)
-	m := op_gio.Record(gtx.Ops)
-	viewport := image.Rectangle{Max: cs.Max}
-	it := textIterator{viewport: viewport, maxLines: ob.maxLines}
-	semantic_gio.LabelOp(txt).Add(gtx.Ops)
-	var glyphs [32]text_gio.Glyph
-	line := glyphs[:0]
-	for g, ok := lt.NextGlyph(); ok; g, ok = lt.NextGlyph() {
-		var ok bool
-		if line, ok = it.paintGlyph(gtx, lt, g, line); !ok {
-			break
-		}
-	}
-	call := m.Stop()
-	viewport.Min = viewport.Min.Add(it.padding.Min)
-	viewport.Max = viewport.Max.Add(it.padding.Max)
-	clipStack := clip_gio.Rect(viewport).Push(gtx.Ops)
-	call.Add(gtx.Ops)
-	dims := layout_gio.Dimensions{Size: it.bounds.Size()}
-	if ob.MinWidth > dims.Size.X {
-		dims.Size.X = ob.MinWidth
-	} else if ob.MaxWidth < dims.Size.X {
-		dims.Size.X = ob.MaxWidth
-	}
-	dims.Size = cs.Constrain(dims.Size)		// fill existing space
-	dims.Baseline = dims.Size.Y - it.baseline
-	clipStack.Pop()
-
-	return dims
-}*/
 
 func (ob *GoLabelObj) ObjectType() (string) {
 	return "GoLabelObj"
@@ -544,14 +501,13 @@ func (ob *GoLabelObj) Widget() (*GioWidget) {
 
 func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {
 	theme := GoApp.Theme()
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
-		//target: nil,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: object,
@@ -562,10 +518,7 @@ func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		color: 		theme.ColorFg,
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
-		//state: 		nil,
 	}
-	//maroon := ColorFromRGB(127, 0, 0)
-	//hLabel.color = maroon
 	hLabel.font.Weight = font_gio.Medium
 	parent.AddControl(hLabel)
 	return hLabel
@@ -573,7 +526,7 @@ func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {
 
 func H2Label(parent GoObject, text string) (hObj *GoLabelObj) {
 	theme := GoApp.Theme()
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -590,10 +543,7 @@ func H2Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		color: 		theme.ColorFg,
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
-		//state: 		nil,
 	}
-	//maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
-	//hH2Label.gio.Color = maroon
 	hLabel.font.Weight = font_gio.Medium
 	parent.AddControl(hLabel)
 	return hLabel
@@ -601,7 +551,7 @@ func H2Label(parent GoObject, text string) (hObj *GoLabelObj) {
 
 func H3Label(parent GoObject, text string) (hObj *GoLabelObj) {
 	theme := GoApp.Theme()
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -618,17 +568,14 @@ func H3Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		color: 		theme.ColorFg,
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
-		//state: 		nil,
 	}
-	//maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
-	//hH2Label.gio.Color = maroon
 	parent.AddControl(hLabel)
 	return hLabel
 }
 
 func H4Label(parent GoObject, text string) (hObj *GoLabelObj) {
 	theme := GoApp.Theme()
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -645,17 +592,14 @@ func H4Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		color: 		theme.ColorFg,
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
-		//state: 		nil,
 	}
-	//maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
-	//hH2Label.gio.Color = maroon
 	parent.AddControl(hLabel)
 	return hLabel
 }
 
 func H5Label(parent GoObject, text string) (hObj *GoLabelObj) {
 	theme := GoApp.Theme()
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -672,17 +616,14 @@ func H5Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		color: 		theme.ColorFg,
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
-		//state: 		nil,
 	}
-	//maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
-	//hH2Label.gio.Color = maroon
 	parent.AddControl(hLabel)
 	return hLabel
 }
 
 func H6Label(parent GoObject, text string) (hObj *GoLabelObj) {
 	theme := GoApp.Theme()
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -699,10 +640,8 @@ func H6Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		color: 		theme.ColorFg,
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
-		//state: 		nil,
+
 	}
-	//maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
-	//hH2Label.gio.Color = maroon
 	hLabel.font.Weight = font_gio.Medium
 	parent.AddControl(hLabel)
 	return hLabel

@@ -2,9 +2,9 @@
 
 **Only coded and running on Windows OS.**
 
-Working is proceeding on Linux OS versions, but help is required to port to MacOS.
+Work is proceeding on Linux OS versions, but help is required to port to MacOS.
 
-UtopiaGio is a Go framework library</a> built on top of the <a href="https://gioui.org">Gio library module</a>. Gio is a cross-platform immediate mode GUI.
+UtopiaGio is a Go framework library built on top of the <a href="https://gioui.org">Gio library module</a>. Gio is a cross-platform immediate mode GUI.
 
 The GoApplication class/structure maintains a list of GoWindows and manages the control of the GoWindows and their running threads.
 
@@ -18,3 +18,33 @@ New layout methods have been introduced requiring a very small change to the Gio
 
 Access to the underlying OS Screen and Main Window has been provided through the desktop package, making it possible to retrieve position, size and scaling of gio windows. The Pos function has been added to the Gio package, which along with the Size function allows positioning and sizing of the gio window. Also available at run time using GoWindowObj SetPos() and SetSize() functions.
 
+### A simple GoMainWindow
+```
+package main
+
+import (
+    ui "github.com/utopiagio/utopia"
+)
+
+var mainwin *ui.GoWindowObj
+
+func main() {
+    // create application instance before any other objects
+    app := ui.GoApplication("GoMainWindowDemo")
+	
+    // create application window
+    mainwin = ui.GoMainWindow("GoMainWindow Demo - UtopiaGio Package")
+	
+    // set the window layout style to stack widgets vertically
+    mainwin.SetLayoutStyle(ui.VFlexBoxLayout)
+    mainwin.SetMargin(10,10,10,10)
+    mainwin.SetBorder(ui.BorderSingleLine, 2, 10, ui.Color_Blue)
+    mainwin.SetPadding(0,0,0,0)
+	
+    // show the application window
+    mainwin.Show()
+
+    // run the application
+    app.Run()
+}
+```

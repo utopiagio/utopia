@@ -1,7 +1,7 @@
 eliasnaur.com/font v0.0.0-20230308162249-dd43949cb42d h1:ARo7NCVvN2NdhLlJE9xAbKweuI9L6UgfTbYb0YwPacY=
 eliasnaur.com/font v0.0.0-20230308162249-dd43949cb42d/go.mod h1:OYVuxibdk9OSLX8vAqydtRPP87PyTFcT9uH3MlEGBQA=
-gioui.org v0.4.1 h1:sCTw5Fexg0xg9CxYmbrkKtHXcobf0JMbl5XpF2TC/zc=
-gioui.org v0.4.1/go.mod h1:2atiYR4upH71/6ehnh6XsUELa7JZOrOHHNMDxGBZF0Q=
+gioui.org v0.4.2 h1:txwggR/n2YYAkhnwgTpqk/5h5Fy7SkI20hOrbwlOyGE=
+gioui.org v0.4.2/go.mod h1:2atiYR4upH71/6ehnh6XsUELa7JZOrOHHNMDxGBZF0Q=
 gioui.org/cpu v0.0.0-20210808092351-bfe733dd3334/go.mod h1:A8M0Cn5o+vY5LTMlnRoK3O5kG+rH0kWfJjeKd9QpBmQ=
 gioui.org/cpu v0.0.0-20220412190645-f1e9e8c3b1f7 h1:tNJdnP5CgM39PRc+KWmBRRYX/zJ+rd5XaYxY5d5veqA=
 gioui.org/cpu v0.0.0-20220412190645-f1e9e8c3b1f7/go.mod h1:A8M0Cn5o+vY5LTMlnRoK3O5kG+rH0kWfJjeKd9QpBmQ=
@@ -23,8 +23,6 @@ github.com/phin1x/go-ipp v1.6.1/go.mod h1:GZwyNds6grdLi2xRBX22Cvt7Dh7ITWsML0bjrq
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
-github.com/utopiagio/gio v0.0.1 h1:2B7dy9pGK0XmWiazf7tkSJGpft2W4fr1OAO3wSYa1UM=
-github.com/utopiagio/gio v0.0.1/go.mod h1:kiXYEMeeTU7rrLjgfG3QFsr6fv2+kQ4XgPWQBdZQ9qY=
 golang.design/x/clipboard v0.7.0 h1:4Je8M/ys9AJumVnl8m+rZnIvstSnYj1fvzqYrU3TXvo=
 golang.design/x/clipboard v0.7.0/go.mod h1:PQIvqYO9GP29yINEfsEn5zSQKAz3UgXmZKzDA6dnq2E=
 golang.org/x/exp v0.0.0-20231226003508-02704c960a9b h1:kLiC65FbiHWFAOu+lxwNPujcsl8VYyTYYEZnsOO1WK4=
