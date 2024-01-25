@@ -62,6 +62,18 @@ Usually the main window will be constructed using multiple layouts to allow the 
     layoutBottom := ui.GoHFlexBoxLayout(mainwin.Layout())
     ....
 ```
+GoLayout has four possible configurations.
+
+1 **GoHBoxLayout**  aligns the child controls horizontally within the layout. No attempt is made to constrain the child controls to fit within the bounds of the layout control.
+
+2 **GoVBoxLayout**  aligns the child controls vertically within the layout. No attempt is made to constrain the child controls to fit within the bounds of the layout control.
+
+3 **GoHFlexBoxLayout**  aligns the child controls horizontally and attempts to constrain the child control widths to fit within the layout.
+
+4 **GoVFlexBoxLayout**  aligns the child controls vertically and attempts to constrain the child control heights to fit within the layout.
+
+The sizing method of each child control is held by the child control's **GoSizePolicy**.
+
 All controls (GioWidgets), including layouts, have margin, border and padding (GoMargin ,GoBorder, GoPadding) properties, which can be set at run time. Defaults are provided for controls where possible.
 These are the main windows layout properties
 ```
