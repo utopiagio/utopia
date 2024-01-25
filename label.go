@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 		
 	f32_gio "github.com/utopiagio/gio/f32"
@@ -178,12 +178,10 @@ type Font struct {
 */
 
 func (ob *GoLabelObj) GotFocus() {
-	log.Println("GoLabelObj::GotFocus()")
 	ob.state.SetFocused(true)
 }
 
 func (ob *GoLabelObj) LostFocus() {
-	log.Println("GoLabelObj::LostFocus()")
 	if ob.selectable == true {
 		ob.state.SetFocused(false)
 		ob.state.TextView().ClearSelection()
@@ -233,10 +231,6 @@ func (ob *GoLabelObj) SetFontSize(size int) {
 	ob.fontSize = unit_gio.Sp(size)
 }
 
-/*func (ob *GoLabelObj) SetFontVariant(variant string) {
-	ob.font.Variant = text_gio.Variant(variant)
-}*/
-
 func (ob *GoLabelObj) SetFontWeight(weight GoFontWeight) {
 	ob.font.Weight = font_gio.Weight(int(weight))
 }
@@ -261,7 +255,6 @@ func (ob *GoLabelObj) SetPreferredWidth() {
 }
 
 func (ob *GoLabelObj) pointerDoubleClicked(e pointer_gio.Event) {
-	log.Println("GoLabelObj::pointerDoubleClicked()")
 	if ob.selectable == true {
 		ob.state.PointerDoubleClicked(e)
 		ob.ParentWindow().Refresh()
@@ -275,7 +268,6 @@ func (ob *GoLabelObj) pointerDragged(e pointer_gio.Event) {
 }
 
 func (ob *GoLabelObj) pointerPressed(e pointer_gio.Event) {
-	log.Println("GoLabelObj::pointerPressed()")
 	if ob.selectable == true {
 		ob.state.PointerPressed(e)
 	}
@@ -346,10 +338,7 @@ func (ob *GoLabelObj) TextColor() (color GoColor) {
 }
 
 func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	log.Println("GoLabelObj::Draw()")
 	cs := gtx.Constraints
-	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
-	
 	width := metrics.DpToPx(GoDpr, ob.Width)
 	height := metrics.DpToPx(GoDpr, ob.Height)
 	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
@@ -359,24 +348,18 @@ func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) 
 	
 	switch ob.SizePolicy().Horiz {
 	case FixedWidth:			// SizeHint is Fixed
-		log.Println("FixedWidth............")
-		//log.Println("object Width = (", width, " )")
-		cs.Min.X = min(cs.Max.X, width)
-		log.Println("cs.Min.X = (", cs.Min.X, " )")
-		cs.Max.X = min(cs.Max.X, width)
-		log.Println("cs.Max.X = (", cs.Max.X, " )")
-	/*case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = min(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		w := min(maxWidth, width)			// constrain to ob.MaxWidth
+		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = minWidth						// set to ob.MinWidth
+		cs.Max.X = minWidth						// set to ob.MinWidth
 	case PreferredWidth:		// SizeHint is Preferred
-		log.Println("PreferredWidth............")
-		log.Println("object MinWidth = (", minWidth, " )")
-		log.Println("object MaxWidth = (", maxWidth, " )")
-		cs.Min.X = max(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)
-	/*case MaximumWidth:			// SizeHint is Maximum
-		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		cs.Min.X = minWidth						// constrain to ob.MinWidth
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+	case MaximumWidth:			// SizeHint is Maximum
+		cs.Max.X = maxWidth						// set to ob.MaxWidth
+		cs.Min.X = maxWidth						// set to ob.MaxWidth
 	case ExpandingWidth:
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 		cs.Min.X = cs.Max.X						// set to cs.Max.X
@@ -384,21 +367,23 @@ func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) 
 
 	switch ob.SizePolicy().Vert {
 	case FixedHeight:			// SizeHint is Fixed 
-		cs.Min.Y = min(cs.Max.Y, height)
-		cs.Max.Y = min(cs.Max.Y, height)
-	/*case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		w := min(maxHeight, height)				// constrain to ob.MaxHeight
+		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
+		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = minHeight					// set to ob.MinHeight
+		cs.Max.Y = minHeight					// set to ob.MinHeight
 	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = min(cs.Min.Y, minHeight)
-		cs.Max.Y = min(cs.Max.Y, maxHeight)
-	/*case MaximumHeight:			// SizeHint is Maximum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+	case MaximumHeight:			// SizeHint is Maximum
+		cs.Max.Y = maxHeight					// set to ob.MaxHeight
+		cs.Min.Y = maxHeight					// set to ob.MaxHeight
 	case ExpandingHeight:
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
+
 	gtx.Constraints = cs
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
@@ -410,14 +395,12 @@ func (ob *GoLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) 
 			})
 		})
 		ob.dims = dims
-		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
-		log.Println("GoLabel::Height: ", dims.Size.Y)
+		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
 
-//func (ob *GoLabelObj) Layout(gtx layout_gio.Context, clipper layout_gio.Constraints) (dims layout_gio.Dimensions) {
 func (ob *GoLabelObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
@@ -427,7 +410,6 @@ func (ob *GoLabelObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions
 	selectionColor := selectColorMacro.Stop()
 	if ob.selectable == false {
 		dims, _ = ob.LayoutDetailed(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
-		log.Println("(GioLabel) Layout dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
 		return dims
 	} else {
 		ob.ReceiveEvents(gtx)
@@ -484,7 +466,6 @@ func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper
 	clipStack := clip_gio.Rect(viewport).Push(gtx.Ops)
 	call.Add(gtx.Ops)
 	dims = layout_gio.Dimensions{Size: it.bounds.Size()}
-	//log.Println("(GioLabel) it.Bounds dims: (", dims.Size.X, dims.Size.Y, dims.Baseline, ")")
 	dims.Size = cs.Constrain(dims.Size)
 	dims.Baseline = dims.Size.Y - it.baseline
 	clipStack.Pop()

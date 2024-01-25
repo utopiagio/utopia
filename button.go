@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 	"image/color"
 	"math"
@@ -40,10 +40,6 @@ import (
 	Button       *widget.Clickable
 	shaper       *text.Shaper
 }*/
-
-
-
-//func Button(th *Theme, button *widget.Clickable, txt string) ButtonStyle {
 
 func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 	//var fontSize unit_gio.Sp = 14
@@ -114,36 +110,28 @@ func (ob *GoButtonObj) Text() (text string) {
 }
 
 func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	log.Println("GoButtonObj::Draw()")
 	cs := gtx.Constraints
-
 	width := metrics.DpToPx(GoDpr, ob.Width)
 	height := metrics.DpToPx(GoDpr, ob.Height)
 	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
 	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
 	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
 	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
-
+	
 	switch ob.SizePolicy().Horiz {
 	case FixedWidth:			// SizeHint is Fixed
-		log.Println("FixedWidth............")
-		//log.Println("object Width = (", width, " )")
-		cs.Min.X = min(cs.Max.X, width)
-		log.Println("cs.Min.X = (", cs.Min.X, " )")
-		cs.Max.X = min(cs.Max.X, width)
-		log.Println("cs.Max.X = (", cs.Max.X, " )")
-	/*case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = min(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		w := min(maxWidth, width)			// constrain to ob.MaxWidth
+		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = minWidth						// set to ob.MinWidth
+		cs.Max.X = minWidth						// set to ob.MinWidth
 	case PreferredWidth:		// SizeHint is Preferred
-		log.Println("PreferredWidth............")
-		log.Println("object MinWidth = (", minWidth, " )")
-		log.Println("object MaxWidth = (", maxWidth, " )")
-		cs.Min.X = max(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)
-	/*case MaximumWidth:			// SizeHint is Maximum
-		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		cs.Min.X = minWidth						// constrain to ob.MinWidth
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+	case MaximumWidth:			// SizeHint is Maximum
+		cs.Max.X = maxWidth						// set to ob.MaxWidth
+		cs.Min.X = maxWidth						// set to ob.MaxWidth
 	case ExpandingWidth:
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 		cs.Min.X = cs.Max.X						// set to cs.Max.X
@@ -151,21 +139,23 @@ func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 
 	switch ob.SizePolicy().Vert {
 	case FixedHeight:			// SizeHint is Fixed 
-		cs.Min.Y = min(cs.Max.Y, height)
-		cs.Max.Y = min(cs.Max.Y, height)
-	/*case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		w := min(maxHeight, height)				// constrain to ob.MaxHeight
+		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
+		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = minHeight					// set to ob.MinHeight
+		cs.Max.Y = minHeight					// set to ob.MinHeight
 	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = min(cs.Min.Y, minHeight)
-		cs.Max.Y = min(cs.Max.Y, maxHeight)
-	/*case MaximumHeight:			// SizeHint is Maximum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+	case MaximumHeight:			// SizeHint is Maximum
+		cs.Max.Y = maxHeight					// set to ob.MaxHeight
+		cs.Min.Y = maxHeight					// set to ob.MaxHeight
 	case ExpandingHeight:
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
+	
 	gtx.Constraints = cs
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
@@ -199,10 +189,8 @@ func (ob *GoButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 			//log.Println("Button label color:", ob.color.NRGBA())
 			//paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 			dims := widget_int.GioLabel{Alignment: text_gio.Middle, MaxLines: 2,}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
-			//log.Println("label size: ", dims)
 			return dims
 		})
-		//log.Println("inset size: ", insetDims)
 		return insetDims
 	})
 }
@@ -240,14 +228,6 @@ func (ob *GoButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layou
 	)
 }
 
-/*func ButtonLayout(th *GoThemeObj, button *widget_gio.Clickable) ButtonLayoutStyle {
-	return ButtonLayoutStyle{
-		Button:       button,
-		Background:   th.Palette.ContrastBg,
-		CornerRadius: 4,
-	}
-}*/
-
 type GoIconButtonObj struct {
 	GioObject
 	GioWidget
@@ -284,13 +264,10 @@ func GoIconVGButton(parent GoObject, icon *GoIconVGObj) *GoIconButtonObj {
 		iconVG:        icon,
 		size:        24,
 		inset:       layout_gio.UniformInset(4),
-		//clickable: 	 new(widget_gio.Clickable),
-		//description: description,
 	}
 	hIconButton.SetOnPointerRelease(hIconButton.Click)
 	hIconButton.SetOnPointerEnter(nil)
 	hIconButton.SetOnPointerLeave(nil)
-	//hIconButton.SetBorder(BorderSingleLine, 2, 4, Color_Blue)
 	parent.AddControl(hIconButton)
 	return hIconButton
 }
@@ -314,13 +291,10 @@ func GoIconPNGButton(parent GoObject, icon *GoIconPNGObj) *GoIconButtonObj {
 		iconPNG:     icon,
 		size:        24,
 		inset:       layout_gio.UniformInset(4),
-		//clickable: 	 new(widget_gio.Clickable),
-		//description: description,
 	}
 	hIconButton.SetOnPointerRelease(hIconButton.Click)
 	hIconButton.SetOnPointerEnter(nil)
 	hIconButton.SetOnPointerLeave(nil)
-	//hIconButton.SetBorder(BorderSingleLine, 2, 4, Color_Blue)
 	parent.AddControl(hIconButton)
 	return hIconButton
 }
@@ -336,30 +310,65 @@ func (ob *GoIconButtonObj) SetOnClick(f func()) {
 }
 
 func (ob *GoIconButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	log.Println("GoIconButtonObj::Draw()")
 	cs := gtx.Constraints
-	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
-	gtx.Constraints.Min.Y = 0
-	dims = layout_gio.Dimensions {Size: gtx.Constraints.Min,}
-	//log.Println("gtx.Constraints.Max: ", dims)
+	width := metrics.DpToPx(GoDpr, ob.Width)
+	height := metrics.DpToPx(GoDpr, ob.Height)
+	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		cs.Min.X = width //min(cs.Max.X, width)			// constrain to ob.Width
+		cs.Max.X = width //min(cs.Max.X, width)			// constrain to ob.Width
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = minWidth						// set to ob.MinWidth
+		cs.Max.X = minWidth						// set to ob.MinWidth
+	case PreferredWidth:		// SizeHint is Preferred
+		cs.Min.X = max(0, minWidth)				// constrain to ob.MinWidth
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+	case MaximumWidth:			// SizeHint is Maximum
+		cs.Max.X = maxWidth						// set to ob.MaxWidth
+		cs.Min.X = maxWidth						// set to ob.MaxWidth
+	case ExpandingWidth:
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	}
+
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = height //min(cs.Max.Y, height)		// constrain to ob.Height
+		cs.Max.Y = height //min(cs.Max.Y, height)		// constrain to ob.Height
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = minHeight					// set to ob.MinHeight
+		cs.Max.Y = minHeight					// set to ob.MinHeight
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+	case MaximumHeight:			// SizeHint is Maximum
+		cs.Max.Y = maxHeight					// set to ob.MaxHeight
+		cs.Min.Y = maxHeight					// set to ob.MaxHeight
+	case ExpandingHeight:
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+	
+	gtx.Constraints = cs
+	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
-	//margin := layout_gio.Inset(ob.margin.Left)
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 			borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 				paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
 					return ob.Layout(gtx)
 				})
-				//log.Println("PaddingDims: ", paddingDims)
 				return paddingDims
 			})
-			//log.Println("BorderDims: ", borderDims)
 			return borderDims
 		})
 		ob.dims = dims
-		//log.Println("ButtonDims: ", dims)
-		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)	//(int(float32(dims.Size.X) / GoDpr))
-		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)	//(int(float32(dims.Size.Y) / GoDpr))
-		log.Println("GoIconButton::Height: ", dims.Size.Y)
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }
@@ -381,7 +390,6 @@ func (ob *GoIconButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions 
 				Size: image.Point{X: size, Y: size},
 			}
 		})
-		//log.Println("inset size: ", insetDims)
 		return insetDims
 	})
 }

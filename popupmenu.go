@@ -67,17 +67,18 @@ func (ob *GoPopupMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensio
 	
 	switch ob.SizePolicy().Horiz {
 	case FixedWidth:			// SizeHint is Fixed
-		cs.Min.X = min(cs.Max.X, width)			// constrain to ob.Width
-		cs.Max.X = min(cs.Max.X, width)			// constrain to ob.Width
-	case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = minWidth					// set to ob.MinWidth
+		w := min(maxWidth, width)			// constrain to ob.MaxWidth
+		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
 		cs.Max.X = cs.Min.X						// set to cs.Min.X
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = minWidth						// set to ob.MinWidth
+		cs.Max.X = minWidth						// set to ob.MinWidth
 	case PreferredWidth:		// SizeHint is Preferred
-		cs.Min.X = max(cs.Min.X, minWidth)		// constrain to ob.MinWidth
+		cs.Min.X = minWidth						// constrain to ob.MinWidth
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 	case MaximumWidth:			// SizeHint is Maximum
 		cs.Max.X = maxWidth						// set to ob.MaxWidth
-		cs.Min.X = cs.Max.X						// set to cs.Max.X
+		cs.Min.X = maxWidth						// set to ob.MaxWidth
 	case ExpandingWidth:
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 		cs.Min.X = cs.Max.X						// set to cs.Max.X
@@ -85,17 +86,18 @@ func (ob *GoPopupMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensio
 
 	switch ob.SizePolicy().Vert {
 	case FixedHeight:			// SizeHint is Fixed 
-		cs.Min.Y = min(cs.Max.Y, height)		// constrain to ob.Height
-		cs.Max.Y = min(cs.Max.Y, height)		// constrain to ob.Height
-	case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = minHeight				// set to ob.MinHeight
+		w := min(maxHeight, height)				// constrain to ob.MaxHeight
+		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
 		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = minHeight					// set to ob.MinHeight
+		cs.Max.Y = minHeight					// set to ob.MinHeight
 	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = min(cs.Min.Y, minHeight)		// constrain to ob.MinHeight
+		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 	case MaximumHeight:			// SizeHint is Maximum
 		cs.Max.Y = maxHeight					// set to ob.MaxHeight
-		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+		cs.Min.Y = maxHeight					// set to ob.MaxHeight
 	case ExpandingHeight:
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y

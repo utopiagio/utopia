@@ -66,8 +66,6 @@ func GoApplication(appName string) (a *GoApplicationObj) {
 		//desktop: desktop,
 		keyboard: keyboard,
 		theme: theme,
-		//fontCollection: gofont.Collection(),
-		
 	}
 	return GoApp
 }
@@ -94,7 +92,7 @@ func (a *GoApplicationObj) Run() {
 	var gio *app_gio.Window = nil
 	if len(a.windows) == 0 {
 		err := errors.New("****************\n\nApplication has no main window!\n" +
-											"Use GoWindow()) method to create new windows.\n\n")
+											"Use GoMainWindow()) method to create new windows.\n\n")
 		log.Fatal(err)
 	}
 	gio = a.windows[0].gio
@@ -169,11 +167,9 @@ func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	
 	hWin.menubar = GoMenuBar(hWin.frame)
-	//hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
-	//hWin.AddPopupMenu(GoPopupMenu(hWin))
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
 	return hWin
@@ -193,7 +189,6 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
-	//hWin.popupmenus = GoPopupMenu(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
 	return hWin
@@ -214,7 +209,6 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
-	//hWin.popupmenus = GoPopupMenu(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
 	return hWin
@@ -222,7 +216,6 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 
 func (ob *GoWindowObj) AddPopupMenu() (popupMenu *GoPopupMenuObj) {
 	popupMenu = GoPopupMenu(ob)
-	//menu := GoMenuItem(ob, len(ob.popupmenus), nil)
 	ob.popupmenus = append(ob.popupmenus, popupMenu)
 	return
 }
@@ -249,17 +242,14 @@ func (ob *GoWindowObj) GoFullScreen() {
 }
 
 func (ob *GoWindowObj) IsMainWindow() bool {
-	//return ob.frame
 	return !ob.modalwindow
 }
 
 func (ob *GoWindowObj) IsModal() bool {
-	//return ob.frame
 	return ob.modalwindow
 }
 
 func (ob *GoWindowObj) Layout() *GoLayoutObj {
-	//return ob.frame
 	return ob.layout
 }
 
@@ -289,56 +279,27 @@ func (ob *GoWindowObj) MenuPopup(idx int) *GoPopupMenuObj {
 	return nil
 }
 
-/*func (ob *GoWindowObj) ModalAction() (int) {
-	return ob.ModalAction
-}
-
-func (ob *GoWindowObj) ModalInfo() (string) {
-	return ob.ModalInfo
-}*/
-
 func (ob *GoWindowObj) ModalStyle() (string) {
 	return ob.modalstyle
 }
 
 func (ob *GoWindowObj) PopupWindow() *GoPopupWindowObj {
-	//return ob.frame
 	return ob.popupwindow
 }
-
-/*func (ob *GoWindowObj) ModalLayout() *GoLayoutObj {
-	//return ob.frame
-	return ob.modal.layout
-}*/
 
 func (ob *GoWindowObj) ObjectType() (string) {
 	return "GoWindowObj"
 }
 
 func (ob *GoWindowObj) ClientPos() (x int, y int) {
-	//log.Println("ob.gio.HWND() = ", ob.gio.HWND())
-	//log.Println("GoWindowObj::ClientPos:()")
-	//log.Println("ob.Pos = ", ob.X, ob.Y)
 	x, y, _, _ = desktop.GetClientRect(ob.gio.HWND())
-	x = metrics.PxToDp(GoDpr, x)
-	y = metrics.PxToDp(GoDpr, y)
-	//log.Println("GoWindowObj::ClientPos:", x, y)
-	return
+	return metrics.PxToDp(GoDpr, x), metrics.PxToDp(GoDpr, y)
 }
 
 func (ob *GoWindowObj) Pos() (x int, y int) {
-	//log.Println("ob.gio.HWND() = ", ob.gio.HWND())
-	//log.Println("GoWindowObj::Pos:()")
-	//log.Println("ob.Pos = ", ob.X, ob.Y)
 	x, y, _, _ = desktop.GetWindowRect(ob.gio.HWND())
-	x = metrics.PxToDp(GoDpr, x)
-	y = metrics.PxToDp(GoDpr, y)
-	//log.Println("GoWindowObj::Pos:", x, y)
-	//ob.X = x
-	//ob.Y = y
-	return
+	return metrics.PxToDp(GoDpr, x), metrics.PxToDp(GoDpr, y)
 }
-
 
 func (ob *GoWindowObj) Widget() (*GioWidget) {
 	return nil
@@ -371,12 +332,23 @@ func (ob *GoWindowObj) SetBorderWidth(width int) {
 }
 
 func (ob *GoWindowObj)SetLayoutStyle(style GoLayoutStyle) {
-	/*if style == HBoxLayout || style == VBoxLayout {
-		ob.layout = GoBoxLayout(ob.frame, style)
-	} else if style == HFlexBoxLayout || style == VFlexBoxLayout {
-		ob.layout.style = HFlexBoxLayout	GoFlexBoxLayout(ob.frame, style)
-	}*/
-	ob.layout.style = style
+	ob.frame.DeleteControl(ob.layout)
+	switch style {
+	case NoLayout:
+		ob.layout = nil
+	case HBoxLayout:
+		ob.layout = GoHBoxLayout(ob.frame)
+	case VBoxLayout:
+		ob.layout = GoVBoxLayout(ob.frame)	
+	case HVBoxLayout:
+		// Not Implemented *******************
+	case HFlexBoxLayout:
+		ob.layout = GoHFlexBoxLayout(ob.frame)	
+	case VFlexBoxLayout:						
+		ob.layout = GoVFlexBoxLayout(ob.frame)	
+	case PopupMenuLayout:
+		// Not Implemented *******************
+	}
 }
 
 func (ob *GoWindowObj) SetMargin(left int, top int, right int, bottom int) {
@@ -394,10 +366,6 @@ func (ob *GoWindowObj) SetPadding(left int, top int, right int, bottom int) {
 func (ob *GoWindowObj) SetPos(x int, y int) {
 	ob.X = x
 	ob.Y = y
-	//log.Println("GoWindowObj::SetPos:", x, y)
-	//log.Println("GoDpr =", GoDpr)
-	//log.Println("GoWindowObj::SetPos unit_gio:", unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y))
-	//log.Println("GoWindowObj::SetPos metrics:", metrics.PxToDp(GoDpr, ob.X), metrics.PxToDp(GoDpr, ob.Y))
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)))
 	}
@@ -406,13 +374,8 @@ func (ob *GoWindowObj) SetPos(x int, y int) {
 func (ob *GoWindowObj) SetSize(width int, height int) {
 	ob.Width = width
 	ob.Height = height
-	//log.Println("GoWindowObj::SetSize:", width, height)
-	//log.Println("GoDpr =", GoDpr)
-	//log.Println("GoWindowObj::SetSize: unit_gio", unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height))
-	//log.Println("GoWindowObj::SetSize metrics:", metrics.DpToPx(GoDpr, ob.Width), metrics.PxToDp(GoDpr, ob.Height))
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)))
-		//ob.gio.Option(app_gio.Size(ob.Width, ob.Height))
 	}
 }
 
@@ -428,20 +391,13 @@ func (ob *GoWindowObj) SetTitle(title string) {
 }
 
 func (ob *GoWindowObj) ClientSize() (width int, height int) {
-	//log.Println("GoWindowObj::ClientSize:()")
-	//log.Println("ob.ClientSize = ", ob.Width, ob.Height)
 	_, _, width, height = desktop.GetClientRect(ob.gio.HWND())
-	width = metrics.PxToDp(GoDpr, width)
-	height = metrics.PxToDp(GoDpr, height)
-	//log.Println("GoWindowObj::ClientSize:", width, height)
-	return
+	return metrics.PxToDp(GoDpr, width), metrics.PxToDp(GoDpr, height)
 }
 
 func (ob *GoWindowObj) Size() (width int, height int) {
 	_, _, width, height = desktop.GetWindowRect(ob.gio.HWND())
-	width = metrics.PxToDp(GoDpr, width)
-	height = metrics.PxToDp(GoDpr, height)
-	return
+	return metrics.PxToDp(GoDpr, width), metrics.PxToDp(GoDpr, height)
 }
 
 func (ob *GoWindowObj) Show() {
@@ -491,15 +447,15 @@ func (ob *GoWindowObj) runModal() (action int, info string) {
 	}
 	switch ob.ModalStyle() {
 	case "GoFileDialog":
-		log.Println("Modal Dialog Style: GoFileDialog")
+		//log.Println("Modal Dialog Style: GoFileDialog")
 		action = ob.ModalAction
 		info = ob.ModalInfo
 	case "GoMsgDialog":
-		log.Println("Modal Dialog Style: GoMsgDialog")
+		//log.Println("Modal Dialog Style: GoMsgDialog")
 		action = ob.ModalAction
 		info = ob.ModalInfo
 	case "GoPrintDialog":
-		log.Println("Modal Dialog Style: GoPrintDialog")
+		//log.Println("Modal Dialog Style: GoPrintDialog")
 		action = ob.ModalAction
 		info = ob.ModalInfo
 	}
@@ -514,15 +470,11 @@ func (ob *GoWindowObj) runModal() (action int, info string) {
 }
 
 func (ob *GoWindowObj) loop() (err error) {
-	//var count int
 	// ops are the operations from the UI
     var ops op.Ops
 
     // listen for events in the window.
     for {
-		//select {
-    	//case e := <-ob.gio.Events():
-
 			// detect what type of event
 			switch  e := ob.gio.NextEvent().(type) {
 					case system.DestroyEvent:
@@ -532,14 +484,9 @@ func (ob *GoWindowObj) loop() (err error) {
 	      	case system.FrameEvent:
 	      		// Open an new context
 	      		gtx := layout_gio.NewContext(&ops, e)
-	      		//log.Println("Window.update(gtx).....", count)
-	      		//count++
 	      		ob.update(gtx)	// receiveEvents
-	      		//log.Println("Window.render(gtx).....")
 	      		ob.render(gtx)	// draw layout and signalEvents
 	      		// window paint
-	      		//e.Frame(gtx.Ops)
-	      		//log.Println("Window.paint(e, gtx).....")
 	      		ob.paint(e, gtx)
 	      	case app_gio.ConfigEvent:
 	      		if ob.onConfig != nil {
@@ -612,235 +559,37 @@ func (ob *GoWindowObj) signalEvents(gtx layout_gio.Context) {
 }
 
 func (ob *GoWindowObj) update(gtx layout_gio.Context) {
-	//log.Println("(ob *GoWindowObj) update.............")
 	// set global screen pixel size
 	GoDpr = gtx.Metric.PxPerDp
 	GoSpr = gtx.Metric.PxPerSp
-	//log.Println("GoDpr =", GoDpr)
 	for _, obj := range ob.frame.Controls {
 		if obj.ObjectType() == "GoLayoutObj" {
-			//log.Println("(ob *GoLayoutObj) updateLayout.............")
 			ob.updateLayout(obj, gtx)
-		} /*else {
-			if obj.ObjectType() == "GoButtonObj"{
-				button := obj.(*GoButtonObj)
-				if button.Clicked() {
-					log.Println("GoWindow::GoButtonObj:Clicked()")
-					//GoApp.Keyboard().SetFocus(nil)
-					if button.onClick != nil{
-						button.onClick()
-					}
-				} 
-				if button.Focused() {
-					log.Println("GoWindow::GoButtonObj:Focused()")
-					if button.onFocus != nil {
-						button.onFocus()
-					}
-				}
-				if button.Hovered() {
-					log.Println("GoWindow::GoButtonObj:Hovered()")
-					if button.onHover != nil {
-						button.onHover()
-					}
-				}
-				if button.Pressed() {
-					log.Println("GoWindow::GoButtonObj:Pressed()")
-					//GoApp.Keyboard().SetFocus(nil)
-					if button.onPress != nil {
-						button.onPress()
-					}
-				}
-			} else if obj.ObjectType() == "GoRadioButtonObj"{
-				button := obj.(*GoRadioButtonObj)
-				if button.Changed() {
-					log.Println("GoWindow::GoRadioButtonObj:Changed()")
-					if button.onChange != nil{
-						button.onChange()
-					}
-				} 
-				if tag, focus := button.Focused(); focus {
-					log.Println("GoWindow::GoRadioButtonObj:Focused()")
-					if button.onFocus != nil {
-						button.onFocus(tag)
-					}
-				}
-				if tag, hover := button.Hovered(); hover {
-					log.Println("GoWindow::GoRadioButtonObj:Hovered()")
-					if button.onHover != nil {
-						button.onHover(tag)
-					}
-				}
-
-			} else if obj.ObjectType() == "GoSwitchObj" {
-				swtch := obj.(*GoSwitchObj)
-				if swtch.Changed() {
-					log.Println("GoWindow::GoSwitchObj:Changed()")
-					if swtch.onChange != nil {
-						swtch.onChange(swtch.goSwitch.Value)
-					}
-				}
-				if swtch.Focused() {
-					log.Println("GoWindow::GoSwitchObj:Focused()")
-					if swtch.onFocus != nil {
-						swtch.onFocus()
-					}
-				}
-				if swtch.Hovered() {
-					log.Println("GoWindow::GoSwitchObj:Hovered()")
-					if swtch.onHover != nil {
-						swtch.onHover()
-					}
-				}
-				if swtch.Pressed() {
-					log.Println("GoWindow::GoSwitchObj:Pressed()")
-					if swtch.onPress != nil {
-						swtch.onPress()
-					}
-				}
-			} else if obj.ObjectType() == "GoSliderObj" {
-				slider := obj.(*GoSliderObj)
-				if slider.Changed() {
-					//log.Println("GoSliderObj:Changed()")
-					if slider.onChange != nil {
-						slider.onChange(slider.gioSlider.Value)
-					}
-				}
-				if slider.Dragging() {
-					//log.Println("GoSliderObj:Dragging()")
-					if slider.onDrag != nil {
-						slider.onDrag(slider.gioSlider.Value)
-					}
-				}
-			} //else if obj.objectType() == "GoTextEditObj" {
-				//textedit := obj.(*GoTextEditObj)
-		}*/
+		}
 	}
 	for _, gtxEvent := range gtx.Events(0) {
-		//log.Println("gtxEvent -", gtxEvent.Type)
 	    switch event := gtxEvent.(type) {
 		    case key_gio.EditEvent:
 				log.Println("ApplicationKey::EditEvent -", "Range -", event.Range, "Text -", event.Text)
 		    case key_gio.Event:
 		    	log.Println("ApplicationKey::Event -", "Name -", event.Name, "Modifiers -", event.Modifiers, "State -", event.State)
 		    case pointer_gio.Event:
-		    	//log.Println("ApplicationPointer::Event -", event.Type)
-
 		    	switch event.Kind {
 					case pointer_gio.Press:
 						if event.Priority == pointer_gio.Grabbed {
 							log.Println("GoApp.Keyboard().SetFocusControl(nil)")
 							GoApp.Keyboard().SetFocusControl(nil)
-
 						}
-
-				}
-
+					}
 	    }
 	}
 	GoApp.Keyboard().Update()
 }
 
 func (ob *GoWindowObj) updateLayout(layout GoObject, gtx layout_gio.Context) {
-	//log.Println("updateLayout() = ENTRY")
 	for _, obj := range layout.Objects() {
 		if obj.ObjectType() == "GoLayoutObj" {
 			ob.updateLayout(obj, gtx)
-		}/* else {
-			if obj.ObjectType() == "GoButtonObj"{
-				button := obj.(*GoButtonObj)
-				if button.Clicked() {
-					log.Println("GoButtonObj:Clicked()")
-					//GoApp.Keyboard().SetFocus(nil)
-					if button.onRelease != nil{
-						button.onRelease()
-					}
-					if button.onClick != nil{
-						button.onClick()
-					}
-				} 
-				if button.Focused() {
-					//log.Println("GoButtonObj:Focused()")
-					if button.onFocus != nil {
-						button.onFocus()
-					}
-				}
-				if button.Hovered() {
-					//log.Println("GoButtonObj:Hovered()")
-					if button.onHover != nil {
-						button.onHover()
-					}
-				}
-				if button.Pressed() {
-					log.Println("GoLayout::GoButtonObj:Pressed()")
-					log.Println("GoApp.Keyboard().SetFocusControl(button.GoWidget)")
-					GoApp.Keyboard().SetFocusControl(&button.GioWidget)
-					if button.onPress != nil {
-						button.onPress()
-					}
-				}
-			} else if obj.ObjectType() == "GoRadioButtonObj"{
-				button := obj.(*GoRadioButtonObj)
-				if button.Changed() {
-					log.Println("GoRadioButtonObj:Changed()")
-					if button.onChange != nil{
-						button.onChange()
-					}
-				} 
-				if tag, focus := button.Focused(); focus {
-					log.Println("GoRadioButtonObj:Focused()")
-					if button.onFocus != nil {
-						button.onFocus(tag)
-					}
-				}
-				if tag, hover := button.Hovered(); hover {
-					log.Println("GoRadioButtonObj:Hovered()")
-					if button.onHover != nil {
-						button.onHover(tag)
-					}
-				}
-
-			} else if obj.ObjectType() == "GoSwitchObj" {
-				swtch := obj.(*GoSwitchObj)
-				if swtch.Changed() {
-					log.Println("GoSwitchObj:Changed()")
-					if swtch.onChange != nil {
-						swtch.onChange(swtch.goSwitch.Value)
-					}
-				}
-				if swtch.Focused() {
-					log.Println("GoSwitchObj:Focused()")
-					if swtch.onFocus != nil {
-						swtch.onFocus()
-					}
-				}
-				if swtch.Hovered() {
-					log.Println("GoSwitchObj:Hovered()")
-					if swtch.onHover != nil {
-						swtch.onHover()
-					}
-				}
-				if swtch.Pressed() {
-					log.Println("GoSwitchObj:Pressed()")
-					if swtch.onPress != nil {
-						swtch.onPress()
-					}
-				}
-			} else if obj.ObjectType() == "GoSliderObj" {
-				slider := obj.(*GoSliderObj)
-				if slider.Changed() {
-					//log.Println("GoSliderObj:Changed()")
-					if slider.onChange != nil {
-						slider.onChange(slider.gioSlider.Value)
-					}
-				}
-				if slider.Dragging() {
-					//log.Println("GoSliderObj:Dragging()")
-					if slider.onDrag != nil {
-						slider.onDrag(slider.gioSlider.Value)
-					}
-				}
-			}
-		}*/
-
+		}
 	}
 }

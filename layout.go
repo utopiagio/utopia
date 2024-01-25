@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 	//"image/color"
 
@@ -21,12 +21,13 @@ const (
 	NoLayout 	GoLayoutStyle = iota
 	HBoxLayout 							// gio.List{Axis: layout_gio.Horizontal}	
 	VBoxLayout 							// gio.List{Axis: layout_gio.Vertical}
-	HVBoxLayout
+	HVBoxLayout							// Not Implemented *******************
+	HFlexBoxLayout
 	// gio.Flex{Axis: layout_gio.Horizontal, Spacing: 0, Alignment: Baseline, WeightSum: 0}
-	HFlexBoxLayout							
+	VFlexBoxLayout						
 	// gio.Flex{Axis: layout_gio.Vertical, Spacing: 0, Alignment: Baseline, WeightSum: 0}
-	VFlexBoxLayout
-	PopupMenuLayout			
+	PopupMenuLayout
+
 )
 
 type GoLayoutDirection int
@@ -295,35 +296,8 @@ func (ob *GoLayoutObj) addRigidControl(control GoObject) {
 	}
 }
 
-/*func (ob *GoLayoutObj) AddFlexLayout(direction GoLayoutDirection) (layout *GoLayoutObj) {
-	if direction == Horizontal {
-		return ob.addFlexedLayout(HFlexBoxLayout)
-	} else {
-		return ob.addFlexedLayout(VFlexBoxLayout)
-	}
-}*/
-
-/*func (ob *GoLayoutObj) addFlexedLayout(style GoLayoutStyle) (layout *GoLayoutObj) {
-	layout = GoFlexBoxLayout(ob, style)
-	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
-		ob.flexControls = append(ob.flexControls, layout_gio.Flexed(1, layout.draw))
-	}
-	//ob.goObject.addControl(layout)
-	return layout
-}*/
-
-/*func (ob *GoLayoutObj) addRigidLayout(layout *GoLayoutObj) {
-	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
-		ob.flexControls = append(ob.flexControls, layout_gio.Rigid(layout.draw))
-	}
-	ob.goObject.addControl(layout)
-}*/
-
 func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	log.Println("GoLayoutObj::Draw()")
 	cs := gtx.Constraints
-	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
-	
 	width := metrics.DpToPx(GoDpr, ob.Width)
 	height := metrics.DpToPx(GoDpr, ob.Height)
 	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
@@ -333,17 +307,18 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 	
 	switch ob.SizePolicy().Horiz {
 	case FixedWidth:			// SizeHint is Fixed
-		cs.Min.X = min(cs.Max.X, width)			// constrain to ob.Width
-		cs.Max.X = min(cs.Max.X, width)			// constrain to ob.Width
+		w := min(maxWidth, width)			// constrain to ob.MaxWidth
+		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
 	case MinimumWidth:			// SizeHint is Minimum
 		cs.Min.X = minWidth						// set to ob.MinWidth
-		cs.Max.X = cs.Min.X						// set to cs.Min.X
+		cs.Max.X = minWidth						// set to ob.MinWidth
 	case PreferredWidth:		// SizeHint is Preferred
-		cs.Min.X = max(cs.Min.X, minWidth)		// constrain to ob.MinWidth
+		cs.Min.X = minWidth						// constrain to ob.MinWidth
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 	case MaximumWidth:			// SizeHint is Maximum
 		cs.Max.X = maxWidth						// set to ob.MaxWidth
-		cs.Min.X = cs.Max.X						// set to cs.Max.X
+		cs.Min.X = maxWidth						// set to ob.MaxWidth
 	case ExpandingWidth:
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 		cs.Min.X = cs.Max.X						// set to cs.Max.X
@@ -351,44 +326,36 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 
 	switch ob.SizePolicy().Vert {
 	case FixedHeight:			// SizeHint is Fixed 
-		cs.Min.Y = min(cs.Max.Y, height)		// constrain to ob.Height
-		cs.Max.Y = min(cs.Max.Y, height)		// constrain to ob.Height
+		w := min(maxHeight, height)				// constrain to ob.MaxHeight
+		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
+		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
 	case MinimumHeight:			// SizeHint is Minimum
 		cs.Min.Y = minHeight					// set to ob.MinHeight
-		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
+		cs.Max.Y = minHeight					// set to ob.MinHeight
 	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = min(cs.Min.Y, minHeight)		// constrain to ob.MinHeight
+		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 	case MaximumHeight:			// SizeHint is Maximum
 		cs.Max.Y = maxHeight					// set to ob.MaxHeight
-		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+		cs.Min.Y = maxHeight					// set to ob.MaxHeight
 	case ExpandingHeight:
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
+	
 	gtx.Constraints = cs
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
-	//dims = layout_gio.Dimensions{Size: gtx.Constraints.Max,}
 	if ob.Visible {
 		if ob.style == HBoxLayout || ob.style == VBoxLayout {
-			log.Println("BoxLayout style:", ob.style)
-			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
-				return ob.GoBorder.Layout(gtx, func(gtx C) D {
-					return ob.GoPadding.Layout(gtx, func(gtx C) D {
-						return ob.list_gio.Layout(gtx, len(ob.Controls), func(gtx C, i int) D {
-							return ob.Controls[i].Draw(gtx)
-						})
-					})
-				})
-			})
-		} else if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
-			log.Println("FlexBoxLayout style:", ob.style)
-			ob.repack(gtx)
+			//log.Println("BoxLayout style:", ob.style)
 			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
-						layoutDims := ob.flex_gio.Layout(gtx, ob.flexControls... )
-						//log.Println("LayoutDims: ", layoutDims)
+						layoutDims := ob.list_gio.Layout(gtx, len(ob.Controls), func(gtx C, i int) D {
+							//log.Println("Layout Control idx: ", i)
+							return ob.Controls[i].Draw(gtx)
+						})
+						//log.Println("Layout LayoutDims: ", layoutDims)
 						return layoutDims
 					})
 					//log.Println("Layout PaddingDims: ", paddingDims)
@@ -398,8 +365,21 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 				return borderDims
 			})
 			//log.Println("Layout MarginDims: ", dims)
+		} else if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
+			//log.Println("FlexBoxLayout style:", ob.style)
+			ob.repack(gtx)
+			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
+				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
+					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
+						layoutDims := ob.flex_gio.Layout(gtx, ob.flexControls... )
+						return layoutDims
+					})
+					return paddingDims
+				})
+				return borderDims
+			})
 		}  else if ob.style == PopupMenuLayout {
-			log.Println("PopupMenuLayout style:", ob.style)
+			//log.Println("PopupMenuLayout style:", ob.style)
 			ob.repack(gtx)
 			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {

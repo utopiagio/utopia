@@ -111,11 +111,7 @@ type GoIconLabelObj struct {
 }
 
 func (ob *GoIconLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	log.Println("GoIconLabelObj::Draw()...............")
 	cs := gtx.Constraints
-	//clipper := gtx.Constraints
-	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
-	
 	width := metrics.DpToPx(GoDpr, ob.Width)
 	height := metrics.DpToPx(GoDpr, ob.Height)
 	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
@@ -125,48 +121,42 @@ func (ob *GoIconLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensio
 	
 	switch ob.SizePolicy().Horiz {
 	case FixedWidth:			// SizeHint is Fixed
-		log.Println("FixedWidth............")
-		//log.Println("object Width = (", width, " )")
-		cs.Min.X = min(cs.Max.X, width)
-		log.Println("cs.Min.X = (", cs.Min.X, " )")
-		cs.Max.X = min(cs.Max.X, width)
-		log.Println("cs.Max.X = (", cs.Max.X, " )")
-	/*case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = min(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		w := min(maxWidth, width)			// constrain to ob.MaxWidth
+		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = minWidth						// set to ob.MinWidth
+		cs.Max.X = minWidth						// set to ob.MinWidth
 	case PreferredWidth:		// SizeHint is Preferred
-		log.Println("PreferredWidth............")
-		log.Println("object MinWidth = (", minWidth, " )")
-		log.Println("object MaxWidth = (", maxWidth, " )")
-		cs.Min.X = max(cs.Min.X, minWidth)
-		cs.Max.X = min(cs.Max.X, maxWidth)
-	/*case MaximumWidth:			// SizeHint is Maximum
-		cs.Min.X = max(cs.Min.X, minWidth) 	// No change to gtx.Constraints.X
-		cs.Max.X = min(cs.Max.X, maxWidth)*/
+		cs.Min.X = minWidth						// constrain to ob.MinWidth
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+	case MaximumWidth:			// SizeHint is Maximum
+		cs.Max.X = maxWidth						// set to ob.MaxWidth
+		cs.Min.X = maxWidth						// set to ob.MaxWidth
 	case ExpandingWidth:
-		log.Println("ExpandingWidth............")
 		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
 		cs.Min.X = cs.Max.X						// set to cs.Max.X
 	}
 
 	switch ob.SizePolicy().Vert {
 	case FixedHeight:			// SizeHint is Fixed 
-		cs.Min.Y = min(cs.Max.Y, height)
-		cs.Max.Y = min(cs.Max.Y, height)
-	/*case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight)
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		w := min(maxHeight, height)				// constrain to ob.MaxHeight
+		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
+		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = minHeight					// set to ob.MinHeight
+		cs.Max.Y = minHeight					// set to ob.MinHeight
 	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = min(cs.Min.Y, minHeight)
-		cs.Max.Y = min(cs.Max.Y, maxHeight)
-	/*case MaximumHeight:			// SizeHint is Maximum
-		cs.Min.Y = min(cs.Min.Y, ob.MinHeight) 	// No change to gtx.Constraints.Y
-		cs.Max.Y = min(cs.Max.Y, ob.MaxHeight)*/
+		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+	case MaximumHeight:			// SizeHint is Maximum
+		cs.Max.Y = maxHeight					// set to ob.MaxHeight
+		cs.Min.Y = maxHeight					// set to ob.MaxHeight
 	case ExpandingHeight:
 		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
 		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
 	}
-
+	
 	gtx.Constraints = cs
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {

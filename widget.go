@@ -380,26 +380,12 @@ func (w *GioWidget) Clicked() (clicked bool) {
 	return false
 }
 
-/*func (w *goWidget) Layout(gtx layout_gio.Context, w layout_gio.Widget) layout_gio.Dimensions {
-	return w.clickable.Layout(gtx layout_gio.Context, w layout_gio.Widget)
-}*/
-
-/*func (w *goWidget) Clickable() *widget_gio.Clickable {
-	return w.clickable
-}*/
-
-/*func (w *goWidget) Pressed() bool {
-	return w.clickable.Pressed()
-}*/
-
-// func (*GioWidget) ClearFocus()
+// func (*GioWidget) ClearFocus() (bool)
 // Notifies the App to switch the keyboard focus to nil 
 func (w *GioWidget) ClearFocus() bool {
-	//log.Println("GioWidget:ClearFocus()")
 	if GoApp.Keyboard().ClearFocus(w) {
 		w.focus = false
 		if w.onClearFocus != nil {
-			//log.Println("w.onClearFocus()")
 			w.onClearFocus()
 		}
 		return true
@@ -410,10 +396,6 @@ func (w *GioWidget) ClearFocus() bool {
 func (w *GioWidget) HasFocus() bool {
 	return w.focus
 }
-
-/*func (w *GioWidget) Height() (height int) {
-	return w.GoSize.Height
-}*/
 
 func (w *GioWidget) Hide() {
 	w.Visible = false
@@ -435,14 +417,14 @@ func (w *GioWidget) IsVisible() bool {
 	return w.Visible
 }
 
-// func (*GioWidget) Margin()
+// func (*GioWidget) Margin() (margin GoMargin)
 // Returns the margin rect for the positioning dimensions for this goWidget within its parent.
 // see goWidget positioning and geometry.
 func (w *GioWidget) Margin() (margin GoMargin) {
 	return w.GoMargin
 }
 
-// func (*GioWidget) Padding()
+// func (*GioWidget) Padding() (padding GoPadding)
 // Returns the padding dimensions for the positioning of clients within their parent.
 // see goWidget positioning and geometry.
 func (w *GioWidget) Padding() (padding GoPadding) {
@@ -487,16 +469,14 @@ func (w *GioWidget) SetBorderWidth(width int) {
 	w.GoBorder.BWidth = width
 }
 
-
-
-// func (*GioWidget) SetFocus(focus bool)
+// func (*GioWidget) LostFocus(f)
 // Sets the keyboard focus on this widget
 /*func (w *GioWidget) LostFocus() {
 	GoApp.Keyboard().SetFocus(w)
 	w.focus = focus
 }*/
 
-// func (*GioWidget) SetFocus()
+// func (*GioWidget) SetFocus() (bool)
 // Notifies the App to switch the keyboard focus to this widget 
 func (w *GioWidget) SetFocus() bool {
 	//log.Println("GioWidget::SetFocus()")
@@ -514,7 +494,7 @@ func (w *GioWidget) SetFocus() bool {
 	return false
 }
 
-// func (*GioWidget) SetFocusPolicy(policy GoFocusPolicy)
+// func (*GioWidget) SetFocusPolicy(focusPolicy GoFocusPolicy)
 // Sets the keyboard focus policy for this widget 
 func (w *GioWidget) SetFocusPolicy(focusPolicy GoFocusPolicy) {
 	w.FocusPolicy = focusPolicy
@@ -523,7 +503,7 @@ func (w *GioWidget) SetFocusPolicy(focusPolicy GoFocusPolicy) {
 	}
 }
 
-// func (*GioWidget) ChangeFocus(focus bool)
+// func (*GioWidget) ChangeFocus(focus bool) (bool)
 // Changes focus on the widget if it can accept keyboard focus
 func (w *GioWidget) ChangeFocus(focus bool) bool {
 	//log.Println("GioWidget::ChangeFocus()")
@@ -571,17 +551,14 @@ func (w *GioWidget) SetOnSetFocus(f func()) {
 }
 
 func (w *GioWidget) SetOnKeyEdit(f func(e key_gio.EditEvent)) {
-	//w.events = w.events | key_gio.Press
 	w.onKeyEdit = f
 }
 
 func (w *GioWidget) SetOnKeyPress(f func(e key_gio.Event)) {
-	//w.events = w.events | key_gio.Press
 	w.onKeyPress = f
 }
 
 func (w *GioWidget) SetOnKeyRelease(f func(e key_gio.Event)) {
-	//w.events = w.events | key_gio.Release
 	w.onKeyRelease = f
 }
 
@@ -641,10 +618,6 @@ func (w *GioWidget) SetWidth(width int) {
 func (w *GioWidget) Show() {
 	w.Visible = true
 }
-
-/*func (w *GioWidget) Width() (width int) {
-	return w.GoSize.Width
-}*/
 
 func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
 	//log.Println("GioWidget::SignalEvents", w.events)
@@ -777,7 +750,7 @@ func (w *GioWidget) pointerClicked() {
 		}
 
 	} else if w.clicks == 2 {
-		log.Println("POINTER doubleclicked:")
+		//log.Println("POINTER doubleclicked:")
 		if w.onPointerDoubleClick != nil {
 			w.onPointerDoubleClick(w.clickEvent)
 		}
