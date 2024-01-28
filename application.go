@@ -292,17 +292,21 @@ func (ob *GoWindowObj) ObjectType() (string) {
 }
 
 func (ob *GoWindowObj) ClientPos() (x int, y int) {
-	x, y, _, _ = desktop.GetClientRect(ob.gio.HWND())
-	return metrics.PxToDp(GoDpr, x), metrics.PxToDp(GoDpr, y)
+	wx, wy := ob.gio.GetClientPos()
+	return metrics.PxToDp(GoDpr, wx), metrics.PxToDp(GoDpr, wy)
 }
 
 func (ob *GoWindowObj) Pos() (x int, y int) {
-	x, y, _, _ = desktop.GetWindowRect(ob.gio.HWND())
-	return metrics.PxToDp(GoDpr, x), metrics.PxToDp(GoDpr, y)
+	wx, wy := ob.gio.GetWindowPos()
+	return metrics.PxToDp(GoDpr, wx), metrics.PxToDp(GoDpr, wy)
 }
 
 func (ob *GoWindowObj) Widget() (*GioWidget) {
 	return nil
+}
+
+func (ob *GoWindowObj) GioWindow() *app_gio.Window {
+	return ob.gio
 }
 
 func (ob *GoWindowObj) Refresh() {
@@ -391,13 +395,13 @@ func (ob *GoWindowObj) SetTitle(title string) {
 }
 
 func (ob *GoWindowObj) ClientSize() (width int, height int) {
-	_, _, width, height = desktop.GetClientRect(ob.gio.HWND())
-	return metrics.PxToDp(GoDpr, width), metrics.PxToDp(GoDpr, height)
+	ww, wh := ob.gio.GetClientSize()
+	return metrics.PxToDp(GoDpr, ww), metrics.PxToDp(GoDpr, wh)
 }
 
 func (ob *GoWindowObj) Size() (width int, height int) {
-	_, _, width, height = desktop.GetWindowRect(ob.gio.HWND())
-	return metrics.PxToDp(GoDpr, width), metrics.PxToDp(GoDpr, height)
+	ww, wh := ob.gio.GetWindowSize()
+	return metrics.PxToDp(GoDpr, ww), metrics.PxToDp(GoDpr, wh)
 }
 
 func (ob *GoWindowObj) Show() {

@@ -208,6 +208,10 @@ func HorizontalSize() int {
 	return deviceCaps.horizSize
 }
 
+func TaskBarHeight() int {
+	return deviceCaps.height - deviceCaps.clientHeight
+}
+
 func SetWindowPos(hWnd syscall.Handle, hwndInsertAfter int, x int, y int, width int, height int, style uintptr) {
 	var swpStyle uintptr
 	if style == 0 {
