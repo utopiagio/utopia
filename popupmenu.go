@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 	//"image/color"
 
@@ -54,9 +54,7 @@ func (ob *GoPopupMenuObj) Click(e pointer_gio.Event) {
 }
 
 func (ob *GoPopupMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	log.Println("GoPopupMenuObj::Draw()")
 	cs := gtx.Constraints
-	log.Println("gtx.Constraints Min = (", cs.Min.X, cs.Min.Y, ") Max = (", cs.Max.X, cs.Max.Y, ")")
 	
 	width := metrics.DpToPx(GoDpr, ob.Width)
 	height := metrics.DpToPx(GoDpr, ob.Height)

@@ -23,6 +23,7 @@ import (
 
 	"github.com/utopiagio/utopia/desktop"
 	"github.com/utopiagio/utopia/metrics"
+	screen "github.com/utopiagio/utopia/internal/sysmetrics"
 )
 
 type (
@@ -218,6 +219,11 @@ func (ob *GoWindowObj) AddPopupMenu() (popupMenu *GoPopupMenuObj) {
 	popupMenu = GoPopupMenu(ob)
 	ob.popupmenus = append(ob.popupmenus, popupMenu)
 	return
+}
+
+func (ob *GoWindowObj) Centre() {
+	screen.Width()
+	ob.SetPos((screen.ClientWidth() - ob.Width) / 2, (screen.ClientHeight() - ob.Height) / 2)
 }
 
 func (ob *GoWindowObj) ClearPopupMenus() {

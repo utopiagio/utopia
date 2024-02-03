@@ -4,16 +4,14 @@
 
 package desktop
 
+// DeviceCaps are obtained for the primary screen only. See monitor package for other options.
+
 /*
 #cgo LDFLAGS: -lX11
 
 #include <X11/Xlib.h>
 */
 import "C"
-
-import "log"
-// DeviceCaps are obtained for the primary screen only. See monitor package for other options.
-
 
 type goDeviceCaps struct {
 	aspectX 	int
@@ -154,69 +152,49 @@ func (ob *GoDeskTopObj) Screen() (*GoDeviceCaps) {
 
 //}
 
-/*func AspectX() int {
-	return deviceCaps.aspectX
+func AspectX() int {
+	return 0
 }
 
 func AspectY() int {
-	return deviceCaps.aspectY
+	return 0
 }
 
 func AspectXY() int {
-	return deviceCaps.aspectXY
+	return 0
 }
 
 func ClientHeight() int {
-	return deviceCaps.clientHeight
+	return 0
 }
 
 func ClientWidth() int {
-	return deviceCaps.clientWidth
+	return 0
 }
-
-func GetClientRect(hWnd syscall.Handle) (x, y, width, height int) {
-	rc := getClientRect(hWnd)
-	return int(rc.Left), int(rc.Top), int(rc.Right - rc.Left), int(rc.Bottom - rc.Top)
-}
-
-func GetWindowRect(hWnd syscall.Handle) (x, y, width, height int) {
-	rc := getWindowRect(hWnd)
-	return int(rc.Left), int(rc.Top), int(rc.Right - rc.Left), int(rc.Bottom - rc.Top)
-}*/
 
 func Height() int {
 	return deviceCaps.height
 }
 
-/*func HorizontalRes() int {
-	return deviceCaps.horizRes
+func HorizontalRes() int {
+	return 0
 }
 
 func HorizontalSize() int {
-	return deviceCaps.horizSize
+	return 0
 }
 
 func TaskBarHeight() int {
-	return deviceCaps.height - deviceCaps.clientHeight
-}*/
+	return 0
+}
 
-/*func SetWindowPos(hWnd syscall.Handle, hwndInsertAfter int, x int, y int, width int, height int, style uintptr) {
-	var swpStyle uintptr
-	if style == 0 {
-		swpStyle = uintptr(SWP_NOZORDER | SWP_FRAMECHANGED)
-	} else {
-		swpStyle = style
-	}
-	setWindowPos(hWnd, 0, int32(x), int32(y), int32(width), int32(height), swpStyle)
-}*/
-
-/*func VerticalRes() int {
-	return deviceCaps.vertRes
+func VerticalRes() int {
+	return 0
 }
 
 func VerticalSize() int {
-	return deviceCaps.vertSize
-}*/
+	return 0
+}
 
 func Width() int {
 	return deviceCaps.width

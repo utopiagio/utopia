@@ -680,7 +680,8 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 						if w.FocusPolicy >= ClickFocus && w.focus == false {
 								//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
 								//GoApp.Keyboard().SetFocusControl(w)
-								//log.Println("GioWidget.SetFocus() -", w)
+								log.Println("GioWidget.SetFocus() -")
+
 								w.SetFocus()
 						}
 						if w.clickEvent.Time == 0 {

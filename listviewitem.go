@@ -46,7 +46,7 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 		}
 	}
 	
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -74,10 +74,10 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 	}
 	hListViewItem.SetOnSetFocus(hListViewItem.SetHighlight)
 	hListViewItem.SetOnClearFocus(hListViewItem.ClearHighlight)
-	hListViewItem.SetOnPointerClick(hListViewItem.Clicked)
+	hListViewItem.SetOnPointerPress(hListViewItem.Clicked)
 	hListViewItem.SetOnPointerDoubleClick(hListViewItem.DoubleClicked)
-	hListViewItem.SetOnPointerEnter(nil)
-	hListViewItem.SetOnPointerLeave(nil)
+	hListViewItem.SetOnPointerEnter(hListViewItem.PointerEnter)
+	hListViewItem.SetOnPointerLeave(hListViewItem.PointerLeave)
 	switch parent.ObjectType() {
 	case "GoListViewItemObj":
 		hListViewItem.listView = parent.(*GoListViewItemObj).ListView()
@@ -116,7 +116,7 @@ type GoListViewItemObj struct {
 }
 
 func (ob *GoListViewItemObj) AddListItem(iconData []byte, labelText string) (listItem *GoListViewItemObj) {
-	log.Println("GoListViewItemObj::AddListItem()")
+	//log.Println("GoListViewItemObj::AddListItem()")
 	listItem = GoListViewItem(ob, iconData, labelText, ob.level + 1, len(ob.Controls))
 	listItem.SetMargin(20 * listItem.level, 0, 0, 0)
 	listItem.SetIconSize(ob.iconSize)
@@ -126,7 +126,7 @@ func (ob *GoListViewItemObj) AddListItem(iconData []byte, labelText string) (lis
 }
 
 func (ob *GoListViewItemObj) InsertListItem(iconData []byte, labelText string, idx int) (listItem *GoListViewItemObj) {
-	log.Println("GoListViewItemObj::InsertListItem()")
+	//log.Println("GoListViewItemObj::InsertListItem()")
 	listItem = GoListViewItem(ob, iconData, labelText, ob.level + 1, len(ob.Controls))
 	listItem.SetMargin(20 * listItem.level, 0, 0, 0)
 	listItem.SetIconSize(ob.iconSize)
@@ -136,18 +136,19 @@ func (ob *GoListViewItemObj) InsertListItem(iconData []byte, labelText string, i
 }
 
 func (ob *GoListViewItemObj) RemoveListItem(item GoObject, idx int) {
-	log.Println("GoListViewItemObj::RemoveListItem()")
+	//log.Println("GoListViewItemObj::RemoveListItem()")
 	ob.RemoveControl(item)
 	ob.listView.RemoveListItem(item)
 }
 
 func (ob *GoListViewItemObj) Clicked(e pointer_gio.Event) {
-	log.Println("GoListViewItemObj.Clicked()-len(ob.Controls):", len(ob.Parent.Objects()))
+	//log.Println("GoListViewItemObj.Clicked()-len(ob.Controls):", len(ob.Parent.Objects()))
+	log.Println(ob.Text(), "Clicked()")
 	switch ob.Parent.ObjectType() {
-	case "GoListViewItemObj":
-		ob.Parent.(*GoListViewItemObj).ItemClicked([]int{ob.id})
-	case "GoListViewObj":
-		ob.Parent.(*GoListViewObj).ItemClicked([]int{ob.id})
+		case "GoListViewItemObj":
+			ob.Parent.(*GoListViewItemObj).ItemClicked([]int{ob.id})
+		case "GoListViewObj":
+			ob.Parent.(*GoListViewObj).ItemClicked([]int{ob.id})
 	}
 	
 	/*if len(ob.menuItems) > 0 {
@@ -262,10 +263,17 @@ func (ob *GoListViewItemObj) ClearHighlight() {
 	//ob.SetBackgroundColor(ob.Highlight)
 }
 
-func (ob *GoListViewItemObj) SetHighlight() {
-	ob.SetBackgroundColor(Color_LightBlue)
-	//ob.SetBackgroundColor(ob.Highlight)
+
+
+func (ob *GoListViewItemObj) Expand() {
+	switch ob.Parent.ObjectType() {
+		case "GoListViewItemObj":
+			ob.Parent.(*GoListViewItemObj).ItemDoubleClicked([]int{ob.id})
+		case "GoListViewObj":
+			ob.Parent.(*GoListViewObj).ItemDoubleClicked([]int{ob.id})
+	}
 }
+
 
 func (ob *GoListViewItemObj) Icon() ([]byte) {
 	return ob.icon
@@ -327,6 +335,20 @@ func (ob *GoListViewItemObj) ObjectType() (string) {
 	return "GoListViewItemObj"
 }
 
+func (ob *GoListViewItemObj) PointerEnter(e pointer_gio.Event) {
+	if !ob.HasFocus() && !ob.IsSelected() {
+		ob.SetBackgroundColor(Color_WhiteSmoke)
+		ob.ParentWindow().Refresh()
+	}
+}
+
+func (ob *GoListViewItemObj) PointerLeave(e pointer_gio.Event) {
+	if !ob.HasFocus() && !ob.IsSelected() {
+		ob.SetBackgroundColor(Color_Transparent)
+		ob.ParentWindow().Refresh()
+	}
+}
+
 func (ob *GoListViewItemObj) SetExpanded(state bool) {
 	ob.expanded = state
 }
@@ -343,8 +365,24 @@ func (ob *GoListViewItemObj) SetId(id int) {
 	ob.id = id
 }
 
+func (ob *GoListViewItemObj) SetHighlight() {
+	ob.SetBackgroundColor(Color_LightBlue)
+	//ob.SetBackgroundColor(ob.Highlight)
+}
+
 func (ob *GoListViewItemObj) Text() (string) {
 	return ob.label
+}
+
+func (ob *GoListViewItemObj) Trigger() {
+	ob.SetFocus()
+	//ob.SetSelected(true)
+	switch ob.Parent.ObjectType() {
+		case "GoListViewItemObj":
+			ob.Parent.(*GoListViewItemObj).ItemClicked([]int{ob.id})
+		case "GoListViewObj":
+			ob.Parent.(*GoListViewObj).ItemClicked([]int{ob.id})
+	}
 }
 
 func (ob *GoListViewItemObj) Widget() (*GioWidget) {
@@ -357,7 +395,7 @@ func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dim
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()
-	log.Println("GoListViewItemObj LabelText :", ob.label)
+	//log.Println("GoListViewItemObj LabelText :", ob.label)
 	if ob.icon != nil {
 		dims = layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
 			layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {

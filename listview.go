@@ -88,7 +88,7 @@ func GoListView(parent GoObject) *GoListViewObj {
 }
 
 func (ob *GoListViewObj) AddListItem(iconData []byte, labelText string) (listItem *GoListViewItemObj) {
-	log.Println("GoListViewObj::AddListItem(", labelText, ")")
+	//log.Println("GoListViewObj::AddListItem(", labelText, ")")
 	listItem = GoListViewItem(ob, iconData, labelText, 0, len(ob.Controls))
 	listItem.SetIconSize(ob.itemSize)
 	listItem.SetIconColor(ob.itemColor)
@@ -101,7 +101,7 @@ func (ob *GoListViewObj) CurrentSelection() (*GoListViewItemObj) {
 }
 
 func (ob *GoListViewObj) InsertListItem(iconData []byte, labelText string, idx int) (listItem *GoListViewItemObj) {
-	log.Println("GoListViewObj::InsertListItem(", labelText, ")")
+	//log.Println("GoListViewObj::InsertListItem(", labelText, ")")
 	listItem = GoListViewItem(ob, iconData, labelText, 0, len(ob.Controls))
 	listItem.SetIconSize(ob.itemSize)
 	listItem.SetIconColor(ob.itemColor)
@@ -110,14 +110,15 @@ func (ob *GoListViewObj) InsertListItem(iconData []byte, labelText string, idx i
 }
 
 func (ob *GoListViewObj) ClearList() {
-	log.Println("GoListViewObj::ClearList()")
+	//log.Println("GoListViewObj::ClearList()")
 	ob.currentItem = nil
 	ob.Clear()
 }
 
 func (ob *GoListViewObj) Item(nodeId []int) (*GoListViewItemObj) {
 	var listViewItem  *GoListViewItemObj
-	for level := 0; level < len(nodeId); level++ {
+	listViewItem = ob.Objects()[nodeId[0]].(*GoListViewItemObj)
+	for level := 1; level < len(nodeId); level++ {
 		listViewItem = listViewItem.Objects()[nodeId[level]].(*GoListViewItemObj)
 	}
 	return listViewItem
@@ -129,23 +130,23 @@ func (ob *GoListViewObj) Item(nodeId []int) (*GoListViewItemObj) {
 }*/
 
 func (ob *GoListViewObj) ItemClicked(nodeId []int) {
-	ob.switchFocus()
+	log.Println("GoListViewObj) ItemClicked()............")
+	ob.switchFocus(ob.Item(nodeId))
 	if ob.onItemClicked != nil {
 		ob.onItemClicked(nodeId)
 	}
 }
 
 func (ob *GoListViewObj) ItemDoubleClicked(nodeId []int) {
-	ob.switchFocus()
-	log.Println("GoListViewObj.ItemDoubleClicked()")
-	//log.Println("Parent GoListViewObj.nodeId:", nodeId)
+	log.Println("GoListViewObj) ItemDoubleClicked()............")
+	ob.switchFocus(ob.Item(nodeId))
 	if ob.onItemDoubleClicked != nil {
 		ob.onItemDoubleClicked(nodeId)
 	}
 }
 
 func (ob *GoListViewObj) RemoveListItem(item GoObject) {
-	log.Println("GoListViewObj::RemoveListItem()")
+	//log.Println("GoListViewObj::RemoveListItem()")
 	ob.RemoveControl(item)
 }
 
@@ -329,18 +330,22 @@ func (ob *GoListViewObj) Layout(gtx layout_gio.Context, length int, w layout_gio
 	return listDims
 }
 
-func (ob *GoListViewObj) switchFocus() {
+func (ob *GoListViewObj) switchFocus(listViewItem *GoListViewItemObj) {
 	log.Println("GoListViewObj::switchFocus()")
+
 	if ob.currentItem != nil {
 		log.Println("ob.currentItem.SetSelected(false)")
 		log.Println("ob.currentItem -", ob.currentItem.Text())
 		ob.currentItem.SetSelected(false)
-		ob.currentItem.ClearHighlight()	
+		ob.currentItem.ClearHighlight()
 	}	
-	for _, item := range ob.Controls {
+	/*for _, item := range ob.Controls {
 		if item.(*GoListViewItemObj).HasFocus() {
 			ob.currentItem = item.(*GoListViewItemObj)
 			ob.currentItem.SetSelected(true)
 		}
-	}
+	}*/
+	listViewItem.SetSelected(true)
+	listViewItem.SetHighlight()
+	ob.currentItem = listViewItem
 }

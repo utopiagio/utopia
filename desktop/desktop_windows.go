@@ -6,10 +6,8 @@ package desktop
 
 // DeviceCaps are obtained for the primary screen only. See monitor package for other options.
 import (
-	//"log"
 	"unsafe"
 	syscall "golang.org/x/sys/windows"
-	//ui "github.com/utopiagio/utopia"
 	"github.com/utopiagio/utopia/internal/sysmetrics"
 )
 
@@ -49,7 +47,6 @@ func getClientRect(hwnd syscall.Handle) Rect {
 func getWindowRect(hwnd syscall.Handle) Rect {
 	var r Rect
 	_GetWindowRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&r)))
-	//log.Println("GetWindowRect : ", r)
 	return r
 }
 
@@ -149,8 +146,6 @@ func (ob *GoDeskTopObj) Screen() (*GoDeviceCaps) {
 }*/
 
 func (ob goDeviceCaps) getDeviceCaps() {
-	//hWnd := ob.goWidget.hWnd
-	//hDC := sysmetrics.GetDC(hWnd)
 	deviceCaps.aspectX = sysmetrics.AspectX()
 	deviceCaps.aspectY = sysmetrics.AspectY()
 	deviceCaps.aspectXY = sysmetrics.AspectXY()
