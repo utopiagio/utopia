@@ -82,7 +82,7 @@ func GoListView(parent GoObject) *GoListViewObj {
 		itemColor: Color_Black,
 		layout: nil,
 	}
-	hListView.layout = GoVFlexBoxLayout(hListView)
+	//hListView.layout = GoVFlexBoxLayout(hListView)
 	parent.AddControl(hListView)
 	return hListView
 }
