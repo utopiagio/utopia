@@ -297,53 +297,7 @@ func (ob *GoLayoutObj) addRigidControl(control GoObject) {
 }
 
 func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	cs := gtx.Constraints
-	width := metrics.DpToPx(GoDpr, ob.Width)
-	height := metrics.DpToPx(GoDpr, ob.Height)
-	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
-	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
-	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
-	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
-	
-	switch ob.SizePolicy().Horiz {
-	case FixedWidth:			// SizeHint is Fixed
-		w := min(maxWidth, width)			// constrain to ob.MaxWidth
-		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
-		cs.Max.X = cs.Min.X						// set to cs.Min.X
-	case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = minWidth						// set to ob.MinWidth
-		cs.Max.X = minWidth						// set to ob.MinWidth
-	case PreferredWidth:		// SizeHint is Preferred
-		cs.Min.X = minWidth						// constrain to ob.MinWidth
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-	case MaximumWidth:			// SizeHint is Maximum
-		cs.Max.X = maxWidth						// set to ob.MaxWidth
-		cs.Min.X = maxWidth						// set to ob.MaxWidth
-	case ExpandingWidth:
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-		cs.Min.X = cs.Max.X						// set to cs.Max.X
-	}
-
-	switch ob.SizePolicy().Vert {
-	case FixedHeight:			// SizeHint is Fixed 
-		w := min(maxHeight, height)				// constrain to ob.MaxHeight
-		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
-		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
-	case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = minHeight					// set to ob.MinHeight
-		cs.Max.Y = minHeight					// set to ob.MinHeight
-	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-	case MaximumHeight:			// SizeHint is Maximum
-		cs.Max.Y = maxHeight					// set to ob.MaxHeight
-		cs.Min.Y = maxHeight					// set to ob.MaxHeight
-	case ExpandingHeight:
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
-	}
-	
-	gtx.Constraints = cs
+	gtx.Constraints = ob.SetConstraints(ob.Size(), gtx.Constraints)
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		if ob.style == HBoxLayout || ob.style == VBoxLayout {
@@ -428,7 +382,7 @@ func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
 		ob.MinHeight = 0
 		for i := 0; i < len(ob.Controls); i++ {
 			ob.addFlexControl(ob.Controls[i])
-			dims := ob.Controls[i].(*GoMenuItemObj).Size(gtx)
+			dims := ob.Controls[i].(*GoMenuItemObj).CalcSize(gtx)
 			//ob.Height += metrics.PxToDp(GoDpr, dims.Size.Y)
 			//log.Println("dims.Size.Y :", dims.Size.Y)
 			ob.Height += dims.Size.Y - 1 		// ******* why (-1) *******

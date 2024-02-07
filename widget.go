@@ -619,6 +619,10 @@ func (w *GioWidget) Show() {
 	w.Visible = true
 }
 
+func (w *GioWidget) Size() (GoSize){
+	return w.GoSize
+}
+
 func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
 	//log.Println("GioWidget::SignalEvents", w.events)
 	if w.events != 0 {

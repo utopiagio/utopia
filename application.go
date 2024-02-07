@@ -215,68 +215,94 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	return hWin
 }
 
+//- (**[GoWindowObj]**) **AddPopupMenu()** (popupMenu [**\*GoPopupMenuObj**][1])  -//
+//- ... Add a new popup menu.  -//
 func (ob *GoWindowObj) AddPopupMenu() (popupMenu *GoPopupMenuObj) {
 	popupMenu = GoPopupMenu(ob)
 	ob.popupmenus = append(ob.popupmenus, popupMenu)
 	return
 }
 
+//- (**[GoWindowObj]**) **Centre()**  -//
+//- ... Centre the window on the client screen.  -//
 func (ob *GoWindowObj) Centre() {
 	screen.Width()
 	ob.SetPos((screen.ClientWidth() - ob.Width) / 2, (screen.ClientHeight() - ob.Height) / 2)
 }
 
+//- (**[GoWindowObj]**) **ClearPopupMenus()**  -//
+//- ... Clear and hide the popup menus.  -//
 func (ob *GoWindowObj) ClearPopupMenus() {
 	ob.popupmenus = []*GoPopupMenuObj{}
 	ob.Refresh()
 }
 
+//- (**[GoWindowObj]**) **Close()**  -//
+//- ... Close the window.  -//
 func (ob *GoWindowObj) Close() {
 	ob.gio.Perform(system.ActionClose)
 }
 
+//- (**[GoWindowObj]**) **EscFullScreen()**  -//
+//- ... Escape fullscreen.  -//
 func (ob *GoWindowObj) EscFullScreen() {
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Windowed.Option())
 	}
 }
 
+//- (**[GoWindowObj]**) **GoFullScreen()**  -//
+//- ... Switch to fullscreen.  -//
 func (ob *GoWindowObj) GoFullScreen() {
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Fullscreen.Option())
 	}
 }
 
-func (ob *GoWindowObj) IsMainWindow() bool {
+//- (**[GoWindowObj]**) **IsMainWindow()** ([**bool**][2])  -//
+//- ... Returns **true** if window is main window.  -//
+func (ob *GoWindowObj) IsMainWindow() (isMain bool) {
 	return !ob.modalwindow
 }
 
-func (ob *GoWindowObj) IsModal() bool {
+//- (**[GoWindowObj]**) **IsModal()** ([**bool**][2])  -//
+//- ... Returns **true** if window is modal window.  -//
+func (ob *GoWindowObj) IsModal() (isModal bool) {
 	return ob.modalwindow
 }
 
-func (ob *GoWindowObj) Layout() *GoLayoutObj {
+//- (**[GoWindowObj]**) **Layout()** (layout [**\*GoLayoutObj**][3])  -//
+//- ... Returns the window centre layout.  -//
+func (ob *GoWindowObj) Layout() (layout *GoLayoutObj) {
 	return ob.layout
 }
 
+//- (**[GoWindowObj]**) **Maximize()**  -//
+//- ... Maximize the window.  -//
 func (ob *GoWindowObj) Maximize() {
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Maximized.Option())
 	}
 }
 
+//- (**[GoWindowObj]**) **Minimize()**  -//
+//- ... Minimize the window.  -//
 func (ob *GoWindowObj) Minimize() {
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Minimized.Option())
 	}
 }
 
+//- (**[GoWindowObj]**) **MenuBar()** (layout [**\*GoMenuBarObj**][3])  -//
+//- ... Installs and returns a pointer to the window main menu bar.  -//
 func (ob *GoWindowObj) MenuBar() *GoMenuBarObj {
 	ob.menubar.Show()
 	return ob.menubar
 }
 
-func (ob *GoWindowObj) MenuPopup(idx int) *GoPopupMenuObj {
+//- (**[GoWindowObj]**) **MenuPopup(idx [int])** (popupMenu [**\*GoMenuBarObj**][3])  -//
+//- ... Installs and returns a pointer to the window main menu bar.  -//
+func (ob *GoWindowObj) MenuPopup(idx int) (popupMenu *GoPopupMenuObj) {
 	if len(ob.popupmenus) > idx {
 		return ob.popupmenus[idx]
 	} else {

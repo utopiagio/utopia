@@ -84,8 +84,8 @@ func GoIconLabel(parent GoObject, data []byte, args ...interface{}) (*GoIconLabe
 		fontSize: theme.TextSize,
 		icon: data,
 		iconColor: color,
+		iconSize: size,
 		label: text,
-		size: size,
 		shaper: theme.Shaper,
 	}
 	parent.AddControl(hIcon)
@@ -101,8 +101,8 @@ type GoIconLabelObj struct {
 	fontSize           unit_gio.Sp
 	icon []byte
 	iconColor GoColor
+	iconSize int
 	label string
-	size int
 	shaper             *text_gio.Shaper
 	// Cached values.
 	op       paint_gio.ImageOp
@@ -111,53 +111,7 @@ type GoIconLabelObj struct {
 }
 
 func (ob *GoIconLabelObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	cs := gtx.Constraints
-	width := metrics.DpToPx(GoDpr, ob.Width)
-	height := metrics.DpToPx(GoDpr, ob.Height)
-	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
-	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
-	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
-	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
-	
-	switch ob.SizePolicy().Horiz {
-	case FixedWidth:			// SizeHint is Fixed
-		w := min(maxWidth, width)			// constrain to ob.MaxWidth
-		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
-		cs.Max.X = cs.Min.X						// set to cs.Min.X
-	case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = minWidth						// set to ob.MinWidth
-		cs.Max.X = minWidth						// set to ob.MinWidth
-	case PreferredWidth:		// SizeHint is Preferred
-		cs.Min.X = minWidth						// constrain to ob.MinWidth
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-	case MaximumWidth:			// SizeHint is Maximum
-		cs.Max.X = maxWidth						// set to ob.MaxWidth
-		cs.Min.X = maxWidth						// set to ob.MaxWidth
-	case ExpandingWidth:
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-		cs.Min.X = cs.Max.X						// set to cs.Max.X
-	}
-
-	switch ob.SizePolicy().Vert {
-	case FixedHeight:			// SizeHint is Fixed 
-		w := min(maxHeight, height)				// constrain to ob.MaxHeight
-		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
-		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
-	case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = minHeight					// set to ob.MinHeight
-		cs.Max.Y = minHeight					// set to ob.MinHeight
-	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-	case MaximumHeight:			// SizeHint is Maximum
-		cs.Max.Y = maxHeight					// set to ob.MaxHeight
-		cs.Min.Y = maxHeight					// set to ob.MaxHeight
-	case ExpandingHeight:
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
-	}
-	
-	gtx.Constraints = cs
+	gtx.Constraints = ob.SetConstraints(ob.Size(), gtx.Constraints)
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C, ) D {
@@ -182,8 +136,8 @@ func (ob *GoIconLabelObj) Widget() (*GioWidget) {
 	return &ob.GioWidget
 }
 
-func (ob *GoIconLabelObj) Size() (int) {
-	return ob.size
+func (ob *GoIconLabelObj) IconSize() (int) {
+	return ob.iconSize
 }
 
 // Layout displays the icon with its size set to the X minimum constraint.
@@ -195,7 +149,7 @@ func (ob *GoIconLabelObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	dims := layout_gio.Flex{Alignment: layout_gio.Middle}.Layout(gtx,
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
-				gtx.Constraints.Min = image.Point{X: ob.size}
+				gtx.Constraints.Min = image.Point{X: ob.iconSize}
 				return ob.layoutIcon(gtx)
 			})
 		}),
@@ -210,18 +164,18 @@ func (ob *GoIconLabelObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 }
 
 func (ob *GoIconLabelObj) layoutIcon(gtx layout_gio.Context) layout_gio.Dimensions {
-	rect := image.Point{X: ob.size, Y: ob.size}
+	rect := image.Point{X: ob.iconSize, Y: ob.iconSize}
 	defer clip_gio.Rect{Max: rect}.Push(gtx.Ops).Pop()
 
-	icon := ob.image(ob.size, ob.iconColor)
+	icon := ob.image(ob.iconSize, ob.iconColor)
 	icon.Add(gtx.Ops)
 	paint_gio.PaintOp{}.Add(gtx.Ops)
 
 	// add the events handler to receive widget pointer events
 	//ob.SignalEvents(gtx)
 
-	return layout_gio.Dimensions{
-		Size: icon.Size(),
+	return layout_gio.Dimensions {
+		Size: rect,
 	}
 }
 

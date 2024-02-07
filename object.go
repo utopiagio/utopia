@@ -5,9 +5,10 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 
 	layout_gio "github.com/utopiagio/gio/layout"
+	"github.com/utopiagio/utopia/metrics"
 )
 
 func GetSizePolicy(horiz GoSizeType, vert GoSizeType) (*GoSizePolicy) {
@@ -97,7 +98,6 @@ func (ob *GioObject) DeleteControl(object GoObject) {
 
 
 func (ob *GioObject) Draw(layout_gio.Context) (layout_gio.Dimensions) {
-	log.Println("GioObject.Draw()")
 	return layout_gio.Dimensions{}
 }
 
@@ -151,6 +151,54 @@ func (ob *GioObject) RemoveControl(object GoObject) {
 		}
 	}
 }*/
+
+func (ob *GioObject) SetConstraints(size GoSize, cs layout_gio.Constraints) (layout_gio.Constraints) {	// widget sizing policy - GoSizePolicy{horiz, vert, fixed}
+	
+	width := metrics.DpToPx(GoDpr, size.Width)
+	height := metrics.DpToPx(GoDpr, size.Height)
+	minWidth := metrics.DpToPx(GoDpr, size.MinWidth)
+	minHeight := metrics.DpToPx(GoDpr, size.MinHeight)
+	maxWidth := metrics.DpToPx(GoDpr, size.MaxWidth)
+	maxHeight := metrics.DpToPx(GoDpr, size.MaxHeight)
+	
+	switch ob.SizePolicy().Horiz {
+	case FixedWidth:			// SizeHint is Fixed
+		cs.Min.X = min(cs.Max.X, width)			// constrain ob.Width to cs.Max.X 
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
+	case MinimumWidth:			// SizeHint is Minimum
+		cs.Min.X = min(cs.Max.X, minWidth)		// constrain ob.MinWidth to cs.Max.X
+		cs.Max.X = cs.Min.X						// set to cs.Min.X
+	case PreferredWidth:		// SizeHint is Preferred
+		cs.Min.X = minWidth						// constrain to ob.MinWidth
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
+	case MaximumWidth:			// SizeHint is Maximum
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain ob.MaxWidth to cs.Max.X
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	case ExpandingWidth:		// SizeHint is Expanding
+		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain ob.MaxWidth to cs.Max.X
+		cs.Min.X = cs.Max.X						// set to cs.Max.X
+	}
+
+	switch ob.SizePolicy().Vert {
+	case FixedHeight:			// SizeHint is Fixed 
+		cs.Min.Y = min(cs.Max.Y, height)		// constrain to cs.Max.Y 
+		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
+	case MinimumHeight:			// SizeHint is Minimum
+		cs.Min.Y = min(cs.Max.Y, minHeight)		// set to ob.MinHeight
+		cs.Max.Y = cs.Min.Y						// set to ob.MinHeight
+	case PreferredHeight:		// SizeHint is Preferred
+		cs.Min.Y = minHeight					// constrain to ob.MinHeight
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
+	case MaximumHeight:			// SizeHint is Maximum
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain ob.Height to cs.Max.Y
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	case ExpandingHeight:		// SizeHint is Expanding
+		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain ob.MaxHeight to cs.Max.Y
+		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
+	}
+
+	return cs
+}
 
 func (ob *GioObject) SizePolicy() *GoSizePolicy {	// widget sizing policy - GoSizePolicy{horiz, vert, fixed}
 	return ob.GoSizePolicy

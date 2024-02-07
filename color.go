@@ -39,6 +39,7 @@ const (
 	Color_DarkCyan GoColor = 0xFF008B8B
 	Color_DarkGoldenrod GoColor = 0xFFB8860B
 	Color_DarkGray GoColor = 0xFFA9A9A9
+	Color_DarkGrey GoColor = 0xFFA9A9A9
 	Color_DarkGreen GoColor = 0xFF006400
 	Color_DarkKhaki GoColor = 0xFFBDB76B
 	Color_DarkMagenta GoColor = 0xFF8B008B
@@ -65,6 +66,7 @@ const (
 	Color_Gold GoColor = 0xFFFFD700
 	Color_Goldenrod GoColor = 0xFFDAA520
 	Color_Gray GoColor = 0xFF808080
+	Color_Grey GoColor = 0xFF808080
 	Color_Green GoColor = 0xFF008000
 	Color_GreenYellow GoColor = 0xFFADFF2F
 	Color_Honeydew GoColor = 0xFFF0FFF0
@@ -82,6 +84,7 @@ const (
 	Color_LightCyan GoColor = 0xFFE0FFFF
 	Color_LightGoldenrodYellow GoColor = 0xFFFAFAD2
 	Color_LightGray GoColor = 0xFFD3D3D3
+	Color_LightGrey GoColor = 0xFFD3D3D3
 	Color_LightGreen GoColor = 0xFF90EE90
 	Color_LightPink GoColor = 0xFFFFB6C1
 	Color_LightSalmon GoColor = 0xFFFFA07A

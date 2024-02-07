@@ -59,8 +59,8 @@ func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 		
 		fontSize: theme.TextSize,
 		text: text,
-		color: theme.ContrastFg,
-		background: theme.ContrastBg,
+		textColor: theme.ContrastFg,
+		faceColor: theme.ContrastBg,
 		cornerRadius: 4,
 		inset: layout_gio.Inset{
 			Top: 8, Bottom: 8,
@@ -82,8 +82,8 @@ type GoButtonObj struct {
 	font font_gio.Font
 	fontSize unit_gio.Sp
 	text string
-	color GoColor
-	background GoColor
+	textColor GoColor
+	faceColor GoColor
 	cornerRadius unit_gio.Dp
 	inset layout_gio.Inset
 	shaper *text_gio.Shaper
@@ -97,66 +97,8 @@ func (ob *GoButtonObj) Click(e pointer_gio.Event) {
 	}
 }
 
-func (ob *GoButtonObj) SetOnClick(f func()) {
-	ob.onClick = f
-}
-
-func (ob *GoButtonObj) SetText(text string) {
-	ob.text = text
-}
-
-func (ob *GoButtonObj) Text() (text string) {
-	return ob.text
-}
-
 func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	cs := gtx.Constraints
-	width := metrics.DpToPx(GoDpr, ob.Width)
-	height := metrics.DpToPx(GoDpr, ob.Height)
-	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
-	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
-	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
-	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
-	
-	switch ob.SizePolicy().Horiz {
-	case FixedWidth:			// SizeHint is Fixed
-		w := min(maxWidth, width)			// constrain to ob.MaxWidth
-		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
-		cs.Max.X = cs.Min.X						// set to cs.Min.X
-	case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = minWidth						// set to ob.MinWidth
-		cs.Max.X = minWidth						// set to ob.MinWidth
-	case PreferredWidth:		// SizeHint is Preferred
-		cs.Min.X = minWidth						// constrain to ob.MinWidth
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-	case MaximumWidth:			// SizeHint is Maximum
-		cs.Max.X = maxWidth						// set to ob.MaxWidth
-		cs.Min.X = maxWidth						// set to ob.MaxWidth
-	case ExpandingWidth:
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-		cs.Min.X = cs.Max.X						// set to cs.Max.X
-	}
-
-	switch ob.SizePolicy().Vert {
-	case FixedHeight:			// SizeHint is Fixed 
-		w := min(maxHeight, height)				// constrain to ob.MaxHeight
-		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
-		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
-	case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = minHeight					// set to ob.MinHeight
-		cs.Max.Y = minHeight					// set to ob.MinHeight
-	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-	case MaximumHeight:			// SizeHint is Maximum
-		cs.Max.Y = maxHeight					// set to ob.MaxHeight
-		cs.Min.Y = maxHeight					// set to ob.MaxHeight
-	case ExpandingHeight:
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
-	}
-	
-	gtx.Constraints = cs
+	gtx.Constraints = ob.SetConstraints(ob.Size(), gtx.Constraints)
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
@@ -175,14 +117,10 @@ func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 	return dims
 }
 
-func (ob *GoButtonObj) ObjectType() (string) {
-	return "GoButtonObj"
-}
-
 func (ob *GoButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	ob.ReceiveEvents(gtx)
 	textColorMacro := op_gio.Record(gtx.Ops)
-	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
+	paint_gio.ColorOp{Color: ob.textColor.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
@@ -193,6 +131,30 @@ func (ob *GoButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 		})
 		return insetDims
 	})
+}
+
+func (ob *GoButtonObj) ObjectType() (string) {
+	return "GoButtonObj"
+}
+
+func (ob *GoButtonObj) SetFaceColor(color GoColor) {
+	ob.faceColor = color
+}
+
+func (ob *GoButtonObj) SetOnClick(f func()) {
+	ob.onClick = f
+}
+
+func (ob *GoButtonObj) SetText(text string) {
+	ob.text = text
+}
+
+func (ob *GoButtonObj) SetTextColor(color GoColor) {
+	ob.textColor = color
+}
+
+func (ob *GoButtonObj) Text() (text string) {
+	return ob.text
 }
 
 func (ob *GoButtonObj) Widget() (*GioWidget) {
@@ -207,7 +169,7 @@ func (ob *GoButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layou
 		layout_gio.Expanded(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			rr := gtx.Dp(ob.cornerRadius)
 			defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
-			background := ob.background.NRGBA()
+			background := ob.faceColor.NRGBA()
 			switch {
 			case gtx.Queue == nil:
 				background = DisabledBlend(background)
@@ -232,8 +194,8 @@ type GoIconButtonObj struct {
 	GioObject
 	GioWidget
 	// Color is the icon color.
-	color GoColor
-	background GoColor
+	textColor GoColor
+	faceColor GoColor
 	cornerRadius unit_gio.Dp
 	iconVG  *GoIconVGObj
 	iconPNG *GoIconPNGObj
@@ -259,12 +221,12 @@ func GoIconVGButton(parent GoObject, icon *GoIconVGObj) *GoIconButtonObj {
 	hIconButton := &GoIconButtonObj{
 		GioObject: object,
 		GioWidget: widget,
-		background:  theme.ColorBg,
-		color:       theme.ColorFg,
+		faceColor: theme.ColorBg,
+		textColor: theme.ColorFg,
 		cornerRadius: 4,
-		iconVG:        icon,
-		size:        20,
-		inset:       layout_gio.UniformInset(4),
+		iconVG: icon,
+		size: 20,
+		inset: layout_gio.UniformInset(4),
 	}
 	hIconButton.SetOnPointerRelease(hIconButton.Click)
 	hIconButton.SetOnPointerEnter(nil)
@@ -287,12 +249,12 @@ func GoIconPNGButton(parent GoObject, icon *GoIconPNGObj) *GoIconButtonObj {
 	hIconButton := &GoIconButtonObj{
 		GioObject: object,
 		GioWidget: widget,
-		background:  theme.ColorBg,
-		color:       theme.ColorFg,
+		faceColor: theme.ColorBg,
+		textColor: theme.ColorFg,
 		cornerRadius: 4,
-		iconPNG:     icon,
-		size:        20,
-		inset:       layout_gio.UniformInset(4),
+		iconPNG: icon,
+		size: 20,
+		inset: layout_gio.UniformInset(4),
 	}
 	hIconButton.SetOnPointerRelease(hIconButton.Click)
 	hIconButton.SetOnPointerEnter(nil)
@@ -307,58 +269,8 @@ func (ob *GoIconButtonObj) Click(e pointer_gio.Event) {
 	}
 }
 
-func (ob *GoIconButtonObj) SetOnClick(f func()) {
-	ob.onClick = f
-}
-
 func (ob *GoIconButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	cs := gtx.Constraints
-	width := metrics.DpToPx(GoDpr, ob.Width)
-	height := metrics.DpToPx(GoDpr, ob.Height)
-	minWidth := metrics.DpToPx(GoDpr, ob.MinWidth)
-	minHeight := metrics.DpToPx(GoDpr, ob.MinHeight)
-	maxWidth := metrics.DpToPx(GoDpr, ob.MaxWidth)
-	maxHeight := metrics.DpToPx(GoDpr, ob.MaxHeight)
-	
-	switch ob.SizePolicy().Horiz {
-	case FixedWidth:			// SizeHint is Fixed
-		w := min(maxWidth, width)			// constrain to ob.MaxWidth
-		cs.Min.X = max(minWidth, w)				// constrain to ob.MinWidth 
-		cs.Max.X = cs.Min.X						// set to cs.Min.X
-	case MinimumWidth:			// SizeHint is Minimum
-		cs.Min.X = minWidth						// set to ob.MinWidth
-		cs.Max.X = minWidth						// set to ob.MinWidth
-	case PreferredWidth:		// SizeHint is Preferred
-		cs.Min.X = minWidth						// constrain to ob.MinWidth
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-	case MaximumWidth:			// SizeHint is Maximum
-		cs.Max.X = maxWidth						// set to ob.MaxWidth
-		cs.Min.X = maxWidth						// set to ob.MaxWidth
-	case ExpandingWidth:
-		cs.Max.X = min(cs.Max.X, maxWidth)		// constrain to ob.MaxWidth
-		cs.Min.X = cs.Max.X						// set to cs.Max.X
-	}
-
-	switch ob.SizePolicy().Vert {
-	case FixedHeight:			// SizeHint is Fixed 
-		w := min(maxHeight, height)				// constrain to ob.MaxHeight
-		cs.Min.Y = max(minHeight, w)			// constrain to ob.MinHeight 
-		cs.Max.Y = cs.Min.Y						// set to cs.Min.Y
-	case MinimumHeight:			// SizeHint is Minimum
-		cs.Min.Y = minHeight					// set to ob.MinHeight
-		cs.Max.Y = minHeight					// set to ob.MinHeight
-	case PreferredHeight:		// SizeHint is Preferred
-		cs.Min.Y = max(0, minHeight)			// constrain to ob.MinHeight
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-	case MaximumHeight:			// SizeHint is Maximum
-		cs.Max.Y = maxHeight					// set to ob.MaxHeight
-		cs.Min.Y = maxHeight					// set to ob.MaxHeight
-	case ExpandingHeight:
-		cs.Max.Y = min(cs.Max.Y, maxHeight)		// constrain to ob.MaxHeight
-		cs.Min.Y = cs.Max.Y						// set to cs.Max.Y
-	}
-	
-	gtx.Constraints = cs
+	gtx.Constraints = ob.SetConstraints(ob.Size(), gtx.Constraints)
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
 		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
@@ -385,7 +297,7 @@ func (ob *GoIconButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions 
 			if ob.iconVG != nil || ob.iconPNG != nil {
 				gtx.Constraints.Min = image.Point{X: size}
 				if ob.iconVG != nil {
-					ob.iconVG.Layout(gtx, ob.color)
+					ob.iconVG.Layout(gtx, ob.textColor)
 				} else if ob.iconPNG != nil {
 					ob.iconPNG.Layout(gtx)
 				}
@@ -408,7 +320,7 @@ func (ob *GoIconButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) l
 		layout_gio.Expanded(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			rr := gtx.Dp(ob.cornerRadius)
 			defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
-			background := ob.background.NRGBA()
+			background := ob.faceColor.NRGBA()
 			switch {
 			case gtx.Queue == nil:
 				background = DisabledBlend(background)
@@ -477,8 +389,20 @@ func (ob *GoIconButtonObj) ObjectType() (string) {
 	return "GoIconButtonObj"
 }
 
+func (ob *GoIconButtonObj) SetFaceColor(color GoColor) {
+	ob.faceColor = color
+}
+
+func (ob *GoIconButtonObj) SetOnClick(f func()) {
+	ob.onClick = f
+}
+
 func (ob *GoIconButtonObj) SetSize(size int) {
 	ob.size = unit_gio.Dp(size)
+}
+
+func (ob *GoIconButtonObj) SetTextColor(color GoColor) {
+	ob.textColor = color
 }
 
 func (ob *GoIconButtonObj) Widget() (*GioWidget) {
