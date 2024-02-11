@@ -5,11 +5,11 @@
 package utopia
 
 import (
-	"log"
-	"image"
+	//"log"
+	//"image"
 	//"image/color"
 
-	clip_gio "github.com/utopiagio/gio/op/clip"
+	//clip_gio "github.com/utopiagio/gio/op/clip"
 	layout_gio "github.com/utopiagio/gio/layout"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
 )
@@ -24,12 +24,14 @@ func GoPopupWindow(parent GoObject) (hPopupWindow *GoPopupWindowObj) {
 		Visible: false,
 	}
 	hPopupWindow = &GoPopupWindowObj{GioObject: object, GioWidget: widget, alpha: 90}
-	hPopupWindow.layout = GoPopupMenuLayout(hPopupWindow)
-	//hPopupMenu.layout.SetPadding(3,3,3,3)
-	hPopupWindow.layout.SetBorder(BorderSingleLine, 1, 3, Color_Blue)
-	hPopupWindow.SetOnPointerPress(hPopupWindow.Click)
-	hPopupWindow.SetOnPointerEnter(nil)
-	hPopupWindow.SetOnPointerLeave(nil)
+	hPopupWindow.layout = GoVFlexBoxLayout(hPopupWindow)
+	hPopupWindow.layout.SetMargin(3,3,3,3)
+	hPopupWindow.layout.SetBorder(BorderSingleLine, 2, 3, Color_Blue)
+	hPopupWindow.layout.SetPadding(3,3,3,3)
+	
+	hPopupWindow.layout.SetOnPointerPress(hPopupWindow.Click)
+	hPopupWindow.layout.SetOnPointerEnter(nil)
+	hPopupWindow.layout.SetOnPointerLeave(nil)
 	return hPopupWindow
 }
 
@@ -43,19 +45,19 @@ type GoPopupWindowObj struct {
 }
 
 func (ob *GoPopupWindowObj) Click(e pointer_gio.Event) {
-	log.Println("PopupWindow::Click()")
 	ob.Hide()
 }
 
 func (ob *GoPopupWindowObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	dims = layout_gio.Dimensions {Size: gtx.Constraints.Max,}
 	if ob.Visible {
-		dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
-			/*return ob.GoBorder.Layout(gtx, func(gtx C) D {
-				return ob.GoPadding.Layout(gtx, func(gtx C) D {*/
+		return ob.layout.Draw(gtx)
+		/*dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
+			return ob.GoBorder.Layout(gtx, func(gtx C) D {
+				return ob.GoPadding.Layout(gtx, func(gtx C) D {
 					return ob.Layout(gtx)
 				})
-			/*})
+			})
 		})*/
 	}
 	return dims
@@ -63,14 +65,17 @@ func (ob *GoPopupWindowObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimens
 
 func (ob *GoPopupWindowObj) Hide() {
 	ob.GioWidget.Hide()
-	ob.layout = GoVFlexBoxLayout(ob)
-		//ob.layout.SetPadding(3,3,3,3)
-	ob.layout.SetBorder(BorderSingleLine, 1, 3, Color_Blue)
+	ob.layout.Clear()
+	//ob.layout = GoVFlexBoxLayout(ob)
+	//ob.layout.SetMargin(3,3,3,3)
+	//ob.layout.SetBorder(BorderSingleLine, 1, 3, Color_Blue)
+	//ob.layout.SetPadding(3,3,3,3)
+	
 }
 
 // Layout draws the scrim using the provided animation. If the animation indicates
 // that the scrim is not visible, this is a no-op.
-func (ob *GoPopupWindowObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
+/*func (ob *GoPopupWindowObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	dims := gtx.Constraints.Max
 		//if !s.Visible() {
 			//return layout.Dimensions{}
@@ -78,10 +83,10 @@ func (ob *GoPopupWindowObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions
 		ob.ReceiveEvents(gtx)
 		//gtx.Constraints.Min = gtx.Constraints.Max
 		//currentAlpha := s.FinalAlpha
-		/*if anim.Animating() {
+		if anim.Animating() {
 			revealed := anim.Revealed(gtx)
 			currentAlpha = uint8(float32(s.FinalAlpha) * revealed)
-		}*/
+		}
 		//color := th.Fg
 		//color.A = currentAlpha
 		defer clip_gio.Rect(image.Rectangle{Max: dims}).Push(gtx.Ops).Pop()
@@ -89,7 +94,7 @@ func (ob *GoPopupWindowObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions
 		PaintRect(gtx, dims, fill)
 		ob.SignalEvents(gtx)
 		return layout_gio.Dimensions{Size: dims}
-}
+}*/
 
 func (ob *GoPopupWindowObj) ObjectType() (string) {
 	return "GoPopupWindowObj"
@@ -114,4 +119,8 @@ func (ob *GoPopupWindowObj) ObjectType() (string) {
 
 func (ob *GoPopupWindowObj) Widget() (*GioWidget) {
 	return &ob.GioWidget
+}
+
+func (ob *GoPopupWindowObj) Layout() (*GoLayoutObj) {
+	return ob.layout
 }
