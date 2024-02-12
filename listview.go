@@ -7,15 +7,9 @@ package utopia
 import (
 	"log"
 	"image"
-	//"image/color"
 	"math"
 
-	//pointer_gio "github.com/utopiagio/gio/io/pointer"
 	layout_gio "github.com/utopiagio/gio/layout"
-	//op_gio "github.com/utopiagio/gio/op"
-	//clip_gio "github.com/utopiagio/gio/op/clip"
-	//paint_gio "github.com/utopiagio/gio/op/paint"
-	//unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
 
 	"github.com/utopiagio/utopia/metrics"
@@ -25,7 +19,7 @@ import (
 type GoListViewObj struct {
 	GioObject
 	GioWidget
-	Scrollbar goScrollbar
+	Scrollbar GoScrollbar
 	AnchorStrategy
 	state *widget_gio.List
 	columns int
@@ -56,7 +50,7 @@ func GoListView(parent GoObject) *GoListViewObj {
 		Visible: true,
 		//target: nil,
 	}
-	scrollbar := goScrollbar{
+	scrollbar := GoScrollbar{
 		Scrollbar: &state.Scrollbar,
 		Track: ScrollTrackStyle{
 			MajorPadding: 2,
@@ -246,7 +240,7 @@ func (ob *GoListViewObj) Layout(gtx layout_gio.Context, length int, w layout_gio
 		anchoring = layout_gio.S
 	}
 	majorAxisSize := ob.state.Axis.Convert(listDims.Size).X
-	start, end := fromListPosition(ob.state.Position, length, majorAxisSize)
+	start, end := ob.fromListPosition(ob.state.Position, length, majorAxisSize)
 	// layout.Direction respects the minimum, so ensure that the
 	// scrollbar will be drawn on the correct edge even if the provided
 	// layout.Context had a zero minimum constraint.
@@ -282,6 +276,27 @@ func (ob *GoListViewObj) Layout(gtx layout_gio.Context, length int, w layout_gio
 		listDims.Size.X = ob.MinWidth
 	}
 	return listDims
+}
+
+// fromListPosition converts a layout.Position into two floats representing
+// the location of the viewport on the underlying content. It needs to know
+// the number of elements in the list and the major-axis size of the list
+// in order to do this. The returned values will be in the range [0,1], and
+// start will be less than or equal to end.
+func (ob *GoListViewObj) fromListPosition(lp layout_gio.Position, elements int, majorAxisSize int) (start, end float32) {
+	// Approximate the size of the scrollable content.
+	lengthPx := float32(lp.Length)
+	meanElementHeight := lengthPx / float32(elements)
+
+	// Determine how much of the content is visible.
+	listOffsetF := float32(lp.Offset)
+	visiblePx := float32(majorAxisSize)
+	visibleFraction := visiblePx / lengthPx
+
+	// Compute the location of the beginning of the viewport.
+	viewportStart := (float32(lp.First)*meanElementHeight + listOffsetF) / lengthPx
+
+	return viewportStart, clamp1(viewportStart + visibleFraction)
 }
 
 func (ob *GoListViewObj) switchFocus(listViewItem *GoListViewItemObj) {

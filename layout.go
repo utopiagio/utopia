@@ -7,11 +7,12 @@ package utopia
 import (
 	//"log"
 	"image"
-	//"image/color"
+	"math"
 
 	layout_gio "github.com/utopiagio/gio/layout"
-	//widget_gio "github.com/utopiagio/gio/widget"
+	widget_gio "github.com/utopiagio/gio/widget"
 	unit_gio "github.com/utopiagio/gio/unit"
+
 	"github.com/utopiagio/utopia/metrics"
 )
 
@@ -93,6 +94,13 @@ func GoBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 		case VBoxLayout:
 			axis = layout_gio.Vertical
 	}
+	theme := GoApp.Theme()
+	lightFg := theme.ColorFg.NRGBA()
+	lightFg.A = 150
+	darkFg := lightFg
+	darkFg.A = 200
+	state := &widget_gio.List{}
+	state.Axis = axis
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -102,10 +110,26 @@ func GoBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 		FocusPolicy: NoFocus,
 		Visible: true,
 	}
+	scrollbar := GoScrollbar{
+		Scrollbar: &state.Scrollbar,
+		Track: ScrollTrackStyle{
+			MajorPadding: 2,
+			MinorPadding: 2,
+		},
+		Indicator: ScrollIndicatorStyle{
+			MajorMinLen:  8,
+			MinorWidth:   6,
+			CornerRadius: 3,
+			Color:        lightFg,
+			HoverColor:   darkFg,
+		},
+	}
 	hLayout := &GoLayoutObj{
 		GioObject: object,
 		GioWidget: widget,
-		list_gio: &layout_gio.List{Axis: axis},
+		Scrollbar: scrollbar,
+		AnchorStrategy: Occupy,
+		list_gio: state,
 		style: style,
 		flexControls: []layout_gio.FlexChild{},
 	}
@@ -114,6 +138,13 @@ func GoBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 }
 
 func GoHBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
+	theme := GoApp.Theme()
+	lightFg := theme.ColorFg.NRGBA()
+	lightFg.A = 150
+	darkFg := lightFg
+	darkFg.A = 200
+	state := &widget_gio.List{}
+	state.Axis = layout_gio.Horizontal
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -123,10 +154,27 @@ func GoHBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 		FocusPolicy: NoFocus,
 		Visible: true,
 	}
+	scrollbar := GoScrollbar{
+		Scrollbar: &state.Scrollbar,
+		Track: ScrollTrackStyle{
+			MajorPadding: 2,
+			MinorPadding: 2,
+		},
+		Indicator: ScrollIndicatorStyle{
+			MajorMinLen:  8,
+			MinorWidth:   6,
+			CornerRadius: 3,
+			Color:        lightFg,
+			HoverColor:   darkFg,
+		},
+	}
 	hLayout := &GoLayoutObj{
 		GioObject: object,
 		GioWidget: widget,
-		list_gio: &layout_gio.List{Axis: layout_gio.Horizontal},
+		Scrollbar: scrollbar,
+		AnchorStrategy: Occupy,
+		list_gio: state,
+		//list_gio: &layout_gio.List{Axis: layout_gio.Horizontal},
 		style: HBoxLayout,
 		flexControls: []layout_gio.FlexChild{},
 	}
@@ -135,6 +183,13 @@ func GoHBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 }
 
 func GoVBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
+	theme := GoApp.Theme()
+	lightFg := theme.ColorFg.NRGBA()
+	lightFg.A = 150
+	darkFg := lightFg
+	darkFg.A = 200
+	state := &widget_gio.List{}
+	state.Axis = layout_gio.Vertical
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -144,10 +199,27 @@ func GoVBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 		FocusPolicy: NoFocus,
 		Visible: true,
 	}
+	scrollbar := GoScrollbar{
+		Scrollbar: &state.Scrollbar,
+		Track: ScrollTrackStyle{
+			MajorPadding: 2,
+			MinorPadding: 2,
+		},
+		Indicator: ScrollIndicatorStyle{
+			MajorMinLen:  8,
+			MinorWidth:   6,
+			CornerRadius: 3,
+			Color:        lightFg,
+			HoverColor:   darkFg,
+		},
+	}
 	hLayout := &GoLayoutObj{
 		GioObject: object,
 		GioWidget: widget,
-		list_gio: &layout_gio.List{Axis: layout_gio.Vertical},
+		Scrollbar: scrollbar,
+		AnchorStrategy: Occupy,
+		list_gio: state,
+		//list_gio: &layout_gio.List{Axis: layout_gio.Vertical},
 		style: VBoxLayout,
 		flexControls: []layout_gio.FlexChild{},
 	}
@@ -251,7 +323,9 @@ func GoPopupMenuLayout(parent GoObject) (hObj *GoLayoutObj) {
 type GoLayoutObj struct {
 	GioObject
 	GioWidget
-	list_gio 	*layout_gio.List
+	Scrollbar GoScrollbar
+	AnchorStrategy
+	list_gio 	*widget_gio.List
 	flex_gio 	*layout_gio.Flex
 	style 		GoLayoutStyle
 	flexControls 	[]layout_gio.FlexChild
@@ -305,7 +379,7 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
-						layoutDims := ob.list_gio.Layout(gtx, len(ob.Controls), func(gtx C, i int) D {
+						layoutDims := ob.Layout(gtx, len(ob.Controls), func(gtx C, i int) D {
 							//log.Println("Layout Control idx: ", i)
 							return ob.Controls[i].Draw(gtx)
 						})
@@ -357,12 +431,105 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 	return dims
 }
 
+// layout the list and its scrollbar.
+func (ob *GoLayoutObj) Layout(gtx layout_gio.Context, length int, w layout_gio.ListElement) layout_gio.Dimensions {
+	originalConstraints := gtx.Constraints
+
+	// Determine how much space the scrollbar occupies.
+	barWidth := gtx.Dp(ob.Scrollbar.Width())
+
+	if ob.AnchorStrategy == Occupy {
+
+		// Reserve space for the scrollbar using the gtx constraints.
+		max := ob.list_gio.Axis.Convert(gtx.Constraints.Max)
+		min := ob.list_gio.Axis.Convert(gtx.Constraints.Min)
+		max.Y -= barWidth
+		if max.Y < 0 {
+			max.Y = 0
+		}
+		min.Y -= barWidth
+		if min.Y < 0 {
+			min.Y = 0
+		}
+		gtx.Constraints.Max = ob.list_gio.Axis.Convert(max)
+		gtx.Constraints.Min = ob.list_gio.Axis.Convert(min)
+	}
+
+	listDims := ob.list_gio.List.Layout(gtx, length, w)
+	gtx.Constraints = originalConstraints
+
+	// Draw the scrollbar.
+	anchoring := layout_gio.E
+	if ob.list_gio.Axis == layout_gio.Horizontal {
+		anchoring = layout_gio.S
+	}
+	majorAxisSize := ob.list_gio.Axis.Convert(listDims.Size).X
+	start, end := ob.fromListPosition(ob.list_gio.Position, length, majorAxisSize)
+	// layout.Direction respects the minimum, so ensure that the
+	// scrollbar will be drawn on the correct edge even if the provided
+	// layout.Context had a zero minimum constraint.
+	gtx.Constraints.Min = listDims.Size
+	if ob.AnchorStrategy == Occupy {
+		min := ob.list_gio.Axis.Convert(gtx.Constraints.Min)
+		min.Y += barWidth
+		gtx.Constraints.Min = ob.list_gio.Axis.Convert(min)
+	}
+	anchoring.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
+		return ob.Scrollbar.Layout(gtx, ob.list_gio.Axis, start, end)
+	})
+
+	if delta := ob.list_gio.ScrollDistance(); delta != 0 {
+		// Handle any changes to the list position as a result of user interaction
+		// with the scrollbar.
+		ob.list_gio.List.Position.Offset += int(math.Round(float64(float32(ob.list_gio.Position.Length) * delta)))
+
+		// Ensure that the list pays attention to the Offset field when the scrollbar drag
+		// is started while the bar is at the end of the list. Without this, the scrollbar
+		// cannot be dragged away from the end.
+		ob.list_gio.List.Position.BeforeEnd = true
+	}
+
+	if ob.AnchorStrategy == Occupy {
+		// Increase the width to account for the space occupied by the scrollbar.
+		cross := ob.list_gio.Axis.Convert(listDims.Size)
+		cross.Y += barWidth
+		listDims.Size = ob.list_gio.Axis.Convert(cross)
+	}
+	//log.Println("listDims :", listDims)
+	if ob.MinWidth > listDims.Size.X {
+		listDims.Size.X = ob.MinWidth
+	}
+	return listDims
+}
+
+
 func (ob *GoLayoutObj) ObjectType() (string) {
 	return "GoLayoutObj"
 }
 
 func (ob *GoLayoutObj) Widget() (*GioWidget) {
 	return &ob.GioWidget
+}
+
+// fromListPosition converts a layout.Position into two floats representing
+// the location of the viewport on the underlying content. It needs to know
+// the number of elements in the list and the major-axis size of the list
+// in order to do this. The returned values will be in the range [0,1], and
+// start will be less than or equal to end.
+func (ob *GoLayoutObj) fromListPosition(lp layout_gio.Position, elements int, majorAxisSize int) (start, end float32) {
+	// Approximate the size of the scrollable content.
+	lengthPx := float32(lp.Length)
+	meanElementHeight := lengthPx / float32(elements)
+
+	// Determine how much of the content is visible.
+	listOffsetF := float32(lp.Offset)
+	visiblePx := float32(majorAxisSize)
+	visibleFraction := visiblePx / lengthPx
+
+	// Compute the location of the beginning of the viewport.
+	viewportStart := (float32(lp.First)*meanElementHeight + listOffsetF) / lengthPx
+
+	return viewportStart, clamp1(viewportStart + visibleFraction)
 }
 
 func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
@@ -383,8 +550,6 @@ func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
 		for i := 0; i < len(ob.Controls); i++ {
 			ob.addFlexControl(ob.Controls[i])
 			dims := ob.Controls[i].(*GoMenuItemObj).CalcSize(gtx)
-			//ob.Height += metrics.PxToDp(GoDpr, dims.Size.Y)
-			//log.Println("dims.Size.Y :", dims.Size.Y)
 			ob.Height += dims.Size.Y - 1 		// ******* why (-1) *******
 			menuItemWidth := metrics.PxToDp(GoDpr, dims.Size.X)
 			if menuItemWidth > ob.Width {
