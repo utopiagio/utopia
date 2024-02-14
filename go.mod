@@ -8,10 +8,11 @@ require (
 	github.com/kr/pretty v0.3.1
 	github.com/phin1x/go-ipp v1.6.1
 	github.com/utopiagio/gio v0.0.2
+	github.com/utopiagio/gio-x v0.0.0-20240213195510-6883a3b480f1
 	golang.design/x/clipboard v0.7.0
-	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
+	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
 	golang.org/x/exp/shiny v0.0.0-20231226003508-02704c960a9b
-	golang.org/x/image v0.14.0
+	golang.org/x/image v0.15.0
 	golang.org/x/sys v0.15.0
 	golang.org/x/text v0.14.0
 )
@@ -21,5 +22,6 @@ require (
 	gioui.org/shader v1.0.8 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/yuin/goldmark v1.7.0 // indirect
 	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect
 )
