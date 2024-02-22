@@ -202,7 +202,7 @@ func (ob *GoMenuObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layout_
 			defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
 			background := ob.background.NRGBA()
 			switch {
-			case gtx.Queue == nil:
+			case !gtx.Enabled():
 				background = DisabledBlend(background)
 			case ob.IsHovered() || ob.HasFocus():
 				background = HoveredBlend(background)
@@ -282,7 +282,7 @@ func (ob *GoMenuObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layout_
 				defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
 				background := ob.background.NRGBA()
 				switch {
-				case gtx.Queue == nil:
+				case !gtx.Enabled():
 					background = DisabledBlend(ob.background.NRGBA())
 				case ob.clickable.Hovered() || ob.clickable.Focused():
 					background = HoveredBlend(ob.background.NRGBA())
@@ -325,7 +325,7 @@ func (ob *GoIconButtonObj) ObjectType() (string) {
 	dims := w(gtx)
 	c := m.Stop()
 	defer clip.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
-	disabled := gtx.Queue == nil
+	disabled := !gtx.Enabled()
 	semantic.DisabledOp(disabled).Add(gtx.Ops)
 	b.click.Add(gtx.Ops)
 	if !disabled {
@@ -414,7 +414,7 @@ func (ob *GoMenuObj) drawInk(gtx layout_gio.Context, c widget_gio.Press) {
 
 	// Animate only ended presses, and presses that are fading in.
 	if !c.End.IsZero() || sizet <= 1.0 {
-		op_gio.InvalidateOp{}.Add(gtx.Ops)
+		gtx.Execute(op_gio.InvalidateCmd{})
 	}
 
 	if sizet > 1.0 {

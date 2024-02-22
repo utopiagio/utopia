@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 
+	event_gio "github.com/utopiagio/gio/io/event"
 	f32_gio "github.com/utopiagio/gio/f32"
 	layout_gio "github.com/utopiagio/gio/layout"
 	op_gio "github.com/utopiagio/gio/op"
@@ -20,7 +21,7 @@ import (
 )
 
 // The duration is somewhat arbitrary.
-const clickDuration = 200 * time.Millisecond
+const clickDuration = 300 * time.Millisecond
 const doubleClickDuration = 400 * time.Millisecond
 
 type GoFocusPolicy int
@@ -625,14 +626,15 @@ func (w *GioWidget) Size() (GoSize){
 
 func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
 	//log.Println("GioWidget::SignalEvents", w.events)
-	if w.events != 0 {
+	event_gio.Op(gtx.Ops, w)
+	/*if w.events != 0 {
 		pointer_gio.InputOp{
 			Tag:   w,
 			Grab:  false,
 			Kinds: w.events,
 		}.Add(gtx.Ops)
-	}
-	if w.focus {
+	}*/
+	/*if w.focus {
 
 		key_gio.FocusOp{
 			Tag: w, // Use Tag: 0 as the event routing tag, and retireve it through gtx.Events(0)
@@ -645,102 +647,117 @@ func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
 			Keys: key_gio.Set(w.keys),
 			Tag:  w, // Use Tag: w as the event routing tag, and retrieve it through gtx.Events(w) in GioWidget::ReceiveEvents() routine.
 		}.Add(gtx.Ops)
-	}
+	}*/
 }
 
 func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
-	for _, gtxEvent := range gtx.Events(w) {
-		switch e := gtxEvent.(type) {
-			case key_gio.EditEvent:
-				//log.Println("WidgetKey::EditEvent -", "Range -", e.Range, "Text -", e.Text)
-				if w.onKeyEdit != nil {
-					//log.Println("WidgetKey::onKeyEdit() -")
-					w.onKeyEdit(e)
-				}
-			case key_gio.Event:
-				switch e.State {
-					case key_gio.Press:
-						//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
-						if w.onKeyPress != nil {
-							//log.Println("WidgetKey::onKeyPress() -")
-							w.onKeyPress(e)
-						}
-					case key_gio.Release:
-						//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
-						if w.onKeyRelease != nil {
-							w.onKeyRelease(e)
-						}
-				}
-			case pointer_gio.Event:
-				switch e.Kind {
-					case pointer_gio.Press:
-						//log.Println("MousePress:")
-						//log.Println("e.Time: ", uint(e.Time))
-						//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
-						//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
+	for {
+		evt, ok := gtx.Event(
+			key_gio.FocusFilter{ Target: w },
+			key_gio.Filter{ Focus: w, Name: "A", Optional: key_gio.ModShift },
+			pointer_gio.Filter { Target: w,	Kinds: w.events },
+		)
+		if !ok {
+			break
+		}
+		if ev, ok := evt.(key_gio.Event); ok {
+			log.Println("GioWidget::Event -", "Name -", ev.Name, "Modifiers -", ev.Modifiers, "State -", ev.State)
+			switch ev.State {
+				case key_gio.Press:
+					//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
+					log.Println("w.onKeyPress()")
+					if w.onKeyPress != nil {
+						//log.Println("WidgetKey::onKeyPress() -")
+						w.onKeyPress(ev)
+					}
+				case key_gio.Release:
+					//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
+					log.Println("w.onKeyRelease()")
+					if w.onKeyRelease != nil {
+						w.onKeyRelease(ev)
+					}
+			}
+		} else if ev, ok := evt.(key_gio.EditEvent); ok {
+			log.Println("GioWidget::EditEvent -", "Range -", ev.Range, "Text -", ev.Text)
+			if w.onKeyEdit != nil {
+				//log.Println("WidgetKey::onKeyEdit() -")
+				w.onKeyEdit(ev)
+			}
+		} else if ev, ok := evt.(pointer_gio.Event); ok {
+			switch ev.Kind {
+				case pointer_gio.Press:
+					//log.Println("MousePress:")
+					//log.Println("e.Time: ", uint(e.Time))
+					//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
+					//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
 
-						//log.Println("Duration: ", uint(e.Time - w.clickEvent.Time))
+					//log.Println("Duration: ", uint(e.Time - w.clickEvent.Time))
 
-						if w.FocusPolicy >= ClickFocus && w.focus == false {
-								//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
-								//GoApp.Keyboard().SetFocusControl(w)
-								log.Println("GioWidget.SetFocus() -")
+					if w.FocusPolicy >= ClickFocus && w.focus == false {
+							//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
+							//GoApp.Keyboard().SetFocusControl(w)
+							//log.Println("GioWidget.SetFocus() -")
+							gtx.Execute(key_gio.FocusCmd{Tag: w})
+							w.SetFocus()
+					}
+					if w.clickEvent.Time == 0 {
+						w.clickEvent = ev
+						//log.Println("w.onPointerPress()")
+						if w.onPointerPress != nil {
+							//log.Println("w.onPointerPress() != nil")
+							w.onPointerPress(ev)
+						}
+					} else {
+						if ev.Time - w.clickEvent.Time < doubleClickDuration {
+							//log.Println("MouseDoubleClick:")
+							//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
+							//GoApp.Keyboard().SetFocusControl(w)
+							w.clicks = 2
+						}
+					}
+				case pointer_gio.Release:
+					//log.Println("MouseRelease:")
+					//log.Println("e.Time: ", uint(e.Time))
+					//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
+					//log.Println("clickDuration: ", uint(clickDuration))
+					//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
 
-								w.SetFocus()
-						}
-						if w.clickEvent.Time == 0 {
-							w.clickEvent = e
-							//log.Println("w.onPointerPress()")
-							if w.onPointerPress != nil {
-								//log.Println("w.onPointerPress() != nil")
-								w.onPointerPress(e)
-							}
-						} else {
-							if e.Time - w.clickEvent.Time < doubleClickDuration {
-								//log.Println("MouseDoubleClick:")
-								//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
-								//GoApp.Keyboard().SetFocusControl(w)
-								w.clicks = 2
-							}
-						}
-					case pointer_gio.Release:
-						//log.Println("MouseRelease:")
-						//log.Println("e.Time: ", uint(e.Time))
-						//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
-						//log.Println("clickDuration: ", uint(clickDuration))
-						//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
-
-						//log.Println("Duration: ", uint(e.Time - w.clickEvent.Time))
-						if e.Time - w.clickEvent.Time < clickDuration {
-							//log.Println("MouseClick:")
-							// call go routine
-							go w.pointerClicked()
-							w.clicks = 1
-						} else {
-							w.clickEvent.Time = 0
-						}
-						if w.onPointerRelease != nil {
-							w.onPointerRelease(e)
-						}
-					case pointer_gio.Move:
-						if w.onPointerMove != nil {
-							w.onPointerMove(e)
-						}
-					case pointer_gio.Drag:
-						if w.onPointerDrag != nil {
-							w.onPointerDrag(e)
-						}
-					case pointer_gio.Enter:
-						w.hovered = true
-						if w.onPointerEnter != nil {
-							w.onPointerEnter(e)
-						}
-					case pointer_gio.Leave:
-						w.hovered = false
-						if w.onPointerLeave != nil {
-							w.onPointerLeave(e)
-						}
-				}
+					//log.Println("Duration: ", uint(e.Time - w.clickEvent.Time))
+					if ev.Time - w.clickEvent.Time < clickDuration {
+						//log.Println("MouseClick:")
+						// call go routine
+						go w.pointerClicked()
+						w.clicks = 1
+					} else {
+						w.clickEvent.Time = 0
+					}
+					//log.Println("w.onPointerRelease()")
+					if w.onPointerRelease != nil {
+						w.onPointerRelease(ev)
+					}
+				case pointer_gio.Move:
+					log.Println("w.onPointerMove()")
+					if w.onPointerMove != nil {
+						w.onPointerMove(ev)
+					}
+				case pointer_gio.Drag:
+					log.Println("w.onPointerDrag()")
+					if w.onPointerDrag != nil {	
+						w.onPointerDrag(ev)
+					}
+				case pointer_gio.Enter:
+					w.hovered = true
+					//log.Println("w.onPointerEnter()")
+					if w.onPointerEnter != nil {
+						w.onPointerEnter(ev)
+					}
+				case pointer_gio.Leave:
+					w.hovered = false
+					//log.Println("w.onPointerLeave()")
+					if w.onPointerLeave != nil {
+						w.onPointerLeave(ev)
+					}
+			}
 		}
 	}
 }

@@ -12,6 +12,7 @@ import (
 
 	app_gio "github.com/utopiagio/gio/app"
 	"github.com/utopiagio/gio/font/gofont"
+	event_gio "github.com/utopiagio/gio/io/event"
 	key_gio "github.com/utopiagio/gio/io/key"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
 	"github.com/utopiagio/gio/io/system"
@@ -407,6 +408,7 @@ func (ob *GoWindowObj) SetPos(x int, y int) {
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)))
 	}
+	ob.Refresh()
 }
 
 func (ob *GoWindowObj) SetSize(width int, height int) {
@@ -415,6 +417,7 @@ func (ob *GoWindowObj) SetSize(width int, height int) {
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)))
 	}
+	ob.Refresh()
 }
 
 func (ob *GoWindowObj) SetSpacing(spacing GoLayoutSpacing) {
@@ -512,17 +515,16 @@ func (ob *GoWindowObj) loop() (err error) {
     for {
 			// detect what type of event
 			switch  e := ob.gio.NextEvent().(type) {
-					case system.DestroyEvent:
-	      		log.Println("system.DestroyEvent.....")
+					case app_gio.DestroyEvent:
+	      		//log.Println("system.DestroyEvent.....")
 	      		return e.Err
 	      	// this is sent when the application should re-render.
-	      	case system.FrameEvent:
+	      	case app_gio.FrameEvent:
 	      		// Open an new context
-	      		gtx := layout_gio.NewContext(&ops, e)
-	      		ob.update(gtx)	// receiveEvents
-	      		ob.render(gtx)	// draw layout and signalEvents
-	      		// window paint
-	      		ob.paint(e, gtx)
+	      		gtx := app_gio.NewContext(&ops, e)
+	      		ob.update(gtx)		// receiveEvents
+	      		ob.render(gtx)		// draw layout and signalEvents
+	      		ob.paint(e, gtx)	// window paint
 	      	case app_gio.ConfigEvent:
 	      		if ob.onConfig != nil {
 	      			ob.onConfig()
@@ -540,7 +542,7 @@ func (ob *GoWindowObj) loop() (err error) {
 	return nil
 }
 
-func (ob *GoWindowObj) paint(e system.FrameEvent, gtx layout_gio.Context) {
+func (ob *GoWindowObj) paint(e app_gio.FrameEvent, gtx layout_gio.Context) {
 	//log.Println("GoWindow.paint(e, gtx)")
 	e.Frame(gtx.Ops)
 }
@@ -573,8 +575,10 @@ func (ob *GoWindowObj) render(gtx layout_gio.Context) layout_gio.Dimensions {
 }
 
 func (ob *GoWindowObj) signalEvents(gtx layout_gio.Context) {
-	if GoApp.Keyboard().GetFocus() == nil {
-		key_gio.FocusOp{
+	//if GoApp.Keyboard().GetFocus() == nil {
+
+		event_gio.Op(gtx.Ops, 0)
+		/*key_gio.FocusOp{
 			Tag: 0, // Use Tag: 0 as the event routing tag, and retireve it through gtx.Events(0)
 		}.Add(gtx.Ops)
 
@@ -591,6 +595,7 @@ func (ob *GoWindowObj) signalEvents(gtx layout_gio.Context) {
 			Grab:  false,
 			Kinds: pointer_gio.Press,
 		}.Add(gtx.Ops)
+	}*/
 }
 
 func (ob *GoWindowObj) update(gtx layout_gio.Context) {
@@ -602,24 +607,33 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 			ob.updateLayout(obj, gtx)
 		}
 	}
-	for _, gtxEvent := range gtx.Events(0) {
-	    switch event := gtxEvent.(type) {
-		    case key_gio.EditEvent:
-				log.Println("ApplicationKey::EditEvent -", "Range -", event.Range, "Text -", event.Text)
-		    case key_gio.Event:
-		    	log.Println("ApplicationKey::Event -", "Name -", event.Name, "Modifiers -", event.Modifiers, "State -", event.State)
-		    case pointer_gio.Event:
-		    	switch event.Kind {
-					case pointer_gio.Press:
-						if event.Priority == pointer_gio.Grabbed {
-							log.Println("GoApp.Keyboard().SetFocusControl(nil)")
-							if ob.popupwindow.Visible {
-								ob.popupwindow.Hide()
+	for {
+			event, ok := gtx.Event(
+				key_gio.FocusFilter{},
+				//key_gio.Filter{Name: "A"},
+				//key_gio.Filter{Name: key_gio.NameSpace},
+				// list of filters in the form of key_gio.Filter{ Name: key_gio.NameEnter}...
+				// also pointer_gio.Filter{Target: tag, Kinds: pointer_gio.KindPress...}
+				pointer_gio.Filter{Target: 0, Kinds: pointer_gio.Press},
+			)
+
+			if !ok { break }
+			if ev, ok := event.(key_gio.Event); ok {
+				   	log.Println("ApplicationKey::Event -", "Name -", ev.Name, "Modifiers -", ev.Modifiers, "State -", ev.State)
+			} else if ev, ok := event.(key_gio.EditEvent); ok {
+		    		log.Println("ApplicationKey::EditEvent -", "Range -", ev.Range, "Text -", ev.Text)
+			} else if ev, ok := event.(pointer_gio.Event); ok {
+				 	switch ev.Kind {
+						case pointer_gio.Press:
+							if ev.Priority == pointer_gio.Grabbed {
+								if ob.popupwindow.Visible {
+									ob.popupwindow.Hide()
+								}
+								gtx.Execute(key_gio.FocusCmd{Tag: nil})
+								GoApp.Keyboard().SetFocusControl(nil)
 							}
-							GoApp.Keyboard().SetFocusControl(nil)
-						}
 					}
-	    }
+			}
 	}
 	GoApp.Keyboard().Update()
 }

@@ -8,7 +8,7 @@ import (
 	"bufio"
 	"image"
 	"io"
-	_ "log"
+	"log"
 	"math"
 	"strings"
 	"time"
@@ -22,9 +22,9 @@ import (
 	key_gio "github.com/utopiagio/gio/io/key"
 	pointer_gio "github.com/utopiagio/gio/io/pointer"
 	//"github.com/utopiagio/gio/io/system"
-	"github.com/utopiagio/gio/layout"
-	"github.com/utopiagio/gio/op"
-	"github.com/utopiagio/gio/op/clip"
+	layout_gio "github.com/utopiagio/gio/layout"
+	op_gio "github.com/utopiagio/gio/op"
+	clip_gio "github.com/utopiagio/gio/op/clip"
 	"github.com/utopiagio/gio/text"
 	"github.com/utopiagio/gio/unit"
 
@@ -116,6 +116,8 @@ type GioEditor struct {
 	// is only not len(history) immediately after undo operations occur. It is framed as the "next" value
 	// to make the zero value consistent.
 	nextHistoryIdx int
+
+	//pending []EditorEvent
 }
 
 type offEntry struct {
@@ -646,10 +648,18 @@ func (e *GioEditor) initBuffer() {
 	e.text.WrapPolicy = e.WrapPolicy
 }
 
-// Update the state of the editor in response to input events.
-func (e *GioEditor) Update(gtx layout.Context) {
+// Update the state of the editor in response to input events. Update consumes editor
+// input events until there are no remaining events or an editor event is generated.
+// To fully update the state of the editor, callers should call Update until it returns
+// false.
+func (e *GioEditor) Update(gtx layout_gio.Context) {
 	e.initBuffer()
-	//e.processEvents(gtx)
+	//event, ok := e.processEvents(gtx)
+	if e.focused {
+		log.Println("(e *GioEditor) Update() focused: true", )
+	} else {
+		log.Println("(e *GioEditor) Update() focused: false", )
+	}
 	if e.focused {
 		// Notify IME of selection if it changed.
 		newSel := e.ime.selection
@@ -660,17 +670,13 @@ func (e *GioEditor) Update(gtx layout.Context) {
 		}
 		caretPos, carAsc, carDesc := e.text.CaretInfo()
 		newSel.caret = key_gio.Caret{
-			Pos:     layout.FPt(caretPos),
+			Pos:     layout_gio.FPt(caretPos),
 			Ascent:  float32(carAsc),
 			Descent: float32(carDesc),
 		}
 		if newSel != e.ime.selection {
 			e.ime.selection = newSel
-			key_gio.SelectionOp{
-				Tag:   &e.eventKey,
-				Range: newSel.rng,
-				Caret: newSel.caret,
-			}.Add(gtx.Ops)
+			gtx.Execute(key_gio.SelectionCmd{Tag: e, Range: newSel.rng, Caret: newSel.caret})
 		}
 
 		e.updateSnippet(gtx, e.ime.start, e.ime.end)
@@ -680,7 +686,7 @@ func (e *GioEditor) Update(gtx layout.Context) {
 // Layout lays out the editor using the provided textMaterial as the paint material
 // for the text glyphs+caret and the selectMaterial as the paint material for the
 // selection rectangle.
-func (e *GioEditor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectMaterial, cursorMaterial op.CallOp) layout.Dimensions {
+func (e *GioEditor) Layout(gtx layout_gio.Context, lt *text.Shaper, font font.Font, size unit.Sp, textMaterial, selectMaterial, cursorMaterial op_gio.CallOp) layout_gio.Dimensions {
 	e.Update(gtx)
 
 	e.text.Layout(gtx, lt, font, size)
@@ -689,7 +695,7 @@ func (e *GioEditor) Layout(gtx layout.Context, lt *text.Shaper, font font.Font, 
 
 // updateSnippet adds a key.SnippetOp if the snippet content or position
 // have changed. off and len are in runes.
-func (e *GioEditor) updateSnippet(gtx layout.Context, start, end int) {
+func (e *GioEditor) updateSnippet(gtx layout_gio.Context, start, end int) {
 	if start > end {
 		start, end = end, start
 	}
@@ -727,13 +733,10 @@ func (e *GioEditor) updateSnippet(gtx layout.Context, start, end int) {
 		return
 	}
 	e.ime.snippet = newSnip
-	key_gio.SnippetOp{
-		Tag:     &e.eventKey,
-		Snippet: newSnip,
-	}.Add(gtx.Ops)
+	gtx.Execute(key_gio.SnippetCmd{Tag: e, Snippet: newSnip})
 }
 
-func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial, cursorMaterial op.CallOp) layout.Dimensions {
+func (e *GioEditor) layout(gtx layout_gio.Context, textMaterial, selectMaterial, cursorMaterial op_gio.CallOp) layout_gio.Dimensions {
 	if e.blinkRefresh {
 		e.blinkStart = gtx.Now
 		e.blinkRefresh = false
@@ -746,10 +749,10 @@ func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial, cur
 		e.scrollCaret = false
 		e.text.ScrollToCaret()
 	}
-	textDims := e.text.FullDimensions()
+	//textDims := e.text.FullDimensions()
 	visibleDims := e.text.Dimensions()
 
-	defer clip.Rect(image.Rectangle{Max: visibleDims.Size}).Push(gtx.Ops).Pop()
+	defer clip_gio.Rect(image.Rectangle{Max: visibleDims.Size}).Push(gtx.Ops).Pop()
 	pointer_gio.CursorText.Add(gtx.Ops)
 	/*var keys key.Set
 	if e.focused {
@@ -784,7 +787,7 @@ func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial, cur
 	}
 	e.requestFocus = false*/
 
-	var scrollRange image.Rectangle
+	/*var scrollRange image.Rectangle
 	if e.SingleLine {
 		scrollOffX := e.text.ScrollOff().X
 		scrollRange.Min.X = min(-scrollOffX, 0)
@@ -793,31 +796,32 @@ func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial, cur
 		scrollOffY := e.text.ScrollOff().Y
 		scrollRange.Min.Y = -scrollOffY
 		scrollRange.Max.Y = max(0, textDims.Size.Y-(scrollOffY+visibleDims.Size.Y))
-	}
+	}*/
 	//e.scroller.Add(gtx.Ops, scrollRange)
 
 	//e.clicker.Add(gtx.Ops)
 	//e.dragger.Add(gtx.Ops)
 	e.showCaret = false
-	if e.focused {
+	if gtx.Focused(e) {
 		now := gtx.Now
 		dt := now.Sub(e.blinkStart)
 		blinking := dt < maxBlinkDuration
 		const timePerBlink = time.Second / blinksPerSecond
 		nextBlink := now.Add(timePerBlink/2 - dt%(timePerBlink/2))
 		if blinking {
-			redraw := op.InvalidateOp{At: nextBlink}
-			redraw.Add(gtx.Ops)
+			//redraw := op_gio.InvalidateOp{At: nextBlink}
+			//redraw.Add(gtx.Ops)
+			gtx.Execute(op_gio.InvalidateCmd{At: nextBlink})
 		}
 		e.showCaret = e.focused && (!blinking || dt%timePerBlink < timePerBlink/2)
 	}
-	disabled := gtx.Queue == nil
+	
 	semantic.Editor.Add(gtx.Ops)
 	if e.Len() > 0 {
 		e.paintSelection(gtx, selectMaterial)
 		e.paintText(gtx, textMaterial)
 	}
-	if !disabled {
+	if gtx.Enabled() {
 		e.paintCaret(gtx, cursorMaterial)
 	}
 	return visibleDims
@@ -825,7 +829,7 @@ func (e *GioEditor) layout(gtx layout.Context, textMaterial, selectMaterial, cur
 
 // paintSelection paints the contrasting background for selected text using the provided
 // material to set the painting material for the selection.
-func (e *GioEditor) paintSelection(gtx layout.Context, material op.CallOp) {
+func (e *GioEditor) paintSelection(gtx layout_gio.Context, material op_gio.CallOp) {
 	e.initBuffer()
 	if !e.focused {
 		return
@@ -835,14 +839,14 @@ func (e *GioEditor) paintSelection(gtx layout.Context, material op.CallOp) {
 
 // paintText paints the text glyphs using the provided material to set the fill of the
 // glyphs.
-func (e *GioEditor) paintText(gtx layout.Context, material op.CallOp) {
+func (e *GioEditor) paintText(gtx layout_gio.Context, material op_gio.CallOp) {
 	e.initBuffer()
 	e.text.PaintText(gtx, material)
 }
 
 // paintCaret paints the text glyphs using the provided material to set the fill material
 // of the caret rectangle.
-func (e *GioEditor) paintCaret(gtx layout.Context, material op.CallOp) {
+func (e *GioEditor) paintCaret(gtx layout_gio.Context, material op_gio.CallOp) {
 	e.initBuffer()
 	if !e.showCaret || e.ReadOnly {
 		return

@@ -74,7 +74,7 @@ func (ob *GoCheckBoxObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 func (ob *GoCheckBoxObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	dims := ob.checkBox.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		semantic_gio.CheckBox.Add(gtx.Ops)
-		chdims := ob.checkable.Layout(gtx, ob.checkBox.Value, ob.checkBox.Hovered() || ob.checkBox.Focused())
+		chdims := ob.checkable.Layout(gtx, ob.checkBox.Value, ob.IsHovered() || ob.HasFocus())
 		return chdims
 	})
 	return dims

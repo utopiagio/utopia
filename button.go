@@ -68,7 +68,13 @@ func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 		},
 		shaper: theme.Shaper,
 	}
-	hButton.SetOnPointerRelease(hButton.Click)
+	hButton.SetOnKeyPress(nil)
+	hButton.SetOnKeyRelease(nil)
+	hButton.SetOnKeyEdit(nil)
+	//hButton.SetOnPointerPress(nil)
+	//hButton.SetOnPointerRelease(nil)
+	//hButton.SetOnPointerMove(nil)
+	hButton.SetOnPointerClick(hButton.Click)
 	hButton.SetOnPointerEnter(nil)
 	hButton.SetOnPointerLeave(nil)
 	parent.AddControl(hButton)
@@ -171,7 +177,7 @@ func (ob *GoButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layou
 			defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
 			background := ob.faceColor.NRGBA()
 			switch {
-			case gtx.Queue == nil:
+			case !gtx.Enabled():
 				background = DisabledBlend(background)
 			case ob.IsHovered() || ob.HasFocus():
 				background = HoveredBlend(background)
@@ -322,7 +328,7 @@ func (ob *GoIconButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) l
 			defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
 			background := ob.faceColor.NRGBA()
 			switch {
-			case gtx.Queue == nil:
+			case !gtx.Enabled():
 				background = DisabledBlend(background)
 			case ob.IsHovered() || ob.HasFocus():
 				background = HoveredBlend(background)
@@ -353,7 +359,7 @@ func (ob *GoIconButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) l
 				defer clip_gio.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, rr).Push(gtx.Ops).Pop()
 				background := ob.background.NRGBA()
 				switch {
-				case gtx.Queue == nil:
+				case !gtx.Enabled():
 					background = DisabledBlend(ob.background.NRGBA())
 				case ob.clickable.Hovered() || ob.clickable.Focused():
 					background = HoveredBlend(ob.background.NRGBA())
@@ -416,7 +422,7 @@ func (ob *GoIconButtonObj) Widget() (*GioWidget) {
 	dims := w(gtx)
 	c := m.Stop()
 	defer clip.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
-	disabled := gtx.Queue == nil
+	disabled := !gtx.Enabled()
 	semantic.DisabledOp(disabled).Add(gtx.Ops)
 	b.click.Add(gtx.Ops)
 	if !disabled {
@@ -505,7 +511,7 @@ func (ob *GoButtonObj) drawInk(gtx layout_gio.Context, c widget_gio.Press) {
 
 	// Animate only ended presses, and presses that are fading in.
 	if !c.End.IsZero() || sizet <= 1.0 {
-		op_gio.InvalidateOp{}.Add(gtx.Ops)
+		gtx.Execute(op_gio.InvalidateCmd{})
 	}
 
 	if sizet > 1.0 {

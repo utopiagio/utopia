@@ -156,7 +156,7 @@ func (ob *GoSwitchObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	if ob.state {
 		col = ob.color.enabled.NRGBA()
 	}
-	if gtx.Queue == nil {
+	if !gtx.Enabled() {
 		col = DisabledBlend(col)
 	}
 	trackColor := ob.color.track.NRGBA()

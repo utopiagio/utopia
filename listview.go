@@ -124,7 +124,7 @@ func (ob *GoListViewObj) Item(nodeId []int) (*GoListViewItemObj) {
 }*/
 
 func (ob *GoListViewObj) ItemClicked(nodeId []int) {
-	log.Println("GoListViewObj) ItemClicked()............")
+	//log.Println("GoListViewObj) ItemClicked()............")
 	ob.switchFocus(ob.Item(nodeId))
 	if ob.onItemClicked != nil {
 		ob.onItemClicked(nodeId)
@@ -132,7 +132,7 @@ func (ob *GoListViewObj) ItemClicked(nodeId []int) {
 }
 
 func (ob *GoListViewObj) ItemDoubleClicked(nodeId []int) {
-	log.Println("GoListViewObj) ItemDoubleClicked()............")
+	//log.Println("GoListViewObj) ItemDoubleClicked()............")
 	ob.switchFocus(ob.Item(nodeId))
 	if ob.onItemDoubleClicked != nil {
 		ob.onItemDoubleClicked(nodeId)

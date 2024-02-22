@@ -293,7 +293,7 @@ func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	}
 	dims = ob.editor.Layout(gtx, ob.shaper, ob.font, ob.fontSize, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		semantic_gio.Editor.Add(gtx.Ops)
-		//disabled := gtx.Queue == nil
+		//disabled := !gtx.Enabled()
 		disabled := ob.HasFocus()
 		//log.Println("disabled =", disabled)
 		if ob.editor.Len() > 0 {
@@ -325,10 +325,10 @@ func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	paint_gio.ColorOp{Color: ob.hintColor.NRGBA()}.Add(gtx.Ops)
 	hintColor := hintColorMacro.Stop()
 	selectionColorMacro := op_gio.Record(gtx.Ops)
-	paint_gio.ColorOp{Color: blendDisabledColor(gtx.Queue == nil, ob.selectionColor.NRGBA())}.Add(gtx.Ops)
+	paint_gio.ColorOp{Color: blendDisabledColor(!gtx.Enabled(), ob.selectionColor.NRGBA())}.Add(gtx.Ops)
 	selectionColor := selectionColorMacro.Stop()
 	cursorColorMacro := op_gio.Record(gtx.Ops)
-	paint_gio.ColorOp{Color: blendDisabledColor(gtx.Queue == nil, Color_Black.NRGBA())}.Add(gtx.Ops)
+	paint_gio.ColorOp{Color: blendDisabledColor(!gtx.Enabled(), Color_Black.NRGBA())}.Add(gtx.Ops)
 	cursorColor := cursorColorMacro.Stop()
 
 	var maxlines int

@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 
 	"github.com/utopiagio/utopia/metrics"
@@ -117,7 +117,6 @@ func (ob *GoRadioButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimens
 		ob.dims = dims
 		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
 		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
-		log.Println("GoRadioButton::Height: ", dims.Size.Y)
 	}
 	return dims
 }

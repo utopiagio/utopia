@@ -83,7 +83,7 @@ func (ob *GoLoaderObj) layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	}.Add(gtx.Ops)
 	defer op_gio.Offset(image.Pt(-radius, -radius)).Push(gtx.Ops).Pop()
 	paint_gio.PaintOp{}.Add(gtx.Ops)
-	op_gio.InvalidateOp{}.Add(gtx.Ops)
+	gtx.Execute(op_gio.InvalidateCmd{})
 	return layout_gio.Dimensions{
 		Size: sz,
 	}

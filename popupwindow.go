@@ -117,6 +117,16 @@ func (ob *GoPopupWindowObj) ObjectType() (string) {
 	}
 }*/
 
+func (ob *GoPopupWindowObj) Show() {
+	ob.GioWidget.Show()
+	ob.ParentWindow().Refresh()
+	//ob.layout = GoVFlexBoxLayout(ob)
+	//ob.layout.SetMargin(3,3,3,3)
+	//ob.layout.SetBorder(BorderSingleLine, 1, 3, Color_Blue)
+	//ob.layout.SetPadding(3,3,3,3)
+	
+}
+
 func (ob *GoPopupWindowObj) Widget() (*GioWidget) {
 	return &ob.GioWidget
 }

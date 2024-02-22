@@ -7,7 +7,7 @@ package utopia
 import (
 	"image"
 	"image/color"
-	"log"
+	//"log"
 	
 	layout_gio"github.com/utopiagio/gio/layout"
 	clip_gio "github.com/utopiagio/gio/op/clip"
@@ -122,10 +122,10 @@ func (ob *GoProgressBarObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions
 
 		return layout_gio.Dimensions{Size: d}
 	}
-	log.Println("ob.Width: ", ob.Width, "...................")
-	log.Println("gtx.Constraints.Max.X: ", gtx.Constraints.Max.X, "...................")
+	//log.Println("ob.Width: ", ob.Width, "...................")
+	//log.Println("gtx.Constraints.Max.X: ", gtx.Constraints.Max.X, "...................")
 	progressBarWidth := gtx.Constraints.Max.X
-	log.Println("progressBarWidth: ", progressBarWidth, "...................")
+	//log.Println("progressBarWidth: ", progressBarWidth, "...................")
 	dims := layout_gio.Flex{Alignment: layout_gio.Start}.Layout(gtx,
 		layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 			return layout_gio.Stack{Alignment: layout_gio.W}.Layout(gtx,
@@ -135,7 +135,7 @@ func (ob *GoProgressBarObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions
 				layout_gio.Stacked(func(gtx layout_gio.Context) layout_gio.Dimensions {
 					fillWidth := int(float32(progressBarWidth) * clamp1(float32(ob.progress) / float32(ob.totalSteps)))
 					fillColor := ob.color.NRGBA()
-					if gtx.Queue == nil {
+					if !gtx.Enabled() {
 						fillColor = DisabledBlend(fillColor)
 					}
 					return shader(fillWidth, fillColor)

@@ -163,7 +163,7 @@ func (ob *GoSliderObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	trans.Pop()
 
 	color := ob.Color.NRGBA()
-	if gtx.Queue == nil {
+	if !gtx.Enabled() {
 		color = f32color.Disabled(color)
 	}
 

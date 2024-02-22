@@ -93,18 +93,16 @@ func (ob *GoRichTextObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 func (ob *GoRichTextObj) LoadMarkDown(src string) {
 	buf := []byte(src)
 	renderer := markdown.NewRenderer()
+	renderer.Config.MonospaceFont.Typeface = "Go Mono"
 	spans_richtext, err := renderer.Render(buf)
 	if err != nil {
 		log.Println("Render error..", err)
 	}
-	log.Println(spans_richtext[5].Content)
-	log.Println("len.6", len(spans_richtext[6].Content))
-	for x := 0; x < len(spans_richtext[6].Content); x++ {
-		log.Println("1", []byte(spans_richtext[6].Content)[x])
-	}
 	
-
-	log.Println(spans_richtext[7].Content)
+	/*log.Println("len.6", len(spans_richtext[0].Content))
+	for x := 0; x < len(spans_richtext[0].Content); x++ {
+		log.Printf("1 %d %c", spans_richtext[0].Content[x], rune(spans_richtext[0].Content[x]))
+	}*/
 	ob.AddContent(spans_richtext)
 }
 

@@ -4,6 +4,7 @@ package widget
 
 import (
 	"github.com/utopiagio/gio/gesture"
+	"github.com/utopiagio/gio/io/event"
 	"github.com/utopiagio/gio/io/key"
 	"github.com/utopiagio/gio/io/pointer"
 	"github.com/utopiagio/gio/io/semantic"
@@ -39,18 +40,22 @@ func (e *GioEnum) index(k string) *enumKey {
 }
 //r Value has changed by user interaction.
 func (e *GioEnum) Update(gtx layout.Context) bool {
-	if gtx.Queue == nil {
+	if !gtx.Enabled() {
 		e.focused = false
 	}
 // Update the state and report whethe
 	e.hovering = false
 	changed := false
 	for _, state := range e.keys {
-		for _, ev := range state.click.Update(gtx) {
+		for {
+			ev, ok := state.click.Update(gtx.Source)
+			if !ok {
+				break
+			}
 			switch ev.Kind {
 			case gesture.KindPress:
 				if ev.Source == pointer.Mouse {
-					key.FocusOp{Tag: &state.tag}.Add(gtx.Ops)
+					gtx.Execute(key.FocusCmd{Tag: &state.tag})
 				}
 			case gesture.KindClick:
 				if state.key != e.Value {
@@ -59,7 +64,15 @@ func (e *GioEnum) Update(gtx layout.Context) bool {
 				}
 			}
 		}
-		for _, ev := range gtx.Events(&state.tag) {
+		for {
+			ev, ok := gtx.Event(
+				key.FocusFilter{Target: &state.tag},
+				key.Filter{Focus: &state.tag, Name: key.NameReturn},
+				key.Filter{Focus: &state.tag, Name: key.NameSpace},
+			)
+			if !ok {
+				break
+			}
 			switch ev := ev.(type) {
 			case key.FocusEvent:
 				if ev.Focus {
@@ -69,7 +82,7 @@ func (e *GioEnum) Update(gtx layout.Context) bool {
 					e.focused = false
 				}
 			case key.Event:
-				if !e.focused || ev.State != key.Release {
+				if ev.State != key.Release {
 					break
 				}
 				if ev.Name != key.NameReturn && ev.Name != key.NameSpace {
@@ -117,12 +130,9 @@ func (e *GioEnum) Layout(gtx layout.Context, k string, content layout.Widget) la
 	}
 	clk := &state.click
 	clk.Add(gtx.Ops)
-	enabled := gtx.Queue != nil
-	if enabled {
-		key.InputOp{Tag: &state.tag, Keys: "⏎|Space"}.Add(gtx.Ops)
-	}
+	event.Op(gtx.Ops, &state.tag)
 	semantic.SelectedOp(k == e.Value).Add(gtx.Ops)
-	semantic.EnabledOp(enabled).Add(gtx.Ops)
+	semantic.EnabledOp(gtx.Enabled()).Add(gtx.Ops)
 	c.Add(gtx.Ops)
 
 	return dims
