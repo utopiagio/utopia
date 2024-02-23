@@ -136,7 +136,7 @@ func (ob *GoSwitchObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 
 // Layout updates the switch and displays it.
 func (ob *GoSwitchObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 	trackWidth := gtx.Dp(40)
 	trackHeight := gtx.Dp(18)
 	thumbSize := gtx.Dp(12)

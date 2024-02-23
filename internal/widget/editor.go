@@ -8,7 +8,7 @@ import (
 	"bufio"
 	"image"
 	"io"
-	"log"
+	_ "log"
 	"math"
 	"strings"
 	"time"
@@ -86,11 +86,11 @@ type GioEditor struct {
 	// scratch is a byte buffer that is reused to efficiently read portions of text
 	// from the textView.
 	scratch      []byte
-	eventKey     int
+	//eventKey     int
 	blinkStart   time.Time
 	blinkRefresh bool
 	focused      bool
-	requestFocus bool
+	//requestFocus bool
 
 	// ime tracks the state relevant to input methods.
 	ime struct {
@@ -119,6 +119,8 @@ type GioEditor struct {
 
 	//pending []EditorEvent
 }
+
+
 
 type offEntry struct {
 	runes int
@@ -372,13 +374,48 @@ func (e *GioEditor) PointerDragged(evt pointer_gio.Event) {
 }*/
 
 func (e *GioEditor) ProcessKey(evt key_gio.Event) {
-	//log.Println("GioEditor::ProcessKey()")
 	e.blinkRefresh = true
 	direction := 1
 	moveByWord := evt.Modifiers.Contain(key_gio.ModShortcutAlt)
 	selAct := selectionClear
 	if evt.Modifiers.Contain(key_gio.ModShift) {
 		selAct = selectionExtend
+	}
+	if evt.Modifiers.Contain(key_gio.ModShortcut) {
+		switch evt.Name {
+		// Initiate a paste operation, by requesting the clipboard contents; other
+		// half is in Editor.processKey() under clipboard.Event.
+		case "V":
+			/*if !e.ReadOnly {
+				gtx.Execute(clipboard.ReadCmd{Tag: e})
+			}*/
+		// Copy or Cut selection -- ignored if nothing selected.
+		case "C", "X":
+			/*e.scratch = e.text.SelectedText(e.scratch)
+			if text := string(e.scratch); text != "" {
+				gtx.Execute(clipboard.WriteCmd{Type: "application/text", Data: io.NopCloser(strings.NewReader(text))})
+				if evt.Name == "X" && !e.ReadOnly {
+					if e.Delete(1)// != 0 {
+						//return ChangeEvent{}, true
+					//}
+				}
+			}*/
+		// Select all
+		case "A":
+			e.text.SetCaret(0, e.text.Len())
+		case "Z":
+			if !e.ReadOnly {
+				if evt.Modifiers.Contain(key_gio.ModShift) {
+					/*if ev, ok := */e.redo(); //ok {
+						//return ev, ok
+					//}
+				} else {
+					/*if ev, ok := */e.undo(); //ok {
+						//return ev, ok
+					//}
+				}
+			}
+		}
 	}
 	switch evt.Name {
 		case key_gio.NameReturn, key_gio.NameEnter:
@@ -655,11 +692,11 @@ func (e *GioEditor) initBuffer() {
 func (e *GioEditor) Update(gtx layout_gio.Context) {
 	e.initBuffer()
 	//event, ok := e.processEvents(gtx)
-	if e.focused {
+	/*if e.focused {
 		log.Println("(e *GioEditor) Update() focused: true", )
 	} else {
 		log.Println("(e *GioEditor) Update() focused: false", )
-	}
+	}*/
 	if e.focused {
 		// Notify IME of selection if it changed.
 		newSel := e.ime.selection
@@ -802,7 +839,7 @@ func (e *GioEditor) layout(gtx layout_gio.Context, textMaterial, selectMaterial,
 	//e.clicker.Add(gtx.Ops)
 	//e.dragger.Add(gtx.Ops)
 	e.showCaret = false
-	if gtx.Focused(e) {
+	if e.focused {	//gtx.Focused() {
 		now := gtx.Now
 		dt := now.Sub(e.blinkStart)
 		blinking := dt < maxBlinkDuration
@@ -813,7 +850,7 @@ func (e *GioEditor) layout(gtx layout_gio.Context, textMaterial, selectMaterial,
 			//redraw.Add(gtx.Ops)
 			gtx.Execute(op_gio.InvalidateCmd{At: nextBlink})
 		}
-		e.showCaret = e.focused && (!blinking || dt%timePerBlink < timePerBlink/2)
+		e.showCaret = (!blinking || dt%timePerBlink < timePerBlink/2)
 	}
 	
 	semantic.Editor.Add(gtx.Ops)
@@ -1205,6 +1242,6 @@ func sign(n int) int {
 	}
 }
 
-//func (s ChangeEvent) isGioEditorEvent() {}
+//func (s ChangeEvent) isEditorEvent() {}
 //func (s SubmitEvent) isEditorEvent() {}
 //func (s SelectEvent) isEditorEvent() {}

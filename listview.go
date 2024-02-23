@@ -186,7 +186,7 @@ func (ob *GoListViewObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 }
 
 /*func (ob *GoListViewObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 	width := gtx.Dp(unit_gio.Dp(ob.Width))
 	height := gtx.Dp(unit_gio.Dp(ob.Height))
 	if ob.SizePolicy().HFlex {

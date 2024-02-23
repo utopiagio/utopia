@@ -80,7 +80,7 @@ func (ob *GoPopupWindowObj) Hide() {
 		//if !s.Visible() {
 			//return layout.Dimensions{}
 		//}
-		ob.ReceiveEvents(gtx)
+		ob.ReceiveEvents(gtx, nil)
 		//gtx.Constraints.Min = gtx.Constraints.Max
 		//currentAlpha := s.FinalAlpha
 		if anim.Animating() {

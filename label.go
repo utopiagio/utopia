@@ -366,7 +366,7 @@ func (ob *GoLabelObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions
 		dims, _ = ob.LayoutDetailed(gtx, ob.shaper, ob.font, ob.fontSize, ob.text, textColor)
 		return dims
 	} else {
-		ob.ReceiveEvents(gtx)
+		ob.ReceiveEvents(gtx, nil)
 		dims = ob.state.Layout(gtx, ob.shaper, ob.font, ob.fontSize, textColor, selectionColor)	//, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		defer clip_gio.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
 		pointer_gio.CursorText.Add(gtx.Ops)

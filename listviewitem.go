@@ -344,7 +344,7 @@ func (ob *GoListViewItemObj) Widget() (*GioWidget) {
 
 // Layout displays the icon with its size set to the X minimum constraint.
 func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()

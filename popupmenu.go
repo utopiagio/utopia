@@ -77,7 +77,7 @@ func (ob *GoPopupMenuObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 		//if !s.Visible() {
 			//return layout.Dimensions{}
 		//}
-		ob.ReceiveEvents(gtx)
+		ob.ReceiveEvents(gtx, nil)
 		//gtx.Constraints.Min = gtx.Constraints.Max
 		//currentAlpha := s.FinalAlpha
 		/*if anim.Animating() {

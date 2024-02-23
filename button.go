@@ -71,10 +71,10 @@ func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 	hButton.SetOnKeyPress(nil)
 	hButton.SetOnKeyRelease(nil)
 	hButton.SetOnKeyEdit(nil)
-	//hButton.SetOnPointerPress(nil)
+	hButton.SetOnPointerPress(hButton.Click)
 	//hButton.SetOnPointerRelease(nil)
 	//hButton.SetOnPointerMove(nil)
-	hButton.SetOnPointerClick(hButton.Click)
+	//hButton.SetOnPointerClick(hButton.Click)
 	hButton.SetOnPointerEnter(nil)
 	hButton.SetOnPointerLeave(nil)
 	parent.AddControl(hButton)
@@ -124,7 +124,7 @@ func (ob *GoButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 }
 
 func (ob *GoButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.textColor.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()
@@ -296,7 +296,7 @@ func (ob *GoIconButtonObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensi
 }
 
 func (ob *GoIconButtonObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 	return ob.layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 		insetDims := ob.inset.Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 			size := gtx.Dp(ob.size)

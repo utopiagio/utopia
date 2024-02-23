@@ -209,7 +209,7 @@ func (ob *GoMenuItemObj) CalcSize(gtx layout_gio.Context) (dims layout_gio.Dimen
 }
 
 func (ob *GoMenuItemObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()

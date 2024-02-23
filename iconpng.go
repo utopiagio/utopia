@@ -136,7 +136,7 @@ func (ob *GoIconPNGObj) Size() (int) {
 
 // Layout displays the icon with its size set to the X minimum constraint.
 /*func (ob *GoIconPNGObj) Layout(gtx layout_gio.Context, color GoColor) layout_gio.Dimensions {
-	//ob.ReceiveEvents(gtx)
+	//ob.ReceiveEvents(gtx, nil)
 	
 	sz := gtx.Constraints.Min.X
 	//log.Println("Icon ob.size =", sz)

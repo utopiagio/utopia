@@ -5,13 +5,14 @@
 package utopia
 
 import (
-	//"log"
+	_ "log"
 	"image"
 	"image/color"
 
 	//"github.com/utopiagio/gio/internal/f32color"
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	font_gio "github.com/utopiagio/gio/font"
+	event_gio "github.com/utopiagio/gio/io/event"
 	key_gio "github.com/utopiagio/gio/io/key"
 	//semantic_gio "github.com/utopiagio/gio/io/semantic"
 	layout_gio "github.com/utopiagio/gio/layout"
@@ -46,7 +47,7 @@ type GoTextEditObj struct {
 	hintColor GoColor
 	// SelectionColor is the color of the background for selected text.
 	selectionColor GoColor
-	editor         *widget_int.GioEditor
+	editor    *widget_int.GioEditor
 
 	shaper *text_gio.Shaper
 
@@ -124,15 +125,11 @@ func (ob *GoTextEditObj) Insert(text string) {
 }
 
 func (ob *GoTextEditObj) KeyEdit(e key_gio.EditEvent) {
-	//log.Println("GoTextEditObj::KeyEdit()")
 	ob.Insert(e.Text)
 }
 
 func (ob *GoTextEditObj) KeyPressed(e key_gio.Event) {
-	//log.Println("GoTextEditObj::KeyPressed()")
 	ob.editor.ProcessKey(e)
-	//log.Println("REFRESH........")
-	ob.ParentWindow().Refresh()
 }
 
 func (ob *GoTextEditObj) KeyReleased(e key_gio.Event) {
@@ -271,7 +268,32 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 
 func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	//log.Println("*GoTextEditObj::layout()")
-	ob.ReceiveEvents(gtx)
+	w := &ob.GioWidget
+	keys := []event_gio.Filter{
+		key_gio.FocusFilter{Target: w},
+		//transfer.TargetFilter{Target: w, Type: "application/text"},
+		key_gio.Filter{Focus: w, Name: key_gio.NameEnter, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NameReturn, Optional: key_gio.ModShift},
+
+		key_gio.Filter{Focus: w, Name: "Z", Required: key_gio.ModShortcut, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: "C", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w, Name: "V", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w, Name: "X", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w, Name: "A", Required: key_gio.ModShortcut},
+
+		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteBackward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteForward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+
+		key_gio.Filter{Focus: w, Name: key_gio.NameHome, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NameEnd, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NamePageDown, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NamePageUp, Optional: key_gio.ModShift},
+		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameLeftArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameUpArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameRightArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameDownArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+	}
+	ob.ReceiveEvents(gtx, keys)
 
 
 	/* *** create hint label macro

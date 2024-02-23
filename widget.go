@@ -625,60 +625,38 @@ func (w *GioWidget) Size() (GoSize){
 }
 
 func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
-	//log.Println("GioWidget::SignalEvents", w.events)
 	event_gio.Op(gtx.Ops, w)
-	/*if w.events != 0 {
-		pointer_gio.InputOp{
-			Tag:   w,
-			Grab:  false,
-			Kinds: w.events,
-		}.Add(gtx.Ops)
-	}*/
-	/*if w.focus {
-
-		key_gio.FocusOp{
-			Tag: w, // Use Tag: 0 as the event routing tag, and retireve it through gtx.Events(0)
-		}.Add(gtx.Ops)
-
-		// 3) Finally we add key.InputOp to catch specific keys
-		// (Shift) means an optional Shift
-		// These inputs are retrieved as key.Event
-		key_gio.InputOp{
-			Keys: key_gio.Set(w.keys),
-			Tag:  w, // Use Tag: w as the event routing tag, and retrieve it through gtx.Events(w) in GioWidget::ReceiveEvents() routine.
-		}.Add(gtx.Ops)
-	}*/
 }
 
-func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
+func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio.Filter) {
 	for {
-		evt, ok := gtx.Event(
-			key_gio.FocusFilter{ Target: w },
-			key_gio.Filter{ Focus: w, Name: "A", Optional: key_gio.ModShift },
-			pointer_gio.Filter { Target: w,	Kinds: w.events },
-		)
+		evt, ok := gtx.Event(pointer_gio.Filter { Target: w, Kinds: w.events })
+		if !ok {
+			if keyFilters != nil {
+				evt, ok = gtx.Event(keyFilters...)
+			}
+		}
 		if !ok {
 			break
 		}
 		if ev, ok := evt.(key_gio.Event); ok {
-			log.Println("GioWidget::Event -", "Name -", ev.Name, "Modifiers -", ev.Modifiers, "State -", ev.State)
 			switch ev.State {
 				case key_gio.Press:
-					//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
-					log.Println("w.onKeyPress()")
+					//log.Println("WidgetKey::Event -", "Name -", ev.Name, "Modifiers -", ev.Modifiers, "State -", ev.State)
+					//log.Println("w.onKeyPress()")
 					if w.onKeyPress != nil {
 						//log.Println("WidgetKey::onKeyPress() -")
 						w.onKeyPress(ev)
 					}
 				case key_gio.Release:
 					//log.Println("WidgetKey::Event -", "Name -", e.Name, "Modifiers -", e.Modifiers, "State -", e.State)
-					log.Println("w.onKeyRelease()")
+					//log.Println("w.onKeyRelease()")
 					if w.onKeyRelease != nil {
 						w.onKeyRelease(ev)
 					}
 			}
 		} else if ev, ok := evt.(key_gio.EditEvent); ok {
-			log.Println("GioWidget::EditEvent -", "Range -", ev.Range, "Text -", ev.Text)
+			//log.Println("GioWidget::EditEvent -", "Range -", ev.Range, "Text -", ev.Text)
 			if w.onKeyEdit != nil {
 				//log.Println("WidgetKey::onKeyEdit() -")
 				w.onKeyEdit(ev)
@@ -736,12 +714,12 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context) {
 						w.onPointerRelease(ev)
 					}
 				case pointer_gio.Move:
-					log.Println("w.onPointerMove()")
+					//log.Println("w.onPointerMove()")
 					if w.onPointerMove != nil {
 						w.onPointerMove(ev)
 					}
 				case pointer_gio.Drag:
-					log.Println("w.onPointerDrag()")
+					//log.Println("w.onPointerDrag()")
 					if w.onPointerDrag != nil {	
 						w.onPointerDrag(ev)
 					}

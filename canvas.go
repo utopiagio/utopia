@@ -178,7 +178,7 @@ func (ob *GoCanvasObj) Update() {
 }
 
 func (ob *GoCanvasObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 
 	// paint object
 	width := gtx.Dp(unit_gio.Dp(ob.Width))

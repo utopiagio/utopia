@@ -142,7 +142,7 @@ func (ob *GoIconLabelObj) IconSize() (int) {
 
 // Layout displays the icon with its size set to the X minimum constraint.
 func (ob *GoIconLabelObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	ob.ReceiveEvents(gtx)
+	ob.ReceiveEvents(gtx, nil)
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
 	textColor := textColorMacro.Stop()
