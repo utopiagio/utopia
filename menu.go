@@ -58,7 +58,7 @@ func GoMenu(parent GoObject, text string, id int) (hObj *GoMenuObj) {
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
-		GoSize: GoSize{60, height, 60, height, 1000, height, 60, height},
+		GoSize: GoSize{40, height, 40, height, 1000, height, 40, height},
 		FocusPolicy: StrongFocus,
 		Visible: true,
 	}
@@ -161,8 +161,8 @@ func (ob *GoMenuObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 			return borderDims
 		})
 		ob.dims = dims
-		ob.AbsWidth = metrics.PxToDp(GoDpr, dims.Size.X)
-		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
+		ob.Width = metrics.PxToDp(GoDpr, dims.Size.X)
+		ob.Height = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
 }

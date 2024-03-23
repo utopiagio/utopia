@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 	"image/draw"
 	//"math"
@@ -53,7 +53,7 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{24, 24, 24, 24, 1000, 1000, 24, 24},
 		FocusPolicy: StrongFocus,
-		Visible: true,
+		Visible: false,
 		ForeColor: theme.ColorFg,
 	}
 	
@@ -70,11 +70,12 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 		label: text,
 		level: listLevel,
 		id: listId,
+		maxlines: 1,
 		shaper: theme.Shaper,
 	}
 	hListViewItem.SetOnSetFocus(hListViewItem.SetHighlight)
 	hListViewItem.SetOnClearFocus(hListViewItem.ClearHighlight)
-	hListViewItem.SetOnPointerPress(hListViewItem.Clicked)
+	hListViewItem.SetOnPointerClick(hListViewItem.Clicked)
 	hListViewItem.SetOnPointerDoubleClick(hListViewItem.DoubleClicked)
 	hListViewItem.SetOnPointerEnter(hListViewItem.PointerEnter)
 	hListViewItem.SetOnPointerLeave(hListViewItem.PointerLeave)
@@ -104,7 +105,7 @@ type GoListViewItemObj struct {
 	label string					// text displayed
 	level int						// tree level 0 ...
 	listView *GoListViewObj			// view to display all listViewItems
-		
+	maxlines int
 	shaper *text_gio.Shaper
 	
 	//onClick func()
@@ -121,6 +122,9 @@ func (ob *GoListViewItemObj) AddListItem(iconData []byte, labelText string) (lis
 	listItem.SetMargin(20 * listItem.level, 0, 0, 0)
 	listItem.SetIconSize(ob.iconSize)
 	listItem.SetIconColor(ob.iconColor)
+	if ob.IsExpanded() {
+		listItem.Show()
+	}
 	ob.listView.AddControl(listItem)
 	return listItem
 }
@@ -131,6 +135,9 @@ func (ob *GoListViewItemObj) InsertListItem(iconData []byte, labelText string, i
 	listItem.SetMargin(20 * listItem.level, 0, 0, 0)
 	listItem.SetIconSize(ob.iconSize)
 	listItem.SetIconColor(ob.iconColor)
+	if ob.IsExpanded() {
+		listItem.Show()
+	}
 	ob.listView.InsertControl(listItem, idx)
 	return listItem
 }
@@ -143,37 +150,13 @@ func (ob *GoListViewItemObj) RemoveListItem(item GoObject, idx int) {
 
 func (ob *GoListViewItemObj) Clicked(e pointer_gio.Event) {
 	//log.Println("GoListViewItemObj.Clicked()-len(ob.Controls):", len(ob.Parent.Objects()))
-	log.Println(ob.Text(), "Clicked()")
+	//log.Println(ob.Text(), "Clicked()")
 	switch ob.Parent.ObjectType() {
 		case "GoListViewItemObj":
 			ob.Parent.(*GoListViewItemObj).ItemClicked([]int{ob.id})
 		case "GoListViewObj":
 			ob.Parent.(*GoListViewObj).ItemClicked([]int{ob.id})
-	}
-	
-	/*if len(ob.menuItems) > 0 {
-		popupMenu := ob.ParentWindow().AddPopupMenu()
-		popupMenu.Clear()
-		popupMenu.SetMargin(0, 25, 0, 0)
-		//log.Println("modal.layout.SetMargin(ob.offset)=", ob.offset())
-		offsetX, offsetY := ob.ItemOffset(ob.menuId)
-		popupMenu.layout.SetMargin(offsetX, 25 + offsetY, 0, 0)
-		for idx := 0; idx < len(ob.menuItems); idx++ {
-			popupMenu.layout.AddControl(ob.menuItems[idx])
-		}
-	
-		popupMenu.Show()
-	} else {
-		ob.ParentWindow().ClearPopupMenus()
-		if ob.onClick != nil {
-			ob.onClick()
-		}
-	}
-	for idx := 0; idx < len(ob.ParentWindow().menuItems); idx++ {
-		for idx := 0; idx < len(ob.menuItems); idx++ {
-			ob.ParentWindow().MenuPopup(ob.id).layout.AddControl(ob.menuItems[idx])
-	}*/
-	
+	}	
 }
 
 func (ob *GoListViewItemObj) DoubleClicked(e pointer_gio.Event) {
@@ -284,6 +267,10 @@ func (ob *GoListViewItemObj) ListView() (*GoListViewObj) {
 	return ob.listView
 }
 
+func (ob *GoListViewItemObj) MaxLines() (int) {
+	return ob.maxlines
+}
+
 func (ob *GoListViewItemObj) ObjectType() (string) {
 	return "GoListViewItemObj"
 }
@@ -303,6 +290,17 @@ func (ob *GoListViewItemObj) PointerLeave(e pointer_gio.Event) {
 }
 
 func (ob *GoListViewItemObj) SetExpanded(state bool) {
+	for _, lv := range ob.Controls {
+		lvi := lv.(*GoListViewItemObj)
+		if state == true {
+			lvi.Show()
+		} else {
+			if lvi.IsExpanded() {
+				lvi.SetExpanded(false)
+			}
+			lvi.Hide()
+		}
+	}
 	ob.expanded = state
 }
 
@@ -321,6 +319,10 @@ func (ob *GoListViewItemObj) SetId(id int) {
 func (ob *GoListViewItemObj) SetHighlight() {
 	ob.SetBackgroundColor(Color_LightBlue)
 	//ob.SetBackgroundColor(ob.Highlight)
+}
+
+func (ob *GoListViewItemObj) SetMaxLines(maxlines int) {
+	ob.maxlines = maxlines
 }
 
 func (ob *GoListViewItemObj) Text() (string) {
@@ -360,7 +362,7 @@ func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dim
 			layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 				return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 					paint_gio.ColorOp{Color: ob.ForeColor.NRGBA()}.Add(gtx.Ops)
-					return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
+					return widget_int.GioLabel{MaxLines: ob.maxlines}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
 				})
 			}),
 		)
@@ -369,7 +371,7 @@ func (ob *GoListViewItemObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dim
 			layout_gio.Rigid(func(gtx layout_gio.Context) layout_gio.Dimensions {
 				return layout_gio.UniformInset(2).Layout(gtx, func(gtx layout_gio.Context) layout_gio.Dimensions {
 					paint_gio.ColorOp{Color: ob.ForeColor.NRGBA()}.Add(gtx.Ops)
-					return widget_int.GioLabel{}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
+					return widget_int.GioLabel{MaxLines: ob.maxlines}.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.label, textColor)
 				})
 			}),
 		)

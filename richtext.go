@@ -8,27 +8,22 @@ import (
 	"log"
 	"image"
 	
-	"github.com/utopiagio/gio-x/markdown"
-	"github.com/utopiagio/gio-x/richtext"
-	//f32_gio "github.com/utopiagio/gio/f32"
 	font_gio "github.com/utopiagio/gio/font"
 	layout_gio "github.com/utopiagio/gio/layout"
-	//op_gio "github.com/utopiagio/gio/op"
-	//clip_gio "github.com/utopiagio/gio/op/clip"
-	//paint_gio "github.com/utopiagio/gio/op/paint"
-	//pointer_gio "github.com/utopiagio/gio/io/pointer"
-	//semantic_gio "github.com/utopiagio/gio/io/semantic"
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
-	//widget_int "github.com/utopiagio/utopia/internal/widget"
 	"github.com/utopiagio/utopia/metrics"
-	
-	//"golang.org/x/image/math/fixed"
+
+	"github.com/utopiagio/gio-x/markdown"
+	"github.com/utopiagio/gio-x/richtext"
 )
 
 type GoRichTextObj struct {
 	GioObject
 	GioWidget
+	name string
+	title string
+	anchorTable map[string]int
 	font     font_gio.Font
 	fontSize unit_gio.Sp
 	
@@ -41,10 +36,10 @@ type GoRichTextObj struct {
 	state richtext.InteractiveText
 	shaper *text_gio.Shaper
 
-	//onFocus func()
+	onLinkClick func(string)
 }
 
-func GoRichText(parent GoObject) (hObj *GoRichTextObj) {
+func GoRichText(parent GoObject, name string) (hObj *GoRichTextObj) {
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -58,8 +53,8 @@ func GoRichText(parent GoObject) (hObj *GoRichTextObj) {
 	hRichText := &GoRichTextObj{
 		GioObject: 	object,
 		GioWidget: 	widget,
-		
-
+		name: name,
+		anchorTable: make(map[string]int),
 		selectionColor:	NRGBAColor(MulAlpha(theme.ContrastBg.NRGBA(), 0x60)),
 		selectionColorIndex: 0,
 		shaper: 	theme.Shaper,
@@ -68,9 +63,24 @@ func GoRichText(parent GoObject) (hObj *GoRichTextObj) {
 	return hRichText
 }
 
+func (ob *GoRichTextObj) AnchorTable(ref string) (offset int) {
+	return ob.anchorTable[ref]
+}
+
 func (ob *GoRichTextObj) AddContent(spans []richtext.SpanStyle) {
 	ob.spans = append(ob.spans, spans...)
 }
+
+func (ob *GoRichTextObj) Clear() {
+	ob.spans = []richtext.SpanStyle{}
+}
+
+/*func (ob *GoRichTextObj) Click(e pointer_gio.Event) {
+	log.Println("GoRichTextObj::Click(e pointer_gio.Event)")
+	if ob.onLinkClick != nil {
+		ob.onLinkClick
+	}
+}*/
 
 func (ob *GoRichTextObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
 	gtx.Constraints = ob.SetConstraints(ob.Size(), gtx.Constraints)
@@ -98,20 +108,50 @@ func (ob *GoRichTextObj) LoadMarkDown(src string) {
 	if err != nil {
 		log.Println("Render error..", err)
 	}
-	
-	/*log.Println("len.6", len(spans_richtext[0].Content))
-	for x := 0; x < len(spans_richtext[0].Content); x++ {
-		log.Printf("1 %d %c", spans_richtext[0].Content[x], rune(spans_richtext[0].Content[x]))
+	/*for x := 0; x < len(spans_richtext); x++ {
+		log.Printf("1 %f", spans_richtext[x].Content)
 	}*/
 	ob.AddContent(spans_richtext)
 }
 
 func (ob *GoRichTextObj) Layout(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
-	return richtext.Text(&ob.state, ob.shaper, ob.spans...).Layout(gtx)
+	for {
+		span, event, ok := ob.state.Update(gtx)
+		if !ok {
+			break
+		}
+		//content, _ := span.Content()
+		switch event.Type {
+		case richtext.Click:
+			//log.Println(event.ClickData.Kind)
+			if event.ClickData.Kind == 1 {	//gesture.KindClick {
+				if url, ok := span.Get(markdown.MetadataURL).(string); ok && url != "" {
+					if ob.onLinkClick != nil {
+						ob.onLinkClick(url)
+					}
+				}
+				ob.ParentWindow().Refresh()
+			}
+		}
+	}
+	ob.anchorTable, dims = richtext.Text(&ob.state, ob.shaper, ob.spans...).Layout(gtx)
+	return dims
+}
+
+func (ob *GoRichTextObj) Name() (string) {
+	return ob.name
+}
+
+func (ob *GoRichTextObj) Title() (string) {
+	return ob.title
 }
 
 func (ob *GoRichTextObj) ObjectType() (string) {
 	return "GoRichTextObj"
+}
+
+func (ob *GoRichTextObj) SetOnLinkClick(f func(string)) {
+	ob.onLinkClick = f
 }
 
 func (ob *GoRichTextObj) Widget() (*GioWidget) {

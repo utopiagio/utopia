@@ -64,7 +64,7 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 		GoSize: GoSize{0, 0, 200, 200, 16777215, 16777215, 200, 200},
 		FocusPolicy: StrongFocus,
 		Visible: true,
-		keys: "←|→|↑|↓|⏎|⌤|⎋|⇱|⇲|⌫|⌦|⇞|⇟",
+		keys: []event_gio.Filter{},
 		//target: nil,
 	}
 	hTextEdit := &GoTextEditObj{
@@ -86,6 +86,32 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 	hTextEdit.SetOnPointerDrag(hTextEdit.PointerDragged)
 	hTextEdit.SetOnPointerPress(hTextEdit.PointerPressed)
 	hTextEdit.SetOnPointerRelease(hTextEdit.PointerReleased)
+	w := &widget
+	ctlKeys := []event_gio.Filter{
+		key_gio.FocusFilter{Target: w},
+		//transfer.TargetFilter{Target: w, Type: "application/text"},
+		key_gio.Filter{Focus: w, Name: key_gio.NameEnter, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NameReturn, Optional: key_gio.ModShift},
+
+		key_gio.Filter{Focus: w, Name: "Z", Required: key_gio.ModShortcut, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: "C", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w, Name: "V", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w, Name: "X", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w, Name: "A", Required: key_gio.ModShortcut},
+
+		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteBackward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteForward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+
+		key_gio.Filter{Focus: w, Name: key_gio.NameHome, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NameEnd, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NamePageDown, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w, Name: key_gio.NamePageUp, Optional: key_gio.ModShift},
+		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameLeftArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameUpArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameRightArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameDownArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+	}
+	hTextEdit.SetKeys(ctlKeys)
 	parent.AddControl(hTextEdit)
 	return hTextEdit
 }
@@ -228,6 +254,10 @@ func (ob *GoTextEditObj) SetFontWeight(weight GoFontWeight) {
 	ob.font.Weight = font_gio.Weight(int(weight))
 }
 
+func (ob *GoTextEditObj) SetKeys(ctlKeys []event_gio.Filter) {
+	ob.keys = ctlKeys
+}
+
 func (ob *GoTextEditObj) SelectedText() (text string) {
 	return ob.editor.SelectedText()
 }
@@ -268,32 +298,8 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 
 func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
 	//log.Println("*GoTextEditObj::layout()")
-	w := &ob.GioWidget
-	keys := []event_gio.Filter{
-		key_gio.FocusFilter{Target: w},
-		//transfer.TargetFilter{Target: w, Type: "application/text"},
-		key_gio.Filter{Focus: w, Name: key_gio.NameEnter, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NameReturn, Optional: key_gio.ModShift},
-
-		key_gio.Filter{Focus: w, Name: "Z", Required: key_gio.ModShortcut, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: "C", Required: key_gio.ModShortcut},
-		key_gio.Filter{Focus: w, Name: "V", Required: key_gio.ModShortcut},
-		key_gio.Filter{Focus: w, Name: "X", Required: key_gio.ModShortcut},
-		key_gio.Filter{Focus: w, Name: "A", Required: key_gio.ModShortcut},
-
-		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteBackward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteForward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-
-		key_gio.Filter{Focus: w, Name: key_gio.NameHome, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NameEnd, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NamePageDown, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NamePageUp, Optional: key_gio.ModShift},
-		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameLeftArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameUpArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameRightArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameDownArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-	}
-	ob.ReceiveEvents(gtx, keys)
+	
+	ob.ReceiveEvents(gtx, ob.keys)
 
 
 	/* *** create hint label macro

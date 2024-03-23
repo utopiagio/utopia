@@ -21,10 +21,10 @@ github.com/phin1x/go-ipp v1.6.1/go.mod h1:GZwyNds6grdLi2xRBX22Cvt7Dh7ITWsML0bjrq
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
-github.com/utopiagio/gio v0.0.4 h1:+gjwdXHLzJlDQCCKVwr9ze8Jkz+UzidIaBxXrXlSYgM=
-github.com/utopiagio/gio v0.0.4/go.mod h1:UOiozz9wQ+rsrOE04R9couGVpz/2VhVoXYjEbPAjIRc=
-github.com/utopiagio/gio-x v0.0.1 h1:qM8NPU8MVPqYRceqRa2fuHaE2oldX0kgdcxgIFRRsx4=
-github.com/utopiagio/gio-x v0.0.1/go.mod h1:CQgj6e34caUe7TzdEfRT8i5trJNcwRO1p0QG7IIxXPM=
+github.com/utopiagio/gio v0.0.5 h1:5S51PHPvTQoPldcaxjW1gMHvZzfCrPNB2Nhwr7R7wLU=
+github.com/utopiagio/gio v0.0.5/go.mod h1:UOiozz9wQ+rsrOE04R9couGVpz/2VhVoXYjEbPAjIRc=
+github.com/utopiagio/gio-x v0.0.2 h1:Nip8ok2//OXnE0fSydBgwap/T/LLjNP6t8V6lSdKAYs=
+github.com/utopiagio/gio-x v0.0.2/go.mod h1:cx7P3D/FcfYfjcwcqlHJLH3F+BVA3Lbqxqr4FjMoF34=
 github.com/yuin/goldmark v1.4.13 h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.design/x/clipboard v0.7.0 h1:4Je8M/ys9AJumVnl8m+rZnIvstSnYj1fvzqYrU3TXvo=

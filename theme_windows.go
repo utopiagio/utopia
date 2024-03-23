@@ -49,34 +49,47 @@ type GoPalette struct {
 	//HighlightText 	GoColor 	// COLOR_HIGHLIGHTTEXT Foreground color for slected button text.
 	//Hotlight 		GoColor 	// COLOR_HOTLIGHT Hyperlink color.
 
-	// BackColor is the background color atop which content is currently being
-	// drawn.
+	// BackColor is the background color atop which content is currently being drawn.
+	// Same as BackColor
 	ColorBg GoColor
 
 	// ForeColor is a color suitable for drawing on top of Bg.
+	// Same as ForeColor
 	ColorFg GoColor
 
 	// ContrastBg is a color used to draw attention to active,
 	// important, interactive widgets such as buttons.
+	// Same as HighlightColor
 	ContrastBg GoColor
 
-	// ContrastFg is a color suitable for content drawn on top of
-	// ContrastBg.
+	// ContrastFg is a color suitable for content drawn on top of ContrastBg
+	// Same as HighlightText
 	ContrastFg GoColor
 
 	// Provisional colors corresponding to Windows 10 Color Scheme
-	TextColor GoColor
 
+	// BackColor is the background color selected to contrast TextColor and ForeColor.
 	BackColor GoColor
 
+	// ForeColor is a color suitable for drawing text on top of BackColor.
+	ForeColor GoColor
+
+	// FaceColor is a color suitable for drawing such items as buttons on top of BackColor.
 	FaceColor GoColor
 
+	// TextColor is color suitable for drawing text on top of FaceColor on items such as buttons.
+	TextColor GoColor
+
+	// GrayText is a color suitable for drawing text of disabled controls.
 	GrayText GoColor
 
+	// HighLight is a color suitable for highlighting hovered controls.
 	Highlight GoColor
 
+	// HighLightText is a color suitable for drawing text of hovered controls.
 	HighlightText GoColor
 
+	// Hotlight is a color suitable to draw window borders.
 	Hotlight GoColor
 }
 

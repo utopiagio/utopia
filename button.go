@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	//"log"
+	_ "log"
 	"image"
 	"image/color"
 	"math"
@@ -71,10 +71,10 @@ func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 	hButton.SetOnKeyPress(nil)
 	hButton.SetOnKeyRelease(nil)
 	hButton.SetOnKeyEdit(nil)
-	hButton.SetOnPointerPress(hButton.Click)
-	//hButton.SetOnPointerRelease(nil)
+	hButton.SetOnPointerPress(nil)
+	hButton.SetOnPointerRelease(hButton.click)
 	//hButton.SetOnPointerMove(nil)
-	//hButton.SetOnPointerClick(hButton.Click)
+	//hButton.SetOnPointerClick(nil)
 	hButton.SetOnPointerEnter(nil)
 	hButton.SetOnPointerLeave(nil)
 	parent.AddControl(hButton)
@@ -97,7 +97,7 @@ type GoButtonObj struct {
 	//textAlign text.Alignment
 }
 
-func (ob *GoButtonObj) Click(e pointer_gio.Event) {
+func (ob *GoButtonObj) click(e pointer_gio.Event) {
 	if ob.onClick != nil {
 		ob.onClick()
 	}
@@ -187,6 +187,7 @@ func (ob *GoButtonObj) layout(gtx layout_gio.Context, w layout_gio.Widget) layou
 				drawInk(gtx, c)
 			}*/
 			ob.SignalEvents(gtx)
+
 			return layout_gio.Dimensions{Size: gtx.Constraints.Min}
 		}),
 		layout_gio.Stacked(func(gtx layout_gio.Context) layout_gio.Dimensions {

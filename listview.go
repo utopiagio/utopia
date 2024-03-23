@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 	"math"
 
@@ -86,6 +86,7 @@ func (ob *GoListViewObj) AddListItem(iconData []byte, labelText string) (listIte
 	listItem = GoListViewItem(ob, iconData, labelText, 0, len(ob.Controls))
 	listItem.SetIconSize(ob.itemSize)
 	listItem.SetIconColor(ob.itemColor)
+	listItem.Show()
 	ob.AddControl(listItem)
 	return listItem
 }
@@ -99,6 +100,7 @@ func (ob *GoListViewObj) InsertListItem(iconData []byte, labelText string, idx i
 	listItem = GoListViewItem(ob, iconData, labelText, 0, len(ob.Controls))
 	listItem.SetIconSize(ob.itemSize)
 	listItem.SetIconColor(ob.itemColor)
+	listItem.Show()
 	ob.InsertControl(listItem, idx)
 	return listItem
 }
@@ -118,25 +120,49 @@ func (ob *GoListViewObj) Item(nodeId []int) (*GoListViewItemObj) {
 	return listViewItem
 }
 
+func (ob *GoListViewObj) ItemByLabel(nodeLabel []string) (*GoListViewItemObj) {
+	var listViewItem  *GoListViewItemObj
+	for id, it := range(ob.Objects()) {
+		if it.(*GoListViewItemObj).Text() == nodeLabel[0] {
+			listViewItem = ob.Objects()[id].(*GoListViewItemObj)
+		}
+	}
+	for level := 1; level < len(nodeLabel); level++ {
+		for id, it := range(listViewItem.Objects()) {
+			if it.(*GoListViewItemObj).Text() == nodeLabel[level] {
+				listViewItem = listViewItem.Objects()[id].(*GoListViewItemObj)
+			}
+		}
+	}
+	return listViewItem
+}
+
 /*func (ob *GoListViewObj) Item(id int) (*GoListViewItemObj) {
 	//return ob.itemList[id]
 	return ob.Objects()[id].(*GoListViewItemObj)
 }*/
 
 func (ob *GoListViewObj) ItemClicked(nodeId []int) {
-	//log.Println("GoListViewObj) ItemClicked()............")
 	ob.switchFocus(ob.Item(nodeId))
 	if ob.onItemClicked != nil {
 		ob.onItemClicked(nodeId)
 	}
+	ob.ParentWindow().Refresh()
 }
 
 func (ob *GoListViewObj) ItemDoubleClicked(nodeId []int) {
 	//log.Println("GoListViewObj) ItemDoubleClicked()............")
-	ob.switchFocus(ob.Item(nodeId))
+	lvi := ob.Item(nodeId)
+	if lvi.IsExpanded() {
+		lvi.SetExpanded(false)
+	} else {
+		lvi.SetExpanded(true)
+	}
+	ob.switchFocus(lvi)
 	if ob.onItemDoubleClicked != nil {
 		ob.onItemDoubleClicked(nodeId)
 	}
+	ob.ParentWindow().Refresh()
 }
 
 func (ob *GoListViewObj) RemoveListItem(item GoObject) {
@@ -150,6 +176,12 @@ func (ob *GoListViewObj) ObjectType() (string) {
 
 func (ob *GoListViewObj) Widget() (*GioWidget) {
 	return &ob.GioWidget
+}
+
+func (ob *GoListViewObj) SwitchFocus(item *GoListViewItemObj) {
+	if item != nil {
+		ob.switchFocus(item)
+	}
 }
 
 func (ob *GoListViewObj) SetLayoutMode(mode GoLayoutDirection) {
@@ -300,11 +332,10 @@ func (ob *GoListViewObj) fromListPosition(lp layout_gio.Position, elements int, 
 }
 
 func (ob *GoListViewObj) switchFocus(listViewItem *GoListViewItemObj) {
-	log.Println("GoListViewObj::switchFocus()")
 
 	if ob.currentItem != nil {
-		log.Println("ob.currentItem.SetSelected(false)")
-		log.Println("ob.currentItem -", ob.currentItem.Text())
+		//log.Println("ob.currentItem.SetSelected(false)")
+		//log.Println("ob.currentItem -", ob.currentItem.Text())
 		ob.currentItem.SetSelected(false)
 		ob.currentItem.ClearHighlight()
 	}	
@@ -314,7 +345,9 @@ func (ob *GoListViewObj) switchFocus(listViewItem *GoListViewItemObj) {
 			ob.currentItem.SetSelected(true)
 		}
 	}*/
-	listViewItem.SetSelected(true)
-	listViewItem.SetHighlight()
-	ob.currentItem = listViewItem
+	if listViewItem != nil {
+		listViewItem.SetSelected(true)
+		listViewItem.SetHighlight()
+		ob.currentItem = listViewItem
+	}
 }

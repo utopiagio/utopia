@@ -117,6 +117,34 @@ func (ob *GoPopupWindowObj) ObjectType() (string) {
 	}
 }*/
 
+func (ob *GoPopupWindowObj)SetLayoutStyle(style GoLayoutStyle) {
+	ob.DeleteControl(ob.layout)
+	switch style {
+	case NoLayout:
+		ob.layout = nil
+	case HBoxLayout:
+		ob.layout = GoHBoxLayout(ob)
+	case VBoxLayout:
+		ob.layout = GoVBoxLayout(ob)	
+	case HVBoxLayout:
+		// Not Implemented *******************
+	case HFlexBoxLayout:
+		ob.layout = GoHFlexBoxLayout(ob)	
+	case VFlexBoxLayout:						
+		ob.layout = GoVFlexBoxLayout(ob)	
+	case PopupMenuLayout:
+		// Not Implemented *******************
+	}
+}
+
+func (ob *GoPopupWindowObj) SetSize(width int, height int) {
+	ob.Width = width
+	ob.Height = height
+	if ob.Visible {
+		ob.ParentWindow().Refresh()
+	}
+}
+
 func (ob *GoPopupWindowObj) Show() {
 	ob.GioWidget.Show()
 	ob.ParentWindow().Refresh()

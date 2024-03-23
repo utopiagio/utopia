@@ -420,7 +420,9 @@ func (ob *GoLabelObj) LayoutDetailed(gtx layout_gio.Context, lt *text_gio.Shaper
 	clipStack := clip_gio.Rect(viewport).Push(gtx.Ops)
 	call.Add(gtx.Ops)
 	dims = layout_gio.Dimensions{Size: it.bounds.Size()}
+	//log.Println("Label.it.Bounds.Size.Y =", dims.Size.Y)
 	dims.Size = cs.Constrain(dims.Size)
+	//log.Println("Label.Constrain.Size.Y =", dims.Size.Y)
 	dims.Baseline = dims.Size.Y - it.baseline
 	clipStack.Pop()
 	return dims, TextInfo{Truncated: it.truncated}
@@ -504,6 +506,7 @@ func H3Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
 	}
+	hLabel.font.Weight = font_gio.Medium
 	parent.AddControl(hLabel)
 	return hLabel
 }
@@ -528,6 +531,7 @@ func H4Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
 	}
+	hLabel.font.Weight = font_gio.Medium
 	parent.AddControl(hLabel)
 	return hLabel
 }
@@ -552,6 +556,7 @@ func H5Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		selectionColor:	theme.ContrastBg,
 		shaper: 	theme.Shaper,
 	}
+	hLabel.font.Weight = font_gio.Medium
 	parent.AddControl(hLabel)
 	return hLabel
 }

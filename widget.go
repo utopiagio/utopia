@@ -21,8 +21,8 @@ import (
 )
 
 // The duration is somewhat arbitrary.
-const clickDuration = 300 * time.Millisecond
-const doubleClickDuration = 400 * time.Millisecond
+const clickDuration = 200 * time.Millisecond
+const doubleClickDuration = 300 * time.Millisecond
 
 type GoFocusPolicy int
 
@@ -336,7 +336,7 @@ type GioWidget struct {
 	onClearFocus func()
 	onSetFocus func()
 
-	keys string
+	
 	onKeyEdit func(e key_gio.EditEvent)
 	onKeyPress func(e key_gio.Event)
 	onKeyRelease func(e key_gio.Event)
@@ -351,6 +351,7 @@ type GioWidget struct {
 	onPointerPress func(e pointer_gio.Event)
 	onPointerRelease func(e pointer_gio.Event)
 
+	keys []event_gio.Filter
 	events pointer_gio.Kind
 	clicks int
 	clickEvent pointer_gio.Event
@@ -678,11 +679,11 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio
 							gtx.Execute(key_gio.FocusCmd{Tag: w})
 							w.SetFocus()
 					}
+					//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
 					if w.clickEvent.Time == 0 {
 						w.clickEvent = ev
 						//log.Println("w.onPointerPress()")
 						if w.onPointerPress != nil {
-							//log.Println("w.onPointerPress() != nil")
 							w.onPointerPress(ev)
 						}
 					} else {
@@ -700,7 +701,6 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio
 					//log.Println("clickDuration: ", uint(clickDuration))
 					//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
 
-					//log.Println("Duration: ", uint(e.Time - w.clickEvent.Time))
 					if ev.Time - w.clickEvent.Time < clickDuration {
 						//log.Println("MouseClick:")
 						// call go routine

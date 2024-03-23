@@ -331,6 +331,28 @@ type GoLayoutObj struct {
 	flexControls 	[]layout_gio.FlexChild
 }
 
+// ScrollBy scrolls the list by a relative amount of items.
+// Fractional scrolling may be inaccurate for items of differing
+// dimensions. This includes scrolling by integer amounts if the current
+// l.Position.Offset is non-zero.
+func (ob *GoLayoutObj) ScrollBy(num float32) {	// num listItem.offset:dx
+	if ob.style == HBoxLayout || ob.style == VBoxLayout {
+		ob.list_gio.ScrollBy(num)
+	}
+}
+
+func (ob *GoLayoutObj) ScrollToOffset(dx int) {		// dx offset - pixels
+	if ob.style == HBoxLayout || ob.style == VBoxLayout {
+		ob.list_gio.ScrollToOffset(dx)
+	}
+}
+
+func (ob *GoLayoutObj) ScrollTo(num int) {			// num - listItem
+	if ob.style == HBoxLayout || ob.style == VBoxLayout {
+		ob.list_gio.ScrollTo(num)
+	}
+}
+
 func (ob *GoLayoutObj) SetAlignment(alignment GoLayoutAlignment) {
 	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
 		ob.flex_gio.Alignment = layout_gio.Alignment(uint8(alignment))	// layout_gio.Alignment
@@ -371,6 +393,7 @@ func (ob *GoLayoutObj) addRigidControl(control GoObject) {
 }
 
 func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions) {
+	//log.Println("GoLayoutObj::Draw()")
 	gtx.Constraints = ob.SetConstraints(ob.Size(), gtx.Constraints)
 	dims = layout_gio.Dimensions {Size: image.Point{X: 0, Y: 0,}}
 	if ob.Visible {
@@ -379,10 +402,15 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 			dims = ob.GoMargin.Layout(gtx, func(gtx C) D {
 				borderDims := ob.GoBorder.Layout(gtx, func(gtx C) D {
 					paddingDims := ob.GoPadding.Layout(gtx, func(gtx C) D {
-						layoutDims := ob.Layout(gtx, len(ob.Controls), func(gtx C, i int) D {
-							//log.Println("Layout Control idx: ", i)
+						layoutDims := ob.Layout(gtx, len(ob.Controls), func(gtx C, i int) D {	
 							return ob.Controls[i].Draw(gtx)
 						})
+						//log.Println("Layout BeforeEnd", ob.list_gio.Position.BeforeEnd)
+						//log.Println("Layout First", ob.list_gio.Position.First)
+						//log.Println("Layout Offset", ob.list_gio.Position.Offset)
+						//log.Println("Layout OffsetLast", ob.list_gio.Position.OffsetLast)
+						//log.Println("Layout Count", ob.list_gio.Position.Count)
+						//log.Println("Layout Length", ob.list_gio.Position.Length)
 						//log.Println("Layout LayoutDims: ", layoutDims)
 						return layoutDims
 					})
@@ -433,6 +461,7 @@ func (ob *GoLayoutObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimensions)
 
 // layout the list and its scrollbar.
 func (ob *GoLayoutObj) Layout(gtx layout_gio.Context, length int, w layout_gio.ListElement) layout_gio.Dimensions {
+	//log.Println("GoLayoutObj::Layout()")
 	originalConstraints := gtx.Constraints
 
 	// Determine how much space the scrollbar occupies.
@@ -516,7 +545,7 @@ func (ob *GoLayoutObj) Widget() (*GioWidget) {
 // the number of elements in the list and the major-axis size of the list
 // in order to do this. The returned values will be in the range [0,1], and
 // start will be less than or equal to end.
-func (ob *GoLayoutObj) fromListPosition(lp layout_gio.Position, elements int, majorAxisSize int) (start, end float32) {
+/*func (ob *GoLayoutObj) fromListPosition(lp layout_gio.Position, elements int, majorAxisSize int) (start, end float32) {
 	// Approximate the size of the scrollable content.
 	lengthPx := float32(lp.Length)
 	meanElementHeight := lengthPx / float32(elements)
@@ -530,7 +559,50 @@ func (ob *GoLayoutObj) fromListPosition(lp layout_gio.Position, elements int, ma
 	viewportStart := (float32(lp.First)*meanElementHeight + listOffsetF) / lengthPx
 
 	return viewportStart, clamp1(viewportStart + visibleFraction)
+}*/
+
+// fromListPosition converts a layout.Position into two floats representing
+// the location of the viewport on the underlying content. It needs to know
+// the number of elements in the list and the major-axis size of the list
+// in order to do this. The returned values will be in the range [0,1], and
+// start will be less than or equal to end.
+func (ob *GoLayoutObj) fromListPosition(lp layout_gio.Position, elements int, majorAxisSize int) (start, end float32) {
+	// Approximate the size of the scrollable content.
+	lengthEstPx := float32(lp.Length)
+	elementLenEstPx := lengthEstPx / float32(elements)
+
+	// Determine how much of the content is visible.
+	listOffsetF := float32(lp.Offset)
+	listOffsetL := float32(lp.OffsetLast)
+
+	// Compute the location of the beginning of the viewport using estimated element size and known
+	// pixel offsets.
+	viewportStart := clamp1((float32(lp.First)*elementLenEstPx + listOffsetF) / lengthEstPx)
+	viewportEnd := clamp1((float32(lp.First+lp.Count)*elementLenEstPx + listOffsetL) / lengthEstPx)
+	viewportFraction := viewportEnd - viewportStart
+
+	// Compute the expected visible proportion of the list content based solely on the ratio
+	// of the visible size and the estimated total size.
+	visiblePx := float32(majorAxisSize)
+	visibleFraction := visiblePx / lengthEstPx
+
+	// Compute the error between the two methods of determining the viewport and diffuse the
+	// error on either end of the viewport based on how close we are to each end.
+	err := visibleFraction - viewportFraction
+	adjStart := viewportStart
+	adjEnd := viewportEnd
+	if viewportFraction < 1 {
+		startShare := viewportStart / (1 - viewportFraction)
+		endShare := (1 - viewportEnd) / (1 - viewportFraction)
+		startErr := startShare * err
+		endErr := endShare * err
+
+		adjStart -= startErr
+		adjEnd += endErr
+	}
+	return adjStart, adjEnd
 }
+
 
 func (ob *GoLayoutObj) repack(gtx layout_gio.Context) {
 	if ob.style == HFlexBoxLayout || ob.style == VFlexBoxLayout {
