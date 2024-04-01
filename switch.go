@@ -43,11 +43,13 @@ func GoSwitch(parent GoObject, description string) *GoSwitchObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	//var swtch *widget_gio.Bool = new(widget_gio.Bool)
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hSwitch := &GoSwitchObj{
 		GioObject: object,

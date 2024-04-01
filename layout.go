@@ -102,6 +102,7 @@ func GoBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 	state := &widget_gio.List{}
 	state.Axis = axis
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -109,6 +110,7 @@ func GoBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	scrollbar := GoScrollbar{
 		Scrollbar: &state.Scrollbar,
@@ -146,6 +148,7 @@ func GoHBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	state := &widget_gio.List{}
 	state.Axis = layout_gio.Horizontal
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -153,6 +156,7 @@ func GoHBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	scrollbar := GoScrollbar{
 		Scrollbar: &state.Scrollbar,
@@ -191,6 +195,7 @@ func GoVBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	state := &widget_gio.List{}
 	state.Axis = layout_gio.Vertical
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -198,6 +203,7 @@ func GoVBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	scrollbar := GoScrollbar{
 		Scrollbar: &state.Scrollbar,
@@ -238,6 +244,7 @@ func GoFlexBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 			axis = layout_gio.Vertical
 	}
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -245,6 +252,7 @@ func GoFlexBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLayout := &GoLayoutObj{
 		GioObject: object,
@@ -259,6 +267,7 @@ func GoFlexBoxLayout(parent GoObject, style GoLayoutStyle) (hObj *GoLayoutObj) {
 
 func GoHFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -266,6 +275,7 @@ func GoHFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLayout := &GoLayoutObj{
 		GioObject: object,
@@ -280,6 +290,7 @@ func GoHFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 
 func GoVFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -287,6 +298,7 @@ func GoVFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLayout := &GoLayoutObj{
 		GioObject: object,
@@ -301,6 +313,7 @@ func GoVFlexBoxLayout(parent GoObject) (hObj *GoLayoutObj) {
 
 func GoPopupMenuLayout(parent GoObject) (hObj *GoLayoutObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -308,6 +321,7 @@ func GoPopupMenuLayout(parent GoObject) (hObj *GoLayoutObj) {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLayout := &GoLayoutObj{
 		GioObject: object,

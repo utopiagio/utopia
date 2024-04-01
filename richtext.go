@@ -26,7 +26,8 @@ type GoRichTextObj struct {
 	anchorTable map[string]int
 	font     font_gio.Font
 	fontSize unit_gio.Sp
-	
+	fontColor GoColor
+
 	spans []richtext.SpanStyle
 	
 	// SelectionColor is the color of the background for selected text.
@@ -42,6 +43,7 @@ type GoRichTextObj struct {
 func GoRichText(parent GoObject, name string) (hObj *GoRichTextObj) {
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -49,12 +51,22 @@ func GoRichText(parent GoObject, name string) (hObj *GoRichTextObj) {
 		GoSize: GoSize{0, 0, 300, 26, 16777215, 16777215, 300, 26},
 		FocusPolicy: StrongFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
+	currentFont := font_gio.Font{
+			Typeface: "monospace",
+			Weight:   font_gio.Normal,
+			Style:    font_gio.Regular,
+		}
 	hRichText := &GoRichTextObj{
 		GioObject: 	object,
 		GioWidget: 	widget,
 		name: name,
 		anchorTable: make(map[string]int),
+		font: currentFont,
+		fontSize: 14,
+		fontColor: theme.ColorFg,
+
 		selectionColor:	NRGBAColor(MulAlpha(theme.ContrastBg.NRGBA(), 0x60)),
 		selectionColorIndex: 0,
 		shaper: 	theme.Shaper,
@@ -65,6 +77,16 @@ func GoRichText(parent GoObject, name string) (hObj *GoRichTextObj) {
 
 func (ob *GoRichTextObj) AnchorTable(ref string) (offset int) {
 	return ob.anchorTable[ref]
+}
+
+func (ob *GoRichTextObj) AddSpan(text string) {
+	span := richtext.SpanStyle{
+		Font: ob.font,
+		Size: ob.fontSize,
+		Color: ob.fontColor.NRGBA(),
+		Content: text,
+	}
+	ob.spans = append(ob.spans, span)
 }
 
 func (ob *GoRichTextObj) AddContent(spans []richtext.SpanStyle) {
@@ -98,6 +120,17 @@ func (ob *GoRichTextObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 		ob.AbsHeight = metrics.PxToDp(GoDpr, dims.Size.Y)
 	}
 	return dims
+}
+
+func (ob *GoRichTextObj) Font() font_gio.Font {
+	return ob.font
+}
+
+func (ob *GoRichTextObj) FontBold() bool {
+	if ob.font.Weight == 300 {
+		return true
+	}
+	return false
 }
 
 func (ob *GoRichTextObj) LoadMarkDown(src string) {
@@ -148,6 +181,30 @@ func (ob *GoRichTextObj) Title() (string) {
 
 func (ob *GoRichTextObj) ObjectType() (string) {
 	return "GoRichTextObj"
+}
+
+func (ob *GoRichTextObj) SetFont(typeface string, style GoFontStyle, weight GoFontWeight) {
+	ob.font = font_gio.Font{font_gio.Typeface(typeface), font_gio.Style(int(style)), font_gio.Weight(int(weight))}
+}
+
+func (ob *GoRichTextObj) SetFontBold(bold bool) {
+	if bold {
+		ob.font.Weight = font_gio.Bold
+	} else {
+		ob.font.Weight = font_gio.Light
+	}
+}
+
+func (ob *GoRichTextObj) SetFontColor(color GoColor) {
+	ob.fontColor = color
+}
+
+func (ob *GoRichTextObj) SetFontSize(size int) {
+	ob.fontSize = unit_gio.Sp(size)
+}
+
+func (ob *GoRichTextObj) SetFontWeight(weight GoFontWeight) {
+	ob.font.Weight = font_gio.Weight(int(weight))
 }
 
 func (ob *GoRichTextObj) SetOnLinkClick(f func(string)) {

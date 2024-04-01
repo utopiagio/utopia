@@ -35,12 +35,14 @@ func GoRadioButton(parent GoObject, group *GoButtonGroupObj, key, label string) 
 	}
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 200, 26, 16777215, 16777215, 200, 26},
 		Visible: true,
+		tag: tagCounter,
 	}
 	checkable := &widget_int.GioCheckable{
 		Label: 				label,
@@ -63,11 +65,11 @@ func GoRadioButton(parent GoObject, group *GoButtonGroupObj, key, label string) 
 	return hRadioButton
 }
 
-func (ob *GoRadioButtonObj) Selected() (bool) {
+func (ob *GoRadioButtonObj) Selected() (selected bool) {
 	return ob.selected
 }
 
-func (ob *GoRadioButtonObj) Focused() (bool) {
+func (ob *GoRadioButtonObj) Focused() (focused bool) {
 	key, focused := ob.Group.Focused()
 	if focused {
 		if key == ob.Key {
@@ -77,7 +79,7 @@ func (ob *GoRadioButtonObj) Focused() (bool) {
 	return false
 }
 
-func (ob *GoRadioButtonObj) Hovered() (bool) {
+func (ob *GoRadioButtonObj) Hovered() (hovered bool) {
 	key, hovered := ob.Group.Hovered()
 	if hovered {
 		if key == ob.Key {
@@ -99,7 +101,7 @@ func (ob *GoRadioButtonObj) SetOnHover(f func(string)) {
 	ob.onHover = f
 }
 
-func (ob *GoRadioButtonObj) State() (bool) {
+func (ob *GoRadioButtonObj) State() (state bool) {
 	return ob.Group.Value() == ob.Key
 }
 

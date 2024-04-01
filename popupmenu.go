@@ -18,6 +18,7 @@ import (
 
 func GoPopupMenu(parent GoObject) (hPopupMenu *GoPopupMenuObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -25,6 +26,7 @@ func GoPopupMenu(parent GoObject) (hPopupMenu *GoPopupMenuObj) {
 		GoSize: GoSize{0, 0, 100, 100, 1000, 1000, 100, 100},
 		FocusPolicy: StrongFocus,
 		Visible: false,
+		tag: tagCounter,
 	}
 	hPopupMenu = &GoPopupMenuObj{GioObject: object, GioWidget: widget, alpha: 90}
 	hPopupMenu.layout = GoPopupMenuLayout(hPopupMenu)

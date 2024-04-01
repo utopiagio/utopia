@@ -25,12 +25,14 @@ func GoSlider(parent GoObject, min int, max int) *GoSliderObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	var gioFloat *widget_int.GioFloat = new(widget_int.GioFloat)
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{4,4,4,4},
 		GoSize: GoSize{0, 0, 200, 20, 16777215, 16777215, 200, 20},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hSlider := &GoSliderObj{
 		GioObject: object,

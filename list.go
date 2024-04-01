@@ -32,6 +32,7 @@ func GoListBox(parent GoObject) *GoListBoxObj {
 	darkFg.A = 200
 	state := &widget_gio.List{}
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -39,6 +40,7 @@ func GoListBox(parent GoObject) *GoListBoxObj {
 		GoSize: GoSize{0, 0, 300, 300, 16777215, 16777215, 300, 300},
 		Visible: true,
 		//target: nil,
+		tag: tagCounter,
 	}
 	scrollbar := GoScrollbar{
 		Scrollbar: &state.Scrollbar,

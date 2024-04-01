@@ -17,6 +17,7 @@ import (
 )
 
 func GoEventMask(parent GoObject) (hEventMask *GoEventMaskObj) {
+	tagCounter++
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -25,6 +26,7 @@ func GoEventMask(parent GoObject) (hEventMask *GoEventMaskObj) {
 		GoSize: GoSize{0, 0, 100, 100, 1000, 1000, 100, 100},
 		FocusPolicy: StrongFocus,
 		Visible: false,
+		tag: tagCounter,
 	}
 	hEventMask = &GoEventMaskObj{GioObject: object, GioWidget: widget, alpha: 90}
 	hEventMask.SetOnPointerClick(nil)

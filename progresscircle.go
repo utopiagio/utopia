@@ -29,12 +29,14 @@ type GoProgressCircleObj struct {
 func GoProgressCircle(parent GoObject, totalSteps int) *GoProgressCircleObj {
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		Visible: true,
 		//target: nil,
+		tag: tagCounter,
 	}
 	hProgress :=  &GoProgressCircleObj{
 		GioObject: object,

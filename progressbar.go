@@ -30,6 +30,7 @@ type GoProgressBarObj struct {
 func GoProgressBar(parent GoObject, totalSteps int) *GoProgressBarObj {
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -37,6 +38,7 @@ func GoProgressBar(parent GoObject, totalSteps int) *GoProgressBarObj {
 		GoSize: GoSize{0, 0, 100, 20, 16777215, 16777215, 100, 20},
 		Visible: true,
 		//target: nil,
+		tag: tagCounter,
 	}
 	hProgress :=  &GoProgressBarObj{
 		GioObject: object,

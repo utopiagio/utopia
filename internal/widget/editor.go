@@ -8,7 +8,7 @@ import (
 	"bufio"
 	"image"
 	"io"
-	_ "log"
+	//"log"
 	"math"
 	"strings"
 	"time"
@@ -374,6 +374,7 @@ func (e *GioEditor) PointerDragged(evt pointer_gio.Event) {
 }*/
 
 func (e *GioEditor) ProcessKey(evt key_gio.Event) {
+	//log.Println("GioEditor::ProcessKey()")
 	e.blinkRefresh = true
 	direction := 1
 	moveByWord := evt.Modifiers.Contain(key_gio.ModShortcutAlt)

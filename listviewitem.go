@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	//"log"
+	"log"
 	"image"
 	"image/draw"
 	//"math"
@@ -47,6 +47,7 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 	}
 	
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, PreferredHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -55,6 +56,7 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 		FocusPolicy: StrongFocus,
 		Visible: false,
 		ForeColor: theme.ColorFg,
+		tag: tagCounter,
 	}
 	
 	hListViewItem := &GoListViewItemObj{
@@ -290,6 +292,7 @@ func (ob *GoListViewItemObj) PointerLeave(e pointer_gio.Event) {
 }
 
 func (ob *GoListViewItemObj) SetExpanded(state bool) {
+	log.Println("GoListViewItemObj::SetExpanded(", state, ")")
 	for _, lv := range ob.Controls {
 		lvi := lv.(*GoListViewItemObj)
 		if state == true {

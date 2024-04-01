@@ -62,7 +62,7 @@ func GoIconLabel(parent GoObject, data []byte, args ...interface{}) (*GoIconLabe
 	if err != nil {
 		return nil
 	}
-
+	tagCounter++
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -73,7 +73,7 @@ func GoIconLabel(parent GoObject, data []byte, args ...interface{}) (*GoIconLabe
 		Visible: true,
 
 		ForeColor: theme.ColorFg,
-		
+		tag: tagCounter,
 		//target: nil,
 	}
 	

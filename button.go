@@ -42,9 +42,9 @@ import (
 }*/
 
 func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
-	//var fontSize unit_gio.Sp = 14
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -52,6 +52,7 @@ func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 		GoSize: GoSize{0, 0, 200, 36, 16777215, 16777215, 200, 36},
 		FocusPolicy: StrongFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hButton := &GoButtonObj{
 		GioObject: object,
@@ -218,12 +219,14 @@ type GoIconButtonObj struct {
 func GoIconVGButton(parent GoObject, icon *GoIconVGObj) *GoIconButtonObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 30, 30, 16777215, 16777215, 30, 30},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hIconButton := &GoIconButtonObj{
 		GioObject: object,
@@ -246,12 +249,14 @@ func GoIconVGButton(parent GoObject, icon *GoIconVGObj) *GoIconButtonObj {
 func GoIconPNGButton(parent GoObject, icon *GoIconPNGObj) *GoIconButtonObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 24, 24, 16777215, 16777215, 24, 24},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hIconButton := &GoIconButtonObj{
 		GioObject: object,

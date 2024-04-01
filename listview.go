@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	//"log"
+	"log"
 	"image"
 	"math"
 
@@ -34,7 +34,7 @@ type GoListViewObj struct {
 }
 
 // List constructs a ListStyle using the provided theme and state.
-func GoListView(parent GoObject) *GoListViewObj {
+func GoListView(parent GoObject) (hObj *GoListViewObj) {
 	theme := GoApp.Theme()
 	lightFg := theme.ColorFg.NRGBA()
 	lightFg.A = 150
@@ -42,6 +42,7 @@ func GoListView(parent GoObject) *GoListViewObj {
 	darkFg.A = 200
 	state := &widget_gio.List{}
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -49,6 +50,7 @@ func GoListView(parent GoObject) *GoListViewObj {
 		GoSize: GoSize{100, 100, 100, 100, 1000, 1000, 100, 100},
 		Visible: true,
 		//target: nil,
+		tag: tagCounter,
 	}
 	scrollbar := GoScrollbar{
 		Scrollbar: &state.Scrollbar,
@@ -151,14 +153,14 @@ func (ob *GoListViewObj) ItemClicked(nodeId []int) {
 }
 
 func (ob *GoListViewObj) ItemDoubleClicked(nodeId []int) {
-	//log.Println("GoListViewObj) ItemDoubleClicked()............")
-	lvi := ob.Item(nodeId)
+	log.Println("GoListViewObj) ItemDoubleClicked()............")
+	/*lvi := ob.Item(nodeId)
 	if lvi.IsExpanded() {
 		lvi.SetExpanded(false)
 	} else {
 		lvi.SetExpanded(true)
 	}
-	ob.switchFocus(lvi)
+	ob.switchFocus(lvi)*/
 	if ob.onItemDoubleClicked != nil {
 		ob.onItemDoubleClicked(nodeId)
 	}

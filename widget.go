@@ -6,7 +6,7 @@ package utopia
 
 import (
 	"image"
-	"log"
+	//"log"
 	"time"
 
 	event_gio "github.com/utopiagio/gio/io/event"
@@ -317,7 +317,7 @@ type GioWidget struct {
 	GoMargin		// clear margin surrounding widget
 	GoPadding		// clear padding within widget
 	GoSize 			// Fixed, Min and Max sizes
-	
+	tag int 		// event id tag
 	dims layout_gio.Dimensions // Dimensions{Size image.Point{X: int, Y: int}, Baseline int}
 	
 
@@ -360,12 +360,6 @@ type GioWidget struct {
 	FocusPolicy GoFocusPolicy
 	hovered bool
 	selected bool
-	//pressedAt time.Duration
-	/*clickable *widget_gio.Clickable
-	draggable *widget_gio.Draggable
-	editor *widget_gio.Bool
-	enum *widget_gio.Enum
-	label *widget_gio.Label*/
 }
 
 func (w *GioWidget) Click(e pointer_gio.Event) {
@@ -375,7 +369,6 @@ func (w *GioWidget) Click(e pointer_gio.Event) {
 }
 
 func (w *GioWidget) Clicked() (clicked bool) {
-	log.Println("GioWidget::Clicked", w.clicks)
 	if w.clicks == 1 {
 		return true
 	}
@@ -626,12 +619,12 @@ func (w *GioWidget) Size() (GoSize){
 }
 
 func (w *GioWidget) SignalEvents(gtx layout_gio.Context) {
-	event_gio.Op(gtx.Ops, w)
+	event_gio.Op(gtx.Ops, w.tag)
 }
 
 func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio.Filter) {
 	for {
-		evt, ok := gtx.Event(pointer_gio.Filter { Target: w, Kinds: w.events })
+		evt, ok := gtx.Event(pointer_gio.Filter { Target: w.tag, Kinds: w.events })
 		if !ok {
 			if keyFilters != nil {
 				evt, ok = gtx.Event(keyFilters...)
@@ -676,7 +669,7 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio
 							//log.Println("GoApp.Keyboard().SetFocusControl(GoWidget)")
 							//GoApp.Keyboard().SetFocusControl(w)
 							//log.Println("GioWidget.SetFocus() -")
-							gtx.Execute(key_gio.FocusCmd{Tag: w})
+							gtx.Execute(key_gio.FocusCmd{Tag: w.tag})
 							w.SetFocus()
 					}
 					//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))

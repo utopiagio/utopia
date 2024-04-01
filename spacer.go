@@ -26,6 +26,7 @@ func GoSpacer(parent GoObject, space int) (hObj *GoSpacerObj) {
 	//var fontSize unit_gio.Sp = 14
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -33,6 +34,7 @@ func GoSpacer(parent GoObject, space int) (hObj *GoSpacerObj) {
 		GoSize: GoSize{space, space, space, space, 16777215, 16777215, space, space},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hSpacer := &GoSpacerObj{
 		GioObject: object,

@@ -15,6 +15,7 @@ import (
 
 func GoMenuBar(parent GoObject) (hObj *GoMenuBarObj) {
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -22,6 +23,7 @@ func GoMenuBar(parent GoObject) (hObj *GoMenuBarObj) {
 		GoSize: GoSize{100, 24, 100, 24, 1000, 24, 100, 24},
 		FocusPolicy: NoFocus,
 		Visible: false,
+		tag: tagCounter,
 	}
 	hMenuBar := &GoMenuBarObj{
 		GioObject: object,

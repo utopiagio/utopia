@@ -22,7 +22,8 @@ type GoCheckBoxObj struct {
 	checkBox *widget_gio.Bool
 }
 
-func GoCheckBox(parent GoObject, label string) *GoCheckBoxObj {
+func GoCheckBox(parent GoObject, label string) (hObj *GoCheckBoxObj) {
+	tagCounter++
 	var theme *GoThemeObj = GoApp.Theme()
 	var GioCheckbox *widget_gio.Bool = new(widget_gio.Bool)
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
@@ -32,6 +33,7 @@ func GoCheckBox(parent GoObject, label string) *GoCheckBoxObj {
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 200, 26, 16777215, 16777215, 200, 26},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hCheckBox := &GoCheckBoxObj{
 		GioObject: object,

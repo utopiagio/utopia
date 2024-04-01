@@ -49,6 +49,7 @@ func GoMenuItem(parent GoObject, text string, menuId int, action func()) (hObj *
 	var theme *GoThemeObj = GoApp.Theme()
 
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -56,6 +57,7 @@ func GoMenuItem(parent GoObject, text string, menuId int, action func()) (hObj *
 		GoSize: GoSize{50, 24, 50, 24, 1000, 24, 50, 24},
 		FocusPolicy: StrongFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hMenuItem := &GoMenuItemObj{
 		GioObject: object,

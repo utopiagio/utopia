@@ -22,7 +22,7 @@ import (
 )
 
 func GoCanvas(parent GoObject) (hObj *GoCanvasObj) {
-	//var fontSize unit_gio.Sp = 14
+	tagCounter++
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
@@ -33,6 +33,7 @@ func GoCanvas(parent GoObject) (hObj *GoCanvasObj) {
 		
 		FocusPolicy: StrongFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hCanvas := &GoCanvasObj{
 		GioObject: object,

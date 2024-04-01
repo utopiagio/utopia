@@ -5,11 +5,10 @@
 package utopia
 
 import (
-	_ "log"
+	//"log"
 	"image"
 	"image/color"
 
-	//"github.com/utopiagio/gio/internal/f32color"
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	font_gio "github.com/utopiagio/gio/font"
 	event_gio "github.com/utopiagio/gio/io/event"
@@ -22,7 +21,6 @@ import (
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
-	//widget_gio "github.com/utopiagio/utopia/internal/widget"
 	widget_int "github.com/utopiagio/utopia/internal/widget"
 
 	"github.com/utopiagio/utopia/metrics"
@@ -57,6 +55,7 @@ type GoTextEditObj struct {
 func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
@@ -65,6 +64,7 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 		FocusPolicy: StrongFocus,
 		Visible: true,
 		keys: []event_gio.Filter{},
+		tag: tagCounter,
 		//target: nil,
 	}
 	hTextEdit := &GoTextEditObj{
@@ -88,28 +88,28 @@ func GoTextEdit(parent GoObject, hintText string) *GoTextEditObj {
 	hTextEdit.SetOnPointerRelease(hTextEdit.PointerReleased)
 	w := &widget
 	ctlKeys := []event_gio.Filter{
-		key_gio.FocusFilter{Target: w},
+		key_gio.FocusFilter{Target: w.tag},
 		//transfer.TargetFilter{Target: w, Type: "application/text"},
-		key_gio.Filter{Focus: w, Name: key_gio.NameEnter, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NameReturn, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NameEnter, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NameReturn, Optional: key_gio.ModShift},
 
-		key_gio.Filter{Focus: w, Name: "Z", Required: key_gio.ModShortcut, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: "C", Required: key_gio.ModShortcut},
-		key_gio.Filter{Focus: w, Name: "V", Required: key_gio.ModShortcut},
-		key_gio.Filter{Focus: w, Name: "X", Required: key_gio.ModShortcut},
-		key_gio.Filter{Focus: w, Name: "A", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w.tag, Name: "Z", Required: key_gio.ModShortcut, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: "C", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w.tag, Name: "V", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w.tag, Name: "X", Required: key_gio.ModShortcut},
+		key_gio.Filter{Focus: w.tag, Name: "A", Required: key_gio.ModShortcut},
 
-		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteBackward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NameDeleteForward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NameDeleteBackward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NameDeleteForward, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
 
-		key_gio.Filter{Focus: w, Name: key_gio.NameHome, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NameEnd, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NamePageDown, Optional: key_gio.ModShift},
-		key_gio.Filter{Focus: w, Name: key_gio.NamePageUp, Optional: key_gio.ModShift},
-		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameLeftArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w, Name: key_gio.NameUpArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameRightArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
-		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w, Name: key_gio.NameDownArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NameHome, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NameEnd, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NamePageDown, Optional: key_gio.ModShift},
+		key_gio.Filter{Focus: w.tag, Name: key_gio.NamePageUp, Optional: key_gio.ModShift},
+		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w.tag, Name: key_gio.NameLeftArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atBeginning,*/ key_gio.Filter{Focus: w.tag, Name: key_gio.NameUpArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w.tag, Name: key_gio.NameRightArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
+		/*condFilter(!atEnd,*/ key_gio.Filter{Focus: w.tag, Name: key_gio.NameDownArrow, Optional: key_gio.ModShortcutAlt | key_gio.ModShift},
 	}
 	hTextEdit.SetKeys(ctlKeys)
 	parent.AddControl(hTextEdit)
@@ -297,54 +297,7 @@ func (ob *GoTextEditObj) Draw(gtx layout_gio.Context) (dims layout_gio.Dimension
 }
 
 func (ob *GoTextEditObj) Layout(gtx layout_gio.Context) layout_gio.Dimensions {
-	//log.Println("*GoTextEditObj::layout()")
-	
 	ob.ReceiveEvents(gtx, ob.keys)
-
-
-	/* *** create hint label macro
-	macro := op_gio.Record(gtx.Ops)
-	paint_gio.ColorOp{Color: ob.hintColor.NRGBA()}.Add(gtx.Ops)
-	var maxlines int
-	if ob.editor.SingleLine {
-		maxlines = 1
-	}
-	tl := widget_int.GioLabel{Alignment: ob.editor.Alignment, MaxLines: maxlines}
-	dims := tl.Layout(gtx, ob.shaper, ob.font, ob.fontSize, ob.hint, textColor)
-	call := macro.Stop()
-	// *** end
-	if w := dims.Size.X; gtx.Constraints.Min.X < w {
-		gtx.Constraints.Min.X = w
-	}
-	if h := dims.Size.Y; gtx.Constraints.Min.Y < h {
-		gtx.Constraints.Min.Y = h
-	}
-	dims = ob.editor.Layout(gtx, ob.shaper, ob.font, ob.fontSize, func(gtx layout_gio.Context) layout_gio.Dimensions {
-		semantic_gio.Editor.Add(gtx.Ops)
-		//disabled := !gtx.Enabled()
-		disabled := ob.HasFocus()
-		//log.Println("disabled =", disabled)
-		if ob.editor.Len() > 0 {
-			paint_gio.ColorOp{Color: blendDisabledColor(disabled, ob.selectionColor.NRGBA())}.Add(gtx.Ops)
-			//paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			ob.editor.PaintSelection(gtx)
-			paint_gio.ColorOp{Color: blendDisabledColor(disabled, ob.color.NRGBA())}.Add(gtx.Ops)
-			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			ob.editor.PaintText(gtx)
-		} else {
-			call.Add(gtx.Ops)
-		}
-		if ob.HasFocus() {
-			paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)
-			ob.editor.PaintCaret(gtx)
-		}
-		return dims //layout_gio.Dimensions{Size: gtx.Constraints.Min}
-	})
-	//defer clip_gio.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Push(gtx.Ops).Pop()
-	defer clip_gio.Rect(image.Rectangle{Max: dims.Size}).Push(gtx.Ops).Pop()
-	// add the events handler to receive widget pointer events
-	pointer_gio.CursorText.Add(gtx.Ops)*/
-
 	// Choose colors.
 	textColorMacro := op_gio.Record(gtx.Ops)
 	paint_gio.ColorOp{Color: ob.color.NRGBA()}.Add(gtx.Ops)

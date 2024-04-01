@@ -28,11 +28,13 @@ type GoLoaderObj struct {
 func GoLoader(parent GoObject) *GoLoaderObj {
 	var theme *GoThemeObj = GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(FixedWidth, FixedHeight)}
+	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
 		GoMargin: GoMargin{0,0,0,0},
 		GoPadding: GoPadding{0,0,0,0},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLoader := &GoLoaderObj{
 		GioObject: object,

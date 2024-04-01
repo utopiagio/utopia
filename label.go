@@ -79,6 +79,7 @@ type TextInfo struct {
 
 
 func GoLabel(parent GoObject, text string) (hObj *GoLabelObj) {
+	tagCounter++
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -88,6 +89,7 @@ func GoLabel(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoSize: GoSize{0, 0, 300, 26, 16777215, 16777215, 300, 26},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: 	object,
@@ -437,6 +439,7 @@ func (ob *GoLabelObj) Widget() (*GioWidget) {
 }
 
 func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {
+	tagCounter++
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -445,6 +448,7 @@ func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: object,
@@ -462,6 +466,7 @@ func H1Label(parent GoObject, text string) (hObj *GoLabelObj) {
 }
 
 func H2Label(parent GoObject, text string) (hObj *GoLabelObj) {
+	tagCounter++
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -470,6 +475,7 @@ func H2Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: object,
@@ -487,6 +493,7 @@ func H2Label(parent GoObject, text string) (hObj *GoLabelObj) {
 }
 
 func H3Label(parent GoObject, text string) (hObj *GoLabelObj) {
+	tagCounter++
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -495,6 +502,7 @@ func H3Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: object,
@@ -512,6 +520,7 @@ func H3Label(parent GoObject, text string) (hObj *GoLabelObj) {
 }
 
 func H4Label(parent GoObject, text string) (hObj *GoLabelObj) {
+	tagCounter++
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -520,6 +529,7 @@ func H4Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: object,
@@ -537,6 +547,7 @@ func H4Label(parent GoObject, text string) (hObj *GoLabelObj) {
 }
 
 func H5Label(parent GoObject, text string) (hObj *GoLabelObj) {
+	tagCounter++
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -545,6 +556,7 @@ func H5Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: object,
@@ -562,6 +574,7 @@ func H5Label(parent GoObject, text string) (hObj *GoLabelObj) {
 }
 
 func H6Label(parent GoObject, text string) (hObj *GoLabelObj) {
+	tagCounter++
 	theme := GoApp.Theme()
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	widget := GioWidget{
@@ -570,6 +583,7 @@ func H6Label(parent GoObject, text string) (hObj *GoLabelObj) {
 		GoPadding: GoPadding{0,0,0,0},
 		GoSize: GoSize{0, 0, 60, 20, 16777215, 16777215, 60, 20},
 		Visible: true,
+		tag: tagCounter,
 	}
 	hLabel := &GoLabelObj{
 		GioObject: object,

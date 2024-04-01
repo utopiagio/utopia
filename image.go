@@ -32,7 +32,7 @@ func GoImage(parent GoObject, src string) (hObj *GoImageObj) {
 		log.Fatal(err)
 	}
 	imageOp := paint_gio.NewImageOp(m)
-
+	tagCounter++
 	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -41,6 +41,7 @@ func GoImage(parent GoObject, src string) (hObj *GoImageObj) {
 		GoSize: GoSize{100, 100, 200, 200, 1000, 1000, 200, 200},
 		FocusPolicy: NoFocus,
 		Visible: true,
+		tag: tagCounter,
 	}
 
 	hImage := &GoImageObj{
