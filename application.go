@@ -198,7 +198,7 @@ type GoWindowObj struct {
 	title string
 	frame *GoLayoutObj
 	menubar *GoMenuBarObj
-	statusbar *GoLayoutObj
+	statusbar *GoStatusBarObj
 	layout *GoLayoutObj
 	eventmask *GoEventMaskObj
 	mainwindow bool
@@ -208,8 +208,13 @@ type GoWindowObj struct {
 	ModalInfo string
 	popupmenus []*GoPopupMenuObj
 	popupwindow *GoPopupWindowObj
+	keys []event_gio.Filter
+	events pointer_gio.Kind
 	onClose func() 
 	onConfig func()
+	onPointerMove func(e pointer_gio.Event)
+	onPointerPress func(e pointer_gio.Event)
+	onPointerRelease func(e pointer_gio.Event)
 }
 
 //- <a name=\"goMainWindow\"></a> [**GoMainWindow**](api.GoWindow#goMainWindow)( windowTitle **string** )  ( hWin [***GoWindowObj**](#goWindowObj) )\n
@@ -218,15 +223,22 @@ func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{320, 480, 640, 480, 1500, 1200, 640, 480}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	hWin.menubar = GoMenuBar(hWin.frame)
+	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
+
+	hWin.statusbar = GoStatusBar(hWin.frame)
+	hWin.statusbar.SetSizePolicy(ExpandingWidth, FixedHeight)
+	hWin.statusbar.SetBackgroundColor(Color_WhiteSmoke)
 	hWin.eventmask = GoEventMask(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
+	hWin.MenuBar()
+	hWin.StatusBar()
 	GoApp.AddWindow(hWin)
 	return hWin
 }
@@ -238,7 +250,7 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{0, 0, 640, 480, 1500, 1200, 640, 480}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	hWin.menubar = GoMenuBar(hWin.frame)
@@ -246,6 +258,9 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
+	hWin.statusbar = GoStatusBar(hWin.frame)
+	hWin.statusbar.SetSizePolicy(ExpandingWidth, FixedHeight)
+	hWin.statusbar.SetBackgroundColor(Color_WhiteSmoke)
 	hWin.eventmask = GoEventMask(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
@@ -259,7 +274,7 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{0, 0, 640, 450, 1500, 1000, 640, 450}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, true, modalStyle, -1, "", nil, nil, nil, nil}
+	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, true, modalStyle, -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	hWin.menubar = GoMenuBar(hWin.frame)
@@ -267,6 +282,9 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
 	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
+	hWin.statusbar = GoStatusBar(hWin.frame)
+	hWin.statusbar.SetSizePolicy(ExpandingWidth, FixedHeight)
+	hWin.statusbar.SetBackgroundColor(Color_WhiteSmoke)
 	hWin.eventmask = GoEventMask(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
@@ -460,22 +478,30 @@ func (ob *GoWindowObj) SetBorderWidth(width int) {
 //- <a name=\"setLayoutStyle\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**SetLayoutStyle(** style [**GoLayoutStyle**](api.GoLayoutStyle#) **)**\n
 //- - Changes the window central layout style.\n\n
 func (ob *GoWindowObj)SetLayoutStyle(style GoLayoutStyle) {
-	ob.frame.DeleteControl(ob.layout)
 	switch style {
 	case NoLayout:
+		ob.frame.DeleteControl(ob.layout)
 		ob.layout = nil
 	case HBoxLayout:
+		ob.frame.DeleteControl(ob.layout)
 		ob.layout = GoHBoxLayout(ob.frame)
 	case VBoxLayout:
+		ob.frame.DeleteControl(ob.layout)
 		ob.layout = GoVBoxLayout(ob.frame)	
 	case HVBoxLayout:
 		// Not Implemented *******************
 	case HFlexBoxLayout:
+		ob.frame.DeleteControl(ob.layout)
 		ob.layout = GoHFlexBoxLayout(ob.frame)	
-	case VFlexBoxLayout:						
+	case VFlexBoxLayout:
+		ob.frame.DeleteControl(ob.layout)						
 		ob.layout = GoVFlexBoxLayout(ob.frame)	
 	case PopupMenuLayout:
 		// Not Implemented *******************
+	}
+	if ob.layout != nil {
+		ob.frame.RemoveControl(ob.layout)
+		ob.frame.InsertControl(ob.layout, 1)
 	}
 }
 
@@ -495,6 +521,21 @@ func (ob *GoWindowObj) SetOnClose(f func()) {
 //- - Adds a function to be called when the window is reconfigured.\n\n
 func (ob *GoWindowObj) SetOnConfig(f func()) {
 	ob.onConfig = f
+}
+
+func (ob *GoWindowObj) SetOnPointerMove(f func(e pointer_gio.Event)) {
+	ob.events = ob.events | pointer_gio.Move
+	ob.onPointerMove = f
+}
+
+func (ob *GoWindowObj) SetOnPointerPress(f func(e pointer_gio.Event)) {
+	ob.events = ob.events | pointer_gio.Press
+	ob.onPointerPress = f
+}
+
+func (ob *GoWindowObj) SetOnPointerRelease(f func(e pointer_gio.Event)) {
+	ob.events = ob.events | pointer_gio.Release
+	ob.onPointerRelease = f
 }
 
 //- <a name=\"setPadding\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**SetPadding(** left **int,** top **int,** bottom **int,** right **int )**\n
@@ -540,13 +581,6 @@ func (ob *GoWindowObj) SetTitle(title string) {
 	}
 }
 
-//- <a name=\"size\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Size() (** width **int,** height **int )**\n
-//- - Returns the outer size of the window.\n\n
-func (ob *GoWindowObj) Size() (width int, height int) {
-	ww, wh := ob.gio.GetWindowSize()
-	return metrics.PxToDp(GoDpr, ww), metrics.PxToDp(GoDpr, wh)
-}
-
 //- <a name=\"show\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Show()**\n
 //- - Activate the window loop and set as top window.\n\n
 func (ob *GoWindowObj) Show() {
@@ -558,6 +592,20 @@ func (ob *GoWindowObj) Show() {
 func (ob *GoWindowObj) ShowModal() (action int, info string) {
 	action, info = ob.runModal()
 	return
+}
+
+//- <a name=\"size\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Size() (** width **int,** height **int )**\n
+//- - Returns the outer size of the window.\n\n
+func (ob *GoWindowObj) Size() (width int, height int) {
+	ww, wh := ob.gio.GetWindowSize()
+	return metrics.PxToDp(GoDpr, ww), metrics.PxToDp(GoDpr, wh)
+}
+
+//- <a name=\"statusbar\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**StatusBar() (** statusbar [***GoStatusBarObj**](api.GoStatusBar#) **)**\n
+//- - Installs and returns a pointer to the window status bar.\n\n
+func (ob *GoWindowObj) StatusBar() *GoStatusBarObj {
+	ob.statusbar.Show()
+	return ob.statusbar
 }
 
 //- <a name=\"title\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Title() (** title **string )**\n
@@ -793,7 +841,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 	GoDpr = gtx.Metric.PxPerDp
 	GoSpr = gtx.Metric.PxPerSp
 	for _, obj := range ob.frame.Controls {
-		if obj.ObjectType() == "GoLayoutObj" {
+		if obj.ObjectType() == "GoLayoutObj" || obj.ObjectType() == "GoStatusBarObj"{
 			ob.updateLayout(obj, gtx)
 		}
 	}
@@ -804,7 +852,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 				//key_gio.Filter{Name: key_gio.NameSpace},
 				// list of filters in the form of key_gio.Filter{ Name: key_gio.NameEnter}...
 				// also pointer_gio.Filter{Target: tag, Kinds: pointer_gio.KindPress...}
-				pointer_gio.Filter{Target: 0, Kinds: pointer_gio.Press},
+				pointer_gio.Filter{Target: 0, Kinds: pointer_gio.Press | pointer_gio.Release | pointer_gio.Move},
 			)
 
 			if !ok { break }
@@ -819,9 +867,26 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 								if ob.popupwindow.Visible {
 									ob.popupwindow.Hide()
 								}
-								log.Println("ApplicationKey::keyPress -")
+								log.Println("ApplicationPointer::pointerPress -")
 								gtx.Execute(key_gio.FocusCmd{Tag: nil})
 								GoApp.Keyboard().SetFocusControl(nil)
+								if ob.onPointerPress != nil {
+									ob.onPointerPress(ev)
+								}
+							}
+						case pointer_gio.Move:
+							if ev.Priority == pointer_gio.Shared {
+								log.Println("ApplicationPointer::pointerMove -")
+								if ob.onPointerMove != nil {
+									ob.onPointerMove(ev)
+								}
+							}
+						case pointer_gio.Release:
+							if ev.Priority == pointer_gio.Grabbed {
+								log.Println("ApplicationPointer::pointerRelease -")
+								if ob.onPointerRelease != nil {
+									ob.onPointerRelease(ev)
+								}
 							}
 					}
 			}
@@ -833,7 +898,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 //- - updates all the window layouts and controls\n\n
 func (ob *GoWindowObj) updateLayout(layout GoObject, gtx layout_gio.Context) {
 	for _, obj := range layout.Objects() {
-		if obj.ObjectType() == "GoLayoutObj" {
+		if obj.ObjectType() == "GoLayoutObj" || obj.ObjectType() == "GoStatusBarObj" {
 			ob.updateLayout(obj, gtx)
 		}
 	}

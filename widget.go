@@ -342,19 +342,19 @@ type GioWidget struct {
 	onKeyRelease func(e key_gio.Event)
 
 
-	onPointerClick func(e pointer_gio.Event)
-	onPointerDoubleClick func(e pointer_gio.Event)
-	onPointerDrag func(e pointer_gio.Event)
-	onPointerEnter func(e pointer_gio.Event)
-	onPointerLeave func(e pointer_gio.Event)
-	onPointerMove func(e pointer_gio.Event)
-	onPointerPress func(e pointer_gio.Event)
-	onPointerRelease func(e pointer_gio.Event)
+	onPointerClick func(e GoPointerEvent)
+	onPointerDoubleClick func(e GoPointerEvent)
+	onPointerDrag func(e GoPointerEvent)
+	onPointerEnter func(e GoPointerEvent)
+	onPointerLeave func(e GoPointerEvent)
+	onPointerMove func(e GoPointerEvent)
+	onPointerPress func(e GoPointerEvent)
+	onPointerRelease func(e GoPointerEvent)
 
 	keys []event_gio.Filter
 	events pointer_gio.Kind
 	clicks int
-	clickEvent pointer_gio.Event
+	clickEvent GoPointerEvent
 	focus bool
 	focusEnabled bool
 	FocusPolicy GoFocusPolicy
@@ -362,7 +362,7 @@ type GioWidget struct {
 	selected bool
 }
 
-func (w *GioWidget) Click(e pointer_gio.Event) {
+func (w *GioWidget) Click(e GoPointerEvent) {
 	if w.onPointerClick != nil {
 			w.onPointerClick(e)
 		}
@@ -557,42 +557,42 @@ func (w *GioWidget) SetOnKeyRelease(f func(e key_gio.Event)) {
 	w.onKeyRelease = f
 }
 
-func (w *GioWidget) SetOnPointerClick(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerClick(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Press | pointer_gio.Release
 	w.onPointerClick = f
 }
 
-func (w *GioWidget) SetOnPointerDoubleClick(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerDoubleClick(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Press | pointer_gio.Release
 	w.onPointerDoubleClick = f
 }
 
-func (w *GioWidget) SetOnPointerDrag(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerDrag(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Drag
 	w.onPointerDrag = f
 }
 
-func (w *GioWidget) SetOnPointerEnter(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerEnter(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Enter
 	w.onPointerEnter = f
 }
 
-func (w *GioWidget) SetOnPointerLeave(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerLeave(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Leave
 	w.onPointerLeave = f
 }
 
-func (w *GioWidget) SetOnPointerMove(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerMove(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Move
 	w.onPointerMove = f
 }
 
-func (w *GioWidget) SetOnPointerPress(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerPress(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Press
 	w.onPointerPress = f
 }
 
-func (w *GioWidget) SetOnPointerRelease(f func(e pointer_gio.Event)) {
+func (w *GioWidget) SetOnPointerRelease(f func(e GoPointerEvent)) {
 	w.events = w.events | pointer_gio.Release
 	w.onPointerRelease = f
 }
@@ -658,7 +658,7 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio
 		} else if ev, ok := evt.(pointer_gio.Event); ok {
 			switch ev.Kind {
 				case pointer_gio.Press:
-					//log.Println("MousePress:")
+					//log.Println("PointerPress:")
 					//log.Println("e.Time: ", uint(e.Time))
 					//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
 					//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
@@ -674,10 +674,10 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio
 					}
 					//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
 					if w.clickEvent.Time == 0 {
-						w.clickEvent = ev
+						w.clickEvent = GioPointerEvent(ev)
 						//log.Println("w.onPointerPress()")
 						if w.onPointerPress != nil {
-							w.onPointerPress(ev)
+							w.onPointerPress(GioPointerEvent(ev))
 						}
 					} else {
 						if ev.Time - w.clickEvent.Time < doubleClickDuration {
@@ -688,8 +688,8 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio
 						}
 					}
 				case pointer_gio.Release:
-					//log.Println("MouseRelease:")
-					//log.Println("e.Time: ", uint(e.Time))
+					//log.Println("PointerRelease:")
+					//log.Println("e.Time: ", uint(ev.Time))
 					//log.Println("w.clickEvent.Time: ", uint(w.clickEvent.Time))
 					//log.Println("clickDuration: ", uint(clickDuration))
 					//log.Println("doubleClickDuration: ", uint(doubleClickDuration))
@@ -704,29 +704,29 @@ func (w *GioWidget) ReceiveEvents(gtx layout_gio.Context, keyFilters []event_gio
 					}
 					//log.Println("w.onPointerRelease()")
 					if w.onPointerRelease != nil {
-						w.onPointerRelease(ev)
+						w.onPointerRelease(GioPointerEvent(ev))
 					}
 				case pointer_gio.Move:
 					//log.Println("w.onPointerMove()")
 					if w.onPointerMove != nil {
-						w.onPointerMove(ev)
+						w.onPointerMove(GioPointerEvent(ev))
 					}
 				case pointer_gio.Drag:
 					//log.Println("w.onPointerDrag()")
 					if w.onPointerDrag != nil {	
-						w.onPointerDrag(ev)
+						w.onPointerDrag(GioPointerEvent(ev))
 					}
 				case pointer_gio.Enter:
 					w.hovered = true
 					//log.Println("w.onPointerEnter()")
 					if w.onPointerEnter != nil {
-						w.onPointerEnter(ev)
+						w.onPointerEnter(GioPointerEvent(ev))
 					}
 				case pointer_gio.Leave:
 					w.hovered = false
 					//log.Println("w.onPointerLeave()")
 					if w.onPointerLeave != nil {
-						w.onPointerLeave(ev)
+						w.onPointerLeave(GioPointerEvent(ev))
 					}
 			}
 		}

@@ -15,7 +15,7 @@ import (
 	op_gio "github.com/utopiagio/gio/op"
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	paint_gio "github.com/utopiagio/gio/op/paint"
-	pointer_gio "github.com/utopiagio/gio/io/pointer"
+	//pointer_gio "github.com/utopiagio/gio/io/pointer"
 	//widget_gio "github.com/utopiagio/gio/widget"
 	"github.com/utopiagio/utopia/metrics"
 )
@@ -63,6 +63,7 @@ func GoSwitch(parent GoObject, description string) *GoSwitchObj {
 	//hSwitch.color.track = NRGBAColor(MulAlpha(theme.ColorFg.NRGBA(), 0x88))
 	hSwitch.color.track = theme.ColorBg
 	hSwitch.color.outline = theme.ContrastBg
+	hSwitch.SetOnPointerPress(nil)
 	hSwitch.SetOnPointerRelease(hSwitch.Clicked)
 	hSwitch.SetOnPointerEnter(nil)
 	hSwitch.SetOnPointerLeave(nil)
@@ -70,7 +71,7 @@ func GoSwitch(parent GoObject, description string) *GoSwitchObj {
 	return hSwitch
 }
 
-func (ob *GoSwitchObj) Clicked(e pointer_gio.Event) {
+func (ob *GoSwitchObj) Clicked(e GoPointerEvent) {
 	ob.state = !ob.state
 	if ob.onChange != nil {
 		ob.onChange(ob.state)

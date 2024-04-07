@@ -18,7 +18,7 @@ import (
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	//material_gio "github.com/utopiagio/gio/widget/material"
 	//semantic_gio "github.com/utopiagio/gio/io/semantic"
-	pointer_gio "github.com/utopiagio/gio/io/pointer"
+	//pointer_gio "github.com/utopiagio/gio/io/pointer"
 	text_gio "github.com/utopiagio/gio/text"
 	unit_gio "github.com/utopiagio/gio/unit"
 	widget_gio "github.com/utopiagio/gio/widget"
@@ -76,6 +76,7 @@ func GoMenuItem(parent GoObject, text string, menuId int, action func()) (hObj *
 		shaper: theme.Shaper,
 	}
 	//hMenuItem.SetSizePolicy(FixedWidth, FixedHeight)
+	hMenuItem.SetOnPointerPress(nil)
 	hMenuItem.SetOnPointerRelease(hMenuItem.Click)
 	hMenuItem.SetOnPointerEnter(nil)
 	hMenuItem.SetOnPointerLeave(nil)
@@ -116,7 +117,7 @@ func (ob *GoMenuItemObj) AddItem(text string) (*GoMenuItemObj) {
 	return item
 }
 
-func (ob *GoMenuItemObj) Click(e pointer_gio.Event) {
+func (ob *GoMenuItemObj) Click(e GoPointerEvent) {
 	if len(ob.menuItems) > 0 {
 		popupMenu := ob.ParentWindow().AddPopupMenu()
 		popupMenu.Clear()

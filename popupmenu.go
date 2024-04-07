@@ -11,7 +11,7 @@ import (
 
 	clip_gio "github.com/utopiagio/gio/op/clip"
 	layout_gio "github.com/utopiagio/gio/layout"
-	pointer_gio "github.com/utopiagio/gio/io/pointer"
+	//pointer_gio "github.com/utopiagio/gio/io/pointer"
 
 	"github.com/utopiagio/utopia/metrics"
 )
@@ -32,6 +32,7 @@ func GoPopupMenu(parent GoObject) (hPopupMenu *GoPopupMenuObj) {
 	hPopupMenu.layout = GoPopupMenuLayout(hPopupMenu)
 	//hPopupMenu.layout.SetPadding(3,3,3,3)
 	hPopupMenu.layout.SetBorder(BorderSingleLine, 1, 2, Color_LightGray)
+	hPopupMenu.SetOnPointerPress(nil)
 	hPopupMenu.SetOnPointerRelease(hPopupMenu.Click)
 	hPopupMenu.SetOnPointerEnter(nil)
 	hPopupMenu.SetOnPointerLeave(nil)
@@ -51,7 +52,7 @@ func (ob *GoPopupMenuObj) Clear() {
 	ob.layout.SetBorder(BorderSingleLine, 1, 2, Color_LightGray)
 }
 
-func (ob *GoPopupMenuObj) Click(e pointer_gio.Event) {
+func (ob *GoPopupMenuObj) Click(e GoPointerEvent) {
 	ob.ParentWindow().ClearPopupMenus()
 }
 

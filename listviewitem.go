@@ -12,7 +12,7 @@ import (
 
 	"github.com/utopiagio/utopia/internal/f32color"
 	font_gio "github.com/utopiagio/gio/font"
-	pointer_gio "github.com/utopiagio/gio/io/pointer"
+	//pointer_gio "github.com/utopiagio/gio/io/pointer"
 	layout_gio "github.com/utopiagio/gio/layout"
 	op_gio "github.com/utopiagio/gio/op"
 	clip_gio "github.com/utopiagio/gio/op/clip"
@@ -46,7 +46,7 @@ func GoListViewItem(parent GoObject, data []byte, text string, listLevel int, li
 		}
 	}
 	
-	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(ExpandingWidth, PreferredHeight)}
+	object := GioObject{parent, parent.ParentWindow(), []GoObject{}, GetSizePolicy(PreferredWidth, PreferredHeight)}
 	tagCounter++
 	widget := GioWidget{
 		GoBorder: GoBorder{BorderNone, Color_Black, 0, 0, 0},
@@ -150,7 +150,7 @@ func (ob *GoListViewItemObj) RemoveListItem(item GoObject, idx int) {
 	ob.listView.RemoveListItem(item)
 }
 
-func (ob *GoListViewItemObj) Clicked(e pointer_gio.Event) {
+func (ob *GoListViewItemObj) Clicked(e GoPointerEvent) {
 	//log.Println("GoListViewItemObj.Clicked()-len(ob.Controls):", len(ob.Parent.Objects()))
 	//log.Println(ob.Text(), "Clicked()")
 	switch ob.Parent.ObjectType() {
@@ -161,7 +161,7 @@ func (ob *GoListViewItemObj) Clicked(e pointer_gio.Event) {
 	}	
 }
 
-func (ob *GoListViewItemObj) DoubleClicked(e pointer_gio.Event) {
+func (ob *GoListViewItemObj) DoubleClicked(e GoPointerEvent) {
 	//log.Println("GoListViewItemObj.DoubleClicked()-len(ob.Controls):", len(ob.Parent.Objects()))
 	//log.Println("GoListViewItemObj.DoubleClicked()-Id:", ob.id)
 	switch ob.Parent.ObjectType() {
@@ -277,14 +277,14 @@ func (ob *GoListViewItemObj) ObjectType() (string) {
 	return "GoListViewItemObj"
 }
 
-func (ob *GoListViewItemObj) PointerEnter(e pointer_gio.Event) {
+func (ob *GoListViewItemObj) PointerEnter(e GoPointerEvent) {
 	if !ob.HasFocus() && !ob.IsSelected() {
 		ob.SetBackgroundColor(Color_WhiteSmoke)
 		ob.ParentWindow().Refresh()
 	}
 }
 
-func (ob *GoListViewItemObj) PointerLeave(e pointer_gio.Event) {
+func (ob *GoListViewItemObj) PointerLeave(e GoPointerEvent) {
 	if !ob.HasFocus() && !ob.IsSelected() {
 		ob.SetBackgroundColor(Color_Transparent)
 		ob.ParentWindow().Refresh()

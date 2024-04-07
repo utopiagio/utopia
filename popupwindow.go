@@ -11,7 +11,7 @@ import (
 
 	//clip_gio "github.com/utopiagio/gio/op/clip"
 	layout_gio "github.com/utopiagio/gio/layout"
-	pointer_gio "github.com/utopiagio/gio/io/pointer"
+	//pointer_gio "github.com/utopiagio/gio/io/pointer"
 )
 
 func GoPopupWindow(parent GoObject) (hPopupWindow *GoPopupWindowObj) {
@@ -46,7 +46,7 @@ type GoPopupWindowObj struct {
 	//visible bool
 }
 
-func (ob *GoPopupWindowObj) Click(e pointer_gio.Event) {
+func (ob *GoPopupWindowObj) Click(e GoPointerEvent) {
 	ob.Hide()
 }
 

@@ -256,28 +256,28 @@ func (ob *GoLabelObj) SetPreferredWidth() {
 	ob.SetHorizSizePolicy(PreferredWidth)
 }
 
-func (ob *GoLabelObj) pointerDoubleClicked(e pointer_gio.Event) {
+func (ob *GoLabelObj) pointerDoubleClicked(e GoPointerEvent) {
 	if ob.selectable == true {
-		ob.state.PointerDoubleClicked(e)
+		ob.state.PointerDoubleClicked(e.Gio())
 		ob.ParentWindow().Refresh()
 	}
 }
 
-func (ob *GoLabelObj) pointerDragged(e pointer_gio.Event) {
+func (ob *GoLabelObj) pointerDragged(e GoPointerEvent) {
 	if ob.selectable == true {
-		ob.state.PointerDragged(e)
+		ob.state.PointerDragged(e.Gio())
 	}
 }
 
-func (ob *GoLabelObj) pointerPressed(e pointer_gio.Event) {
+func (ob *GoLabelObj) pointerPressed(e GoPointerEvent) {
 	if ob.selectable == true {
-		ob.state.PointerPressed(e)
+		ob.state.PointerPressed(e.Gio())
 	}
 }
 
-func (ob *GoLabelObj) pointerReleased(e pointer_gio.Event) {
+func (ob *GoLabelObj) pointerReleased(e GoPointerEvent) {
 	if ob.selectable == true {
-		ob.state.PointerReleased(e)
+		ob.state.PointerReleased(e.Gio())
 	}
 	//ob.editor.focused = true
 }

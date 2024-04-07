@@ -542,6 +542,9 @@ func (ob *GoLayoutObj) Layout(gtx layout_gio.Context, length int, w layout_gio.L
 	if ob.MinWidth > listDims.Size.X {
 		listDims.Size.X = ob.MinWidth
 	}
+	if ob.MinHeight > listDims.Size.Y {
+		listDims.Size.Y = ob.MinHeight
+	}
 	return listDims
 }
 

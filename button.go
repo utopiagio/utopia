@@ -18,7 +18,7 @@ import (
 	paint_gio "github.com/utopiagio/gio/op/paint"
 	//material_gio "github.com/utopiagio/gio/widget/material"
 	//semantic_gio "github.com/utopiagio/gio/io/semantic"
-	pointer_gio "github.com/utopiagio/gio/io/pointer"
+	//pointer_gio "github.com/utopiagio/gio/io/pointer"
 	text_gio "github.com/utopiagio/gio/text"
 	font_gio "github.com/utopiagio/gio/font"
 	unit_gio "github.com/utopiagio/gio/unit"
@@ -75,7 +75,7 @@ func GoButton(parent GoObject, text string) (hObj *GoButtonObj) {
 	hButton.SetOnPointerPress(nil)
 	hButton.SetOnPointerRelease(hButton.click)
 	//hButton.SetOnPointerMove(nil)
-	//hButton.SetOnPointerClick(nil)
+	//hButton.SetOnPointerClick(hButton.click)
 	hButton.SetOnPointerEnter(nil)
 	hButton.SetOnPointerLeave(nil)
 	parent.AddControl(hButton)
@@ -98,7 +98,7 @@ type GoButtonObj struct {
 	//textAlign text.Alignment
 }
 
-func (ob *GoButtonObj) click(e pointer_gio.Event) {
+func (ob *GoButtonObj) click(e GoPointerEvent) {
 	if ob.onClick != nil {
 		ob.onClick()
 	}
@@ -275,7 +275,7 @@ func GoIconPNGButton(parent GoObject, icon *GoIconPNGObj) *GoIconButtonObj {
 	return hIconButton
 }
 
-func (ob *GoIconButtonObj) Click(e pointer_gio.Event) {
+func (ob *GoIconButtonObj) Click(e GoPointerEvent) {
 	if ob.onClick != nil {
 		ob.onClick()
 	}

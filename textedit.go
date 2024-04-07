@@ -217,16 +217,16 @@ func (ob *GoTextEditObj) MovePages(pages int, selAct selectionAction) {
 	ob.updateSelection(selAct)
 }*/
 
-func (ob *GoTextEditObj) PointerDragged(e pointer_gio.Event) {
-	ob.editor.PointerDragged(e)
+func (ob *GoTextEditObj) PointerDragged(e GoPointerEvent) {
+	ob.editor.PointerDragged(e.Gio())
 }
 
-func (ob *GoTextEditObj) PointerPressed(e pointer_gio.Event) {
-	ob.editor.PointerPressed(e)
+func (ob *GoTextEditObj) PointerPressed(e GoPointerEvent) {
+	ob.editor.PointerPressed(e.Gio())
 }
 
-func (ob *GoTextEditObj) PointerReleased(e pointer_gio.Event) {
-	ob.editor.PointerReleased(e)
+func (ob *GoTextEditObj) PointerReleased(e GoPointerEvent) {
+	ob.editor.PointerReleased(e.Gio())
 	//ob.editor.focused = true
 }
 
