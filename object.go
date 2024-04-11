@@ -11,12 +11,19 @@ import (
 	"github.com/utopiagio/utopia/metrics"
 )
 
+type GoSizePolicy struct {
+	Horiz 	GoSizeType
+	Vert 	GoSizeType
+	HFlex 	bool
+	VFlex 	bool
+}
+
 func GetSizePolicy(horiz GoSizeType, vert GoSizeType) (*GoSizePolicy) {
-	var fWidth bool = false
-	var fHeight bool = false
-	if horiz == ExpandingWidth {fWidth = true}
-	if vert == ExpandingHeight {fHeight = true}
-	return &GoSizePolicy{horiz, vert, fWidth, fHeight}
+	var flexWidth bool = false
+	var flexHeight bool = false
+	if horiz == ExpandingWidth {flexWidth = true}
+	if vert == ExpandingHeight {flexHeight = true}
+	return &GoSizePolicy{horiz, vert, flexWidth, flexHeight}
 }
 
 func ExpandingSizePolicy() (*GoSizePolicy) {
@@ -41,14 +48,6 @@ const(
 	ExpandingWidth GoSizeType	= 0x0080
 	ExpandingHeight GoSizeType 	= 0x0100
 )
-
-type GoSizePolicy struct {
-	Horiz 	GoSizeType
-	Vert 	GoSizeType
-	HFlex 	bool
-	VFlex 	bool
-}
-
 
 type GoObject interface {
 	AddControl(GoObject)
@@ -80,13 +79,16 @@ func (ob *GioObject) AddControl(control GoObject) {
 }
 
 func (ob *GioObject) Clear() {
+	for k, _ := range ob.Controls {
+	   	ob.Controls[k] = nil
+	}
 	ob.Controls = []GoObject{}
 }
 
-func (ob *GioObject) DeleteControl(object GoObject) {
+func (ob *GioObject) DeleteControl(control GoObject) {
 	k := 0
 	for _, v := range ob.Controls {
-	    if v != object {
+	    if v != control {
 	        ob.Controls[k] = v
 	        k++
 	    } else {
@@ -110,28 +112,27 @@ func (ob *GioObject) InsertControl(control GoObject, idx int) {
 	}
 }
 
-func (ob *GioObject) Objects() []GoObject {
+func (ob *GioObject) Objects() (controls []GoObject) {
 	return ob.Controls
 }
 
 /*func (ob *GioObject) ObjectType() (string) {
-	log.Println("GioObject.ObjectType() -", ob)
-	return ""
+	Implemented in each Utopia control.
 }*/
 
-func (ob *GioObject) ParentControl() (GoObject) {
+func (ob *GioObject) ParentControl() (control GoObject) {
 	return ob.Parent
 }
 
-func (ob *GioObject) ParentWindow() (*GoWindowObj) {
+func (ob *GioObject) ParentWindow() (window *GoWindowObj) {
 	return ob.Window
 }
 
 /*func (ob *GioObject) Widget() *GioWidget {
-	return nil
+	Implemented in each Utopia control.
 }*/
 
-func (ob *GioObject) RemoveControl(object GoObject) {
+func (ob *GioObject) RemoveControl(control GoObject) {
 	k := 0
 	for _, v := range ob.Controls {
 	    if v != object {
