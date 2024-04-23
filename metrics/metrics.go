@@ -27,7 +27,7 @@ import (
 
 // Dp converts v to pixels, rounded to the nearest integer value. PXPerDp
 func DpToPx(dpr float32, v int) int {
-	return int(math.Round(float64(nonZero(dpr)) * float64(v)))
+	return int(math.Round((float64(nonZero(dpr)) * float64(v))))
 }
 
 // PxToDp converts v px to dp.

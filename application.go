@@ -40,6 +40,18 @@ const (
 	ModalMode  	// sets modal window on top.
 )
 
+type GoWindowMode uint8
+const (
+	// Windowed is the normal window mode with OS specific window decorations.
+	Windowed GoWindowMode = iota
+	// Fullscreen is the full screen window mode.
+	Fullscreen
+	// Minimized is for systems where the window can be minimized to an icon.
+	Minimized
+	// Maximized is for systems where the window can be made to fill the available monitor area.
+	Maximized
+)
+
 var tagCounter int
 var GoDpr float32
 var GoSpr float32
@@ -69,7 +81,7 @@ func GoApplication(appName string) (a *GoApplicationObj) {
 	if clipboard.init() != nil {
 		log.Println("ClipBoard Not Available!")
 	}
-	desktop.Init()
+	GoDpr, GoSpr = desktop.Init()
 	keyboard := GoKeyboard()
 	/*if keyboard.init() != nil {
 		log.Println("Keyboard Not Available!")
@@ -125,7 +137,7 @@ func (a *GoApplicationObj) Run() {
 	}
 	a.windows[0].mainwindow = true
 	// on windows, linux, darwin the gio.Main functions blocks the main thread forever
-	app_gio.Main()	
+	app_gio.Main()
 }
 
 //- <a name=\"clipBoard\"></a> **(ob** [***GoApplicationObj**](api.GoApplication#)**)**.**ClipBoard() (** clipboard [***GoClipBoardObj**](api.GoClipBoard#) **)**\n
@@ -189,11 +201,27 @@ func (a *GoApplicationObj) Theme() (theme *GoThemeObj) {
 	return t
 }*/
 
+type GoPosDp struct {
+	XDp unit_gio.Dp
+	YDp unit_gio.Dp
+}
+
+type GoSizeDp struct {
+	MinWidthDp unit_gio.Dp
+	MinHeightDp unit_gio.Dp
+	WidthDp unit_gio.Dp
+	HeightDp  unit_gio.Dp
+	MaxWidthDp unit_gio.Dp
+	MaxHeightDp unit_gio.Dp
+}
+
 type GoWindowObj struct {
 	GioObject
 	//goWidget
 	GoSize 			// Current, Min and Max sizes
-	GoPos
+	GoPos			// Current top left position
+
+	state GoWindowMode	// Current window state
 	gio *app_gio.Window
 	title string
 	frame *GoLayoutObj
@@ -223,7 +251,8 @@ func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{320, 480, 640, 480, 1500, 1200, 640, 480}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
+	wmode := Windowed
+	hWin = &GoWindowObj{object, size, pos, wmode, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	hWin.menubar = GoMenuBar(hWin.frame)
@@ -240,6 +269,7 @@ func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.MenuBar()
 	hWin.StatusBar()
 	GoApp.AddWindow(hWin)
+	//hWin.run()
 	return hWin
 }
 
@@ -250,8 +280,8 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{0, 0, 640, 480, 1500, 1200, 640, 480}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
-	hWin.Window = hWin
+	wmode := Windowed
+	hWin = &GoWindowObj{object, size, pos, wmode, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	hWin.menubar = GoMenuBar(hWin.frame)
 	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
@@ -264,6 +294,7 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.eventmask = GoEventMask(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
+	//hWin.run()
 	return hWin
 }
 
@@ -274,7 +305,8 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	object := GioObject{nil, nil, []GoObject{}, GetSizePolicy(ExpandingWidth, ExpandingHeight)}
 	size := GoSize{0, 0, 640, 450, 1500, 1000, 640, 450}
 	pos := GoPos{-1, -1}
-	hWin = &GoWindowObj{object, size, pos, nil, windowTitle, nil, nil, nil, nil, nil, false, true, modalStyle, -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
+	wmode := Windowed
+	hWin = &GoWindowObj{object, size, pos, wmode, nil, windowTitle, nil, nil, nil, nil, nil, false, true, modalStyle, -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
 	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	hWin.menubar = GoMenuBar(hWin.frame)
@@ -288,6 +320,7 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	hWin.eventmask = GoEventMask(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
+	//hWin.runModal()
 	return hWin
 }
 //- <a name=\"addPopupMenu\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**AddPopupMenu(** popupMenu [***GoPopupMenuObj**](api.GoPopupMenu#) **)**\n
@@ -313,30 +346,31 @@ func (ob *GoWindowObj) ClearPopupMenus() {
 }
 
 //- <a name=\"clientPos\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**ClientPos(** x **int,** y **int )**\n
-//- - Returns the client postion of the window.\nThis is usually set to (0,0)\n\n
-func (ob *GoWindowObj) ClientPos() (x int, y int) {
+//- - Returns the client postion of the window in device pixels.\nThis is usually set to (0,0)\n\n
+func (ob *GoWindowObj) ClientPos() (xDp int, yDp int) {
 	wx, wy := ob.gio.GetClientPos()
+	// GetWindowPos returns in device pixels
 	return metrics.PxToDp(GoDpr, wx), metrics.PxToDp(GoDpr, wy)
 }
 
 //- <a name=\"clientSize\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**ClientSize() (** width **int,** height **int )**\n
-//- - Returns the inner client size of the window.\n\n
-func (ob *GoWindowObj) ClientSize() (width int, height int) {
+//- - Returns the inner client size of the window in device pixels\n\n
+func (ob *GoWindowObj) ClientSize() (widthDp int, heightp int) {
 	ww, wh := ob.gio.GetClientSize()
+	// GetClientSize returns in device pixels
 	return metrics.PxToDp(GoDpr, ww), metrics.PxToDp(GoDpr, wh)
 }
 
 //- <a name=\"close\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Close()**\n
 //- - Close the window.\n\n
 func (ob *GoWindowObj) Close() {
-	//if ob.IsMainWindow() {
-		ob.gio.Perform(system.ActionClose)
-	//}
+	ob.gio.Perform(system.ActionClose)
 }
 
 //- <a name=\"escFullScreen\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**EscFullScreen()**\n
 //- - Escape fullscreen.\n\n
 func (ob *GoWindowObj) EscFullScreen() {
+	ob.state = Windowed
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Windowed.Option())
 	}
@@ -345,6 +379,7 @@ func (ob *GoWindowObj) EscFullScreen() {
 //- <a name=\"goFullScreen\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**GoFullScreen()**\n
 //- - Switch to fullscreen.\n\n
 func (ob *GoWindowObj) GoFullScreen() {
+	ob.state = Fullscreen
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Fullscreen.Option())
 	}
@@ -371,6 +406,7 @@ func (ob *GoWindowObj) Layout() (layout *GoLayoutObj) {
 //- <a name=\"maximize\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Maximize()**\n
 //- - Maximize the window.\n\n
 func (ob *GoWindowObj) Maximize() {
+	ob.state = Maximized
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Maximized.Option())
 	}
@@ -397,6 +433,7 @@ func (ob *GoWindowObj) MenuPopup(idx int) (popupMenu *GoPopupMenuObj) {
 //- <a name=\"minimize\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Minimize()**\n
 //- - Minimize the window.\n\n
 func (ob *GoWindowObj) Minimize() {
+	ob.state = Minimized
 	if ob.gio != nil {
 		ob.gio.Option(app_gio.Minimized.Option())
 	}
@@ -420,11 +457,17 @@ func (ob *GoWindowObj) ObjectType() (string) {
 	return "GoWindowObj"
 }
 
-//- <a name=\"pos\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Pos() (** x **int, y int )**\n
-//- - Returns the screen postion of the window.\n\n
-func (ob *GoWindowObj) Pos() (x int, y int) {
-	wx, wy := ob.gio.GetWindowPos()
-	return metrics.PxToDp(GoDpr, wx), metrics.PxToDp(GoDpr, wy)
+//- <a name=\"posDp\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**PosDp() (** x **int, y int )**\n
+//- - Returns the screen postion of the window in device pixels.\n\n
+func (ob *GoWindowObj) Pos() (xDp int, yDp int) {
+	x, y := ob.gio.GetPos()
+	// win10 introduced invisible borders 7px on 3 sides, but not top
+	invisibleBorder := 7
+	border := 1
+	xPx := x + invisibleBorder + border
+	yPx := y + border
+	// GetPos returns in device pixels
+	return metrics.PxToDp(GoDpr, xPx), metrics.PxToDp(GoDpr, yPx)
 }
 
 /*func (ob *GoWindowObj) GioWindow() *app_gio.Window {
@@ -545,23 +588,33 @@ func (ob *GoWindowObj) SetPadding(left int, top int, right int, bottom int) {
 }
 
 //- <a name=\"setPos\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**SetPos(** x **int, y int )**\n
-//- - Moves the position of the window on screen.\n\n
-func (ob *GoWindowObj) SetPos(x int, y int) {
-	ob.X = x
-	ob.Y = y
+//- - Moves the position of the window on screen with sizes specified in device pixels.\n\n
+func (ob *GoWindowObj) SetPos(xDp int, yDp int) {
+	// win10 introduced invisible borders 7px on 3 sides, but not top
+	invisibleBorder := 7
+	border := 1
+	ob.X = metrics.DpToPx(GoDpr, xDp) - invisibleBorder - border
+	ob.Y = metrics.DpToPx(GoDpr, yDp) - border 	// win 10 no invisible border on top of window
+	// Pos specified in screen pixels
 	if ob.gio != nil {
-		ob.gio.Option(app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)))
+		ob.gio.Option(app_gio.Pos(ob.X, ob.Y))
 	}
 	ob.Refresh()
 }
 
 //- <a name=\"setSize\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**SetSize(** width **int, height int )**\n
-//- - Resizes the window on screen.\n\n
-func (ob *GoWindowObj) SetSize(width int, height int) {
-	ob.Width = width
-	ob.Height = height
-	if ob.gio != nil {
-		ob.gio.Option(app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)))
+//- - Resizes the window on screen with client sizes specified in device pixels.\n\n
+func (ob *GoWindowObj) SetSize(widthDp int, heightDp int) {
+	// actual window size
+	invisibleBorder := 7
+	border := 1
+	// win 10 added 2 for frame width = 1px x 2
+	ob.Width = metrics.DpToPx(GoDpr, widthDp) - border * 2 		// ob.width specified in screen pixels - border 
+	// win 10 added 7px for invisible border and 1px x 2 for frame (no frame size top of window)
+	ob.Height = metrics.DpToPx(GoDpr, heightDp) - invisibleBorder - border * 2	// ob.height specified in screen pixels - border
+	// Size specified in screen pixels
+	if ob.gio != nil {	
+		ob.gio.Option(app_gio.Size(ob.Width, ob.Height))
 	}
 	ob.Refresh()
 }
@@ -594,11 +647,26 @@ func (ob *GoWindowObj) ShowModal() (action int, info string) {
 	return
 }
 
-//- <a name=\"size\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Size() (** width **int,** height **int )**\n
-//- - Returns the outer size of the window.\n\n
-func (ob *GoWindowObj) Size() (width int, height int) {
-	ww, wh := ob.gio.GetWindowSize()
-	return metrics.PxToDp(GoDpr, ww), metrics.PxToDp(GoDpr, wh)
+//- <a name=\"sizeDp\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**Size() (** width **int,** height **int )**\n
+//- - Returns the outer size of the window in device pixels.\n\n
+func (ob *GoWindowObj) Size() (widthDp int, heightDp int) {
+	ww, wh := ob.gio.GetSize()	// GetSize returns in device pixels
+	// actual window size
+	invisibleBorder := 7
+	border := 1
+	// win 10 added 2 for frame border width = 1px x 2
+	ob.Width = ww + border * 2 		// ob.width specified in screen pixels - border 
+	// win 10 added 7px for invisible border and 1px x 2 for frame (no frame size top of window)
+	ob.Height = wh + invisibleBorder + border * 2	// ob.height specified in screen pixels - border
+	// return size in device pixels
+	return metrics.PxToDp(GoDpr, ob.Width), metrics.PxToDp(GoDpr,ob.Height)
+}
+
+//- <a name=\"sizePx\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**SizePx() (** width **int,** height **int )**\n
+//- - Returns the outer size of the window in scrfeen pixels.\n\n
+func (ob *GoWindowObj) SizePx() (widthPx int, heightPx int) {
+	ww, wh := ob.gio.GetWindowSize()	// GetWindowSize returns in screen pixels
+	return ww + 2, wh + 9
 }
 
 //- <a name=\"statusbar\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**StatusBar() (** statusbar [***GoStatusBarObj**](api.GoStatusBar#) **)**\n
@@ -625,11 +693,18 @@ func (ob *GoWindowObj) Widget() (*GioWidget) {
 func (ob *GoWindowObj) run() {
 	go func() {
 	    // create new window
-	    ob.gio = app_gio.NewWindow(
-	      app_gio.Title(ob.title),
-	      app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)),
-	      app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)),
-	    )
+	    ob.gio = new(app_gio.Window)
+	    switch ob.state {
+		    case Fullscreen:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Fullscreen.Option())
+		    case Maximized:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Maximized.Option())
+		    case Minimized:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Minimized.Option())
+		    default:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Pos(ob.X, ob.Y), app_gio.Size(ob.Width, ob.Height))
+	    }
+	    	    
 	    // draw on screen
 	    if err := ob.loop(); err != nil {
 	      log.Fatal(err)
@@ -644,21 +719,28 @@ func (ob *GoWindowObj) run() {
 
 func (ob *GoWindowObj) runModal() (action int, info string) {
     // create new modalwindow
-    ob.gio = app_gio.NewWindow(
-      app_gio.Title(ob.title),
-      app_gio.Pos(unit_gio.Dp(ob.X), unit_gio.Dp(ob.Y)),
-      app_gio.Size(unit_gio.Dp(ob.Width), unit_gio.Dp(ob.Height)),
-    )
+	ob.gio = new(app_gio.Window)
+	switch ob.state {
+		    case Fullscreen:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Fullscreen.Option())
+		    case Maximized:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Maximized.Option())
+		    case Minimized:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Minimized.Option())
+		    default:
+		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Pos(ob.X, ob.Y), app_gio.Size(ob.Width, ob.Height))
+	    }
+
     GoApp.SetModal(ob)
     
     // draw on screen
-    log.Println("Modal Dialog ob.loop()")
+    //log.Println("Modal Dialog ob.loop()")
     if err := ob.loopModal(); err != nil {
       log.Fatal(err)
 		}
 		switch ob.ModalStyle() {
 		case "GoFileDialog":
-			log.Println("Modal Dialog Style: GoFileDialog")
+			//log.Println("Modal Dialog Style: GoFileDialog")
 			action = ob.ModalAction
 			info = ob.ModalInfo
 		case "GoMsgDialog":
@@ -673,7 +755,7 @@ func (ob *GoWindowObj) runModal() (action int, info string) {
 			action = 0
 			info = ""
 		}
-		log.Println("ob.IsMainWindow() :", ob.IsMainWindow())
+		//log.Println("ob.IsMainWindow() :", ob.IsMainWindow())
 		GoApp.SetModal(nil)
 		GoApp.RemoveWindow(ob)
 	//time.Sleep(200 * time.Millisecond)		// Is this required?
@@ -688,37 +770,32 @@ func (ob *GoWindowObj) loop() (err error) {
 
     // listen for events in the window.
     for {
-    	ev := ob.gio.NextEvent()
-    	//if GoApp.mode == ModeWindowed {
-    		//log.Println("ModeWindowed")
-					// detect what type of event
-					switch e := ev.(type) {
-						//switch  e := ob.gio.NextEvent().(type) {
-							case app_gio.DestroyEvent:
-								if ob.onClose != nil {
-			      			ob.onClose()
-			      		}
-			      		//log.Println("system.DestroyEvent.....")
-			      		return e.Err
-			      	// this is sent when the application should re-render.
-			      	case app_gio.FrameEvent:
-			      		//if !modal || ob.IsModal() {
-				      		// Open an new context
-				      		gtx := app_gio.NewContext(&ops, e)
-				      		ob.update(gtx)		// receiveEvents
-				      		ob.render(gtx)		// draw layout and signalEvents
-				      		ob.paint(e, gtx)	// window paint
-				      		
-				      	//}
-			      		//}
-			      	case app_gio.ConfigEvent:
-			      		if ob.onConfig != nil {
-			      			ob.onConfig()
-			      		}
-			    }
-			    if GoApp.mode == ModalMode {
-						GoApp.modalWindow.Raise()
-					}
+    	ev := ob.gio.Event()
+			// detect what type of event
+			switch e := ev.(type) {
+
+			case app_gio.DestroyEvent:
+				if ob.onClose != nil {
+	      			ob.onClose()
+	      		}
+	      		return e.Err
+
+	      	// this is sent when the application should re-render.
+	      	case app_gio.FrameEvent:
+		      		// Open an new context
+		      		gtx := app_gio.NewContext(&ops, e)
+		      		ob.update(gtx)		// receiveEvents
+		      		ob.render(gtx)		// draw layout and signalEvents
+		      		ob.paint(e, gtx)	// window paint
+		      		
+	      	case app_gio.ConfigEvent:
+	      		if ob.onConfig != nil {
+	      			ob.onConfig()
+	      		}
+	    }
+	    if GoApp.mode == ModalMode {
+			GoApp.modalWindow.Raise()
+		}
 	    /*for _, v := range GoApp.windows {
 	    		if v.IsModal() {
 	    				modal = true
@@ -731,8 +808,7 @@ func (ob *GoWindowObj) loop() (err error) {
 			}
 			ob.gio.Invalidate()			// redraw window*/
 		//}
-			}
-    //}
+	}
 	return nil
 }
 
@@ -744,35 +820,28 @@ func (ob *GoWindowObj) loopModal() (err error) {
 
     // listen for events in the window.
     for {
-    			// detect what type of event
-					switch  e := ob.gio.NextEvent().(type) {
+		// detect what type of event
+		switch  e := ob.gio.Event().(type) {
 
-							case app_gio.DestroyEvent:
-								if ob.onClose != nil {
-			      			ob.onClose()
-			      		}
-			      		//log.Println("system.DestroyEvent.....")
-			      		return e.Err
-			      	// this is sent when the application should re-render.
-			      	case app_gio.FrameEvent:
-			      		//if !modal || ob.IsModal() {
-				      		// Open an new context
-				      		gtx := app_gio.NewContext(&ops, e)
-				      		ob.update(gtx)		// receiveEvents
-				      		ob.render(gtx)		// draw layout and signalEvents
-				      		ob.paint(e, gtx)	// window paint
-				      		/*if !ob.IsModal() {
-											if GoApp.mode == ModeModal {
-												GoApp.modalWindow.Raise()
-											}
-									}*/
-				      	//}
-			      		//}
-			      	case app_gio.ConfigEvent:
-			      		if ob.onConfig != nil {
-			      			ob.onConfig()
-			      		}
-			    }
+			case app_gio.DestroyEvent:
+				if ob.onClose != nil {
+      				ob.onClose()
+      			}
+      			return e.Err
+
+	      	// this is sent when the application should re-render.
+	      	case app_gio.FrameEvent:
+	      		// Open an new context
+	      		gtx := app_gio.NewContext(&ops, e)
+	      		ob.update(gtx)		// receiveEvents
+	      		ob.render(gtx)		// draw layout and signalEvents
+	      		ob.paint(e, gtx)	// window paint
+
+	      	case app_gio.ConfigEvent:
+	      		if ob.onConfig != nil {
+	      			ob.onConfig()
+	      		}
+	    }
 	    /*for _, v := range GoApp.windows {
 	    		if v.IsModal() {
 	    				modal = true
@@ -838,6 +907,7 @@ func (ob *GoWindowObj) signalEvents(gtx layout_gio.Context) {
 //- - sets the global screen scaling, calls updateLayout to update all the window layouts and controls, receives events, updates the keyboard focus all the rendering to repaint the window.\n\n
 func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 	// set global screen pixel size
+	//log.Println("GoWindowObj) update...................")
 	GoDpr = gtx.Metric.PxPerDp
 	GoSpr = gtx.Metric.PxPerSp
 	for _, obj := range ob.frame.Controls {
@@ -867,7 +937,7 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 								if ob.popupwindow.Visible {
 									ob.popupwindow.Hide()
 								}
-								log.Println("ApplicationPointer::pointerPress -")
+								//log.Println("ApplicationPointer::pointerPress -")
 								gtx.Execute(key_gio.FocusCmd{Tag: nil})
 								GoApp.Keyboard().SetFocusControl(nil)
 								if ob.onPointerPress != nil {
@@ -876,14 +946,14 @@ func (ob *GoWindowObj) update(gtx layout_gio.Context) {
 							}
 						case pointer_gio.Move:
 							if ev.Priority == pointer_gio.Shared {
-								log.Println("ApplicationPointer::pointerMove -")
+								//log.Println("ApplicationPointer::pointerMove -")
 								if ob.onPointerMove != nil {
 									ob.onPointerMove(ev)
 								}
 							}
 						case pointer_gio.Release:
 							if ev.Priority == pointer_gio.Grabbed {
-								log.Println("ApplicationPointer::pointerRelease -")
+								//log.Println("ApplicationPointer::pointerRelease -")
 								if ob.onPointerRelease != nil {
 									ob.onPointerRelease(ev)
 								}

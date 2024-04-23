@@ -7,8 +7,8 @@ require (
 	github.com/go-text/typesetting v0.1.1
 	github.com/kr/pretty v0.3.1
 	github.com/phin1x/go-ipp v1.6.1
-	github.com/utopiagio/gio v0.0.6
-	github.com/utopiagio/gio-x v0.0.4
+	github.com/utopiagio/gio v0.0.7
+	github.com/utopiagio/gio-x v0.0.7
 	golang.design/x/clipboard v0.7.0
 	golang.org/x/exp v0.0.0-20240318143956-a85f2c67cd81
 	golang.org/x/exp/shiny v0.0.0-20240318143956-a85f2c67cd81

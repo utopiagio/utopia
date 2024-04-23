@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 	"math"
 
@@ -153,7 +153,7 @@ func (ob *GoListViewObj) ItemClicked(nodeId []int) {
 }
 
 func (ob *GoListViewObj) ItemDoubleClicked(nodeId []int) {
-	log.Println("GoListViewObj) ItemDoubleClicked()............")
+	//log.Println("GoListViewObj) ItemDoubleClicked()............")
 	/*lvi := ob.Item(nodeId)
 	if lvi.IsExpanded() {
 		lvi.SetExpanded(false)

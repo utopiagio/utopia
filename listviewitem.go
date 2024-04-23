@@ -5,7 +5,7 @@
 package utopia
 
 import (
-	"log"
+	//"log"
 	"image"
 	"image/draw"
 	//"math"
@@ -292,7 +292,7 @@ func (ob *GoListViewItemObj) PointerLeave(e GoPointerEvent) {
 }
 
 func (ob *GoListViewItemObj) SetExpanded(state bool) {
-	log.Println("GoListViewItemObj::SetExpanded(", state, ")")
+	//log.Println("GoListViewItemObj::SetExpanded(", state, ")")
 	for _, lv := range ob.Controls {
 		lvi := lv.(*GoListViewItemObj)
 		if state == true {

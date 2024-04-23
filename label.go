@@ -314,6 +314,7 @@ func (ob *GoLabelObj) SetText(text string) {
 	if ob.selectable == true {
 		ob.state.SetText(ob.text)
 	}
+	ob.ParentWindow().Refresh()
 }
 
 func (ob *GoLabelObj) SetTextAlignment(alignment GoTextAlignment) {

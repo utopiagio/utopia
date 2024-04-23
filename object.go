@@ -135,7 +135,7 @@ func (ob *GioObject) ParentWindow() (window *GoWindowObj) {
 func (ob *GioObject) RemoveControl(control GoObject) {
 	k := 0
 	for _, v := range ob.Controls {
-	    if v != object {
+	    if v != control {
 	        ob.Controls[k] = v
 	        k++
 	    }
