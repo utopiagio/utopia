@@ -258,9 +258,7 @@ func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.menubar = GoMenuBar(hWin.frame)
 	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
-	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
-
 	hWin.statusbar = GoStatusBar(hWin.frame)
 	hWin.statusbar.SetSizePolicy(ExpandingWidth, FixedHeight)
 	hWin.statusbar.SetBackgroundColor(Color_WhiteSmoke)
@@ -269,7 +267,6 @@ func GoMainWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.MenuBar()
 	hWin.StatusBar()
 	GoApp.AddWindow(hWin)
-	//hWin.run()
 	return hWin
 }
 
@@ -282,11 +279,11 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	pos := GoPos{-1, -1}
 	wmode := Windowed
 	hWin = &GoWindowObj{object, size, pos, wmode, nil, windowTitle, nil, nil, nil, nil, nil, false, false, "", -1, "", nil, nil, nil, 0, nil, nil, nil, nil, nil}
+	hWin.Window = hWin
 	hWin.frame = GoVFlexBoxLayout(hWin)
 	hWin.menubar = GoMenuBar(hWin.frame)
 	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
-	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
 	hWin.statusbar = GoStatusBar(hWin.frame)
 	hWin.statusbar.SetSizePolicy(ExpandingWidth, FixedHeight)
@@ -294,7 +291,6 @@ func GoWindow(windowTitle string) (hWin *GoWindowObj) {
 	hWin.eventmask = GoEventMask(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
-	//hWin.run()
 	return hWin
 }
 
@@ -312,7 +308,6 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	hWin.menubar = GoMenuBar(hWin.frame)
 	hWin.menubar.SetSizePolicy(ExpandingWidth, FixedHeight)
 	hWin.menubar.SetBackgroundColor(Color_WhiteSmoke)
-	//hWin.menubar.SetBorder(BorderSingleLine, 5, 5, Color_Red)
 	hWin.layout = GoVFlexBoxLayout(hWin.frame)
 	hWin.statusbar = GoStatusBar(hWin.frame)
 	hWin.statusbar.SetSizePolicy(ExpandingWidth, FixedHeight)
@@ -320,7 +315,6 @@ func GoModalWindow(modalStyle string, windowTitle string) (hWin *GoWindowObj) {
 	hWin.eventmask = GoEventMask(hWin)
 	hWin.popupwindow = GoPopupWindow(hWin)
 	GoApp.AddWindow(hWin)
-	//hWin.runModal()
 	return hWin
 }
 //- <a name=\"addPopupMenu\"></a> **(ob** [***GoWindowObj**](api.GoWindow#)**)**.**AddPopupMenu(** popupMenu [***GoPopupMenuObj**](api.GoPopupMenu#) **)**\n
@@ -693,7 +687,7 @@ func (ob *GoWindowObj) Widget() (*GioWidget) {
 func (ob *GoWindowObj) run() {
 	go func() {
 	    // create new window
-	    ob.gio = new(app_gio.Window)
+	    ob.gio = &app_gio.Window{}
 	    switch ob.state {
 		    case Fullscreen:
 		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Fullscreen.Option())
@@ -719,7 +713,7 @@ func (ob *GoWindowObj) run() {
 
 func (ob *GoWindowObj) runModal() (action int, info string) {
     // create new modalwindow
-	ob.gio = new(app_gio.Window)
+	ob.gio = &app_gio.Window{}
 	switch ob.state {
 		    case Fullscreen:
 		    	ob.gio.Option(app_gio.Title(ob.title), app_gio.Fullscreen.Option())
