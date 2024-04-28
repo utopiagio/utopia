@@ -12,6 +12,7 @@ package desktop
 #include <X11/Xlib.h>
 */
 import "C"
+import "log"
 
 type goDeviceCaps struct {
 	aspectX 	int
@@ -29,15 +30,16 @@ type goDeviceCaps struct {
 
 var deviceCaps goDeviceCaps
 
-func Init() {
+func Init() (dpr float32, spr float32) {
 	deviceCaps.getPrimaryDeviceCaps()
+	return 1, 1
 }
 
 func (ob goDeviceCaps) getPrimaryDeviceCaps() {
 	dy := C.XOpenDisplay(nil)
 	if dy == nil {
-		return
 		log.Println("return nil")
+		return	
 	}
 	defer C.XCloseDisplay(dy)
 

@@ -53,8 +53,8 @@ const (
 )
 
 var tagCounter int
-var GoDpr float32
-var GoSpr float32
+var GoDpr float32 = 1
+var GoSpr float32 = 1
 var GoApp *GoApplicationObj = nil
 
 type GoApplicationObj struct {

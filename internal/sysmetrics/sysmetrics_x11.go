@@ -4,7 +4,7 @@
 // +build linux,!android freebsd openbsd
 // +build !nox11
 
-package app
+package sysmetrics
 
 /*
 #cgo freebsd openbsd CFLAGS: -I/usr/X11R6/include -I/usr/local/include
@@ -26,7 +26,7 @@ package app
 
 */
 import "C"
-
+import "log"
 
 type goDeviceCaps struct {
 	aspectX 	int
@@ -44,14 +44,14 @@ type goDeviceCaps struct {
 
 var deviceCaps goDeviceCaps
 
-func Init(win *app_gio.Window) {
+func Init() {
 	deviceCaps.getPrimaryDeviceCaps()
 }
 
 func (ob goDeviceCaps) getPrimaryDeviceCaps() {
 	dy := C.XOpenDisplay(nil)
 	if dy == nil {
-		return nil
+		log.Println("return nil")
 	}
 	defer C.XCloseDisplay(dy)
 
@@ -60,6 +60,9 @@ func (ob goDeviceCaps) getPrimaryDeviceCaps() {
 	height := int(C.XHeightOfScreen(screen))
 	deviceCaps.height = height
 	deviceCaps.width = width
+	deviceCaps.clientHeight = height
+	deviceCaps.clientWidth = width
+
 }
 
 
@@ -87,3 +90,51 @@ func (ob goDeviceCaps) getPrimaryDeviceCaps() {
 	deviceCaps.horizRes = sysmetrics.HorizontalRes() //hDC) 	//GetDeviceCaps(hDC, w32.LOGPIXELSX)
 
 }*/
+
+func AspectX() int {
+	return 0
+}
+
+func AspectY() int {
+	return 0
+}
+
+func AspectXY() int {
+	return 0
+}
+
+func ClientHeight() int {
+	return 0
+}
+
+func ClientWidth() int {
+	return 0
+}
+
+func Height() int {
+	return deviceCaps.height
+}
+
+func HorizontalRes() int {
+	return 0
+}
+
+func HorizontalSize() int {
+	return 0
+}
+
+func TaskBarHeight() int {
+	return 0
+}
+
+func VerticalRes() int {
+	return 0
+}
+
+func VerticalSize() int {
+	return 0
+}
+
+func Width() int {
+	return deviceCaps.width
+}
